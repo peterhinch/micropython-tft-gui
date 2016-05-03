@@ -122,6 +122,7 @@ Keyword only arguments:
  * ``bgcolor`` Background color of object. Defaults to system background.
  * ``fontcolor`` Text color. Defaults to system text color.
  * ``text`` Initial text. Defaults to ''.
+
 Method:
  * ``show`` Argument: ``text``. Displays the string in the label.
 
@@ -141,6 +142,7 @@ Keyword only arguments (all optional):
  * ``pointers`` Tuple of floats in range 0 to 0.9. Defines the length of each pointer as a
  proportion of the dial diameter. Default (0.9,) i.e. one pointer.
  * ``ticks`` Defines the number of graduations around the dial. Default 4.
+
 Method:
  * ``show`` Displays an angle. Arguments: ``angle`` (mandatory), ``pointer`` the pointer index
  (default 0).
@@ -157,6 +159,7 @@ Keyword only arguments (all optional):
  * ``bgcolor`` Background color of object. Defaults to system background.
  * ``border`` Border width in pixels - typically 2. If omitted, no border will be drawn.
  * ``color`` The color of the LED. Default RED.
+
 Methods:
  * ``off`` No arguments. Turns the LED off.
  * ``on`` Optional arguemnt ``color``. Turns the LED on. By default it will use the ``color``
@@ -168,6 +171,7 @@ This displays a single value in range 0.0 to 1.0 on a vertical linear meter. Con
 positional arguments:
  1. ``tft`` The TFT object.
  2. ``location`` 2-tuple defining position.
+
 Keyword only arguments:
  * ``height`` Dimension of the bounding box. Default 200 pixels.
  * ``width`` Dimension of the bounding box. Default 30 pixels.
@@ -181,6 +185,7 @@ Keyword only arguments:
  * ``fontcolor`` Text color. Defaults to system text color.
  * ``pointercolor`` Color of meter pointer. Defaults to ``fgcolor``.
  * ``value`` Initial value to display. Default 0.
+
 Methods:
  * ``value`` Optional argument ``val``. If set, refreshes the meter display with a new value,
  otherwise returns its current value. Range 0.0 to 1.0.
@@ -203,6 +208,7 @@ Constructor mandatory positional arguments:
  3. ``objtouch`` The touch panel instance.
  4. ``location`` 2-tuple defining position.
  5. ``font`` Font to use for any legends.
+
 Optional keyword only arguments:
  * ``height`` Dimension of the bounding box. Default 200 pixels (v), 30 (h).
  * ``width`` Dimension of the bounding box. Default 30 pixels (v), 200 (h).
@@ -221,6 +227,7 @@ Optional keyword only arguments:
  changed.
  * ``cbm_args`` A list of arguments for the above callback. Default ``[]``.
  * ``value`` The initial value. Default 0.0: slider will be at the bottom (v), left (h).
+
 Methods:
  * ``value`` Optional argument ``val``. If set, moves the slider position to correspond to a new
  value, otherwise returns the control's current value. Range 0.0 to 1.0.
@@ -234,6 +241,7 @@ Constructor mandatory positional arguments:
  2. ``tft`` The TFT instance.
  3. ``objtouch`` The touch panel instance.
  4. ``location`` 2-tuple defining position.
+
 Optional keyword only arguments:
  * ``height`` Dimension of the square bounding box. Default 100 pixels.
  * ``arc`` Amount of movement available. Default 2*PI radians (360 degrees).
@@ -249,6 +257,7 @@ Optional keyword only arguments:
  changed.
  * ``cbm_args`` A list of arguments for the above callback. Default ``[]``.
  * ``value`` Initial value. Default 0.0: knob will be at its most counterclockwise position.
+
 Methods:
  * ``value`` Optional argument ``val``. If set, moves the knob to correspond to a new value,
  otherwise returns the control's current value. Range 0.0 to 1.0.
@@ -263,6 +272,7 @@ Constructor mandatory positional arguments:
  2. ``tft`` The TFT instance.
  3. ``objtouch`` The touch panel instance.
  4. ``location`` 2-tuple defining position.
+
 Optional keyword only arguments:
  * ``height`` Dimension of the square bounding box. Default 30 pixels.
  * ``fillcolor`` Fill color of checkbox when ``True``. Default ``None``: an 'X' will be drawn.
@@ -273,6 +283,7 @@ Optional keyword only arguments:
  * ``callback`` Callback function which will run when the value changes.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
  * ``value`` Initial value. Default ``False``.
+
 Methods:
  * ``value`` Optional boolean argument ``val``. If provided updates the control's value, otherwise
  returns its current value.
@@ -287,8 +298,10 @@ Constructor mandatory positional arguments:
  2. ``tft`` The TFT instance.
  3. ``objtouch`` The touch panel instance.
  4. ``location`` 2-tuple defining position.
+
 Mandatory keyword only argument:
  * ``font`` Font or button text
+
 Optional keyword only arguments:
  * ``shape`` CIRCLE, RECTANGLE or CLIPPED_RECT. Default CIRCLE.
  * ``height`` Height of the bounding box. Default 50 pixels.
@@ -304,6 +317,7 @@ Optional keyword only arguments:
  * ``show`` Boolean, default ``True``. If ``False`` button will not be displayed.
  * ``callback`` Callback function which runs when button is pressed.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
+
 There are no methods for normal access.
 
 ## Class Buttonset: a button with multiple states
