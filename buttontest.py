@@ -22,10 +22,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from font14 import font14
-from tft_local import setup
 from ugui import Button, Buttonset, RadioButtons, Checkbox, Label
 from ugui import CIRCLE, RECTANGLE, CLIPPED_RECT, WHITE, BLACK, RED, GREEN, BLUE, YELLOW, GREY
+from font14 import font14
+from tft_local import setup
 
 def callback(button, arg, label):
     label.show(arg)
@@ -117,7 +117,7 @@ def test():
 
 # Radio buttons
     x = 0
-    rb = RadioButtons(callback, BLUE) # color of selected button
+    rb = RadioButtons(BLUE, callback) # color of selected button
     for t in table4:
         t['args'].append(lstlbl[2])
         rb.add_button(objsched, tft, touch, (x, 180), font = font14, fontcolor = WHITE,

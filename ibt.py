@@ -1,0 +1,68 @@
+# ibt.py Test/demo of icon based pushbutton classes for Pybboard TFT GUI
+
+# The MIT License (MIT)
+#
+# Copyright (c) 2016 Peter Hinch
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+from ugui import IconButton, IconRadioButtons, Label, WHITE, RED
+from tft_local import setup
+from font14 import font14
+import radiobutton, checkbox # icon files
+import gc
+gc.collect()
+
+def callback(button, arg, label):
+    label.show(arg)
+    if arg == 'Q':
+        button.objsched.stop()
+
+def cbcb(checkbox, label):
+    label.show(('False', '???', 'True')[checkbox.state])
+
+labels = { 'width' : 70,
+          'fontcolor' : WHITE,
+          'border' : 2,
+          'fgcolor' : RED,
+          'bgcolor' : (0, 40, 0),
+          'font' : font14,
+          }
+
+def test():
+    print('Testing TFT...')
+    objsched, tft, touch = setup()
+    tft.backlight(100) # light on
+    lstlbl = []
+    for n in range(3):
+        lstlbl.append(Label(tft, (350, 50 * n), **labels))
+
+    IconButton(objsched, tft, touch, (10, 10), icon_module = radiobutton, flash = 1.0, callback = callback, args = ['A', lstlbl[2]])
+    IconButton(objsched, tft, touch, (50, 10), icon_module = radiobutton, flash = 1.0, callback = callback, args = ['B', lstlbl[2]])
+    c = IconRadioButtons(callback = callback)
+    c.add_button(objsched, tft, touch, (10, 70), icon_module = radiobutton, args = ['1', lstlbl[0]])
+    c.add_button(objsched, tft, touch, (50, 70), icon_module = radiobutton, args = ['2', lstlbl[0]])
+    c.add_button(objsched, tft, touch, (90, 70), icon_module = radiobutton, args = ['3', lstlbl[0]])
+    c.add_button(objsched, tft, touch, (130, 70), icon_module = radiobutton, args = ['4', lstlbl[0]])
+
+    IconButton(objsched, tft, touch, (10, 150), icon_module = checkbox, toggle = True, callback = cbcb, args =[lstlbl[1]])
+    IconButton(objsched, tft, touch, (400, 240), icon_module = radiobutton, callback = callback, args = ['Q', lstlbl[2]])
+    objsched.run()
+
+test()

@@ -39,6 +39,10 @@ YELLOW = (255, 255, 0)
 GREY = (100, 100, 100)
 
 # *********** UTILITY FUNCTIONS ***********
+
+class ugui_exception(Exception):
+    pass
+
 # replaces lambda *_ : None owing to issue #2023
 def dolittle(*_):
     pass
@@ -64,6 +68,9 @@ def print_left(tft, x, y, s, color, font, clip=False, scroll=False):
     tft.setTextPos(x, y,  clip, scroll)
     tft.printString(s)
     tft.setTextStyle(*old_style)
+
+def icon(x, y, func, no):
+    tft.drawBitmap(x, y, *func(no)) # usage icon(10, 10, radiobutton.get_icon, 0)
 
 # *********** BASE CLASSES ***********
 # Base class for all displayable objects
@@ -358,8 +365,8 @@ class Button(Touchable):
         self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
 class Buttons(object):
-    def __init__(self, user_callback):
-        self.user_callback = user_callback
+    def __init__(self, callback):
+        self.user_callback = callback
         self.lstbuttons = []
 
     def add_button(self, *args, **kwargs):
@@ -369,8 +376,8 @@ class Buttons(object):
 # Group of buttons, typically at same location, where pressing one shows
 # the next e.g. start/stop toggle or sequential select from short list
 class Buttonset(Buttons):
-    def __init__(self, user_callback):
-        super().__init__(user_callback)
+    def __init__(self, callback=dolittle):
+        super().__init__(callback)
 
     def run(self):
         for idx, button in enumerate(self.lstbuttons):
@@ -397,8 +404,8 @@ class Buttonset(Buttons):
 # Group of buttons at different locations, where pressing one shows
 # only current button highlighted and oes callback from current one
 class RadioButtons(Buttons):
-    def __init__(self, user_callback, highlight, selected=0):
-        super().__init__(user_callback)
+    def __init__(self, highlight, callback=dolittle, selected=0):
+        super().__init__(callback)
         self.highlight = highlight
         self.selected = selected
 
@@ -419,7 +426,6 @@ class RadioButtons(Buttons):
                 but.fgcolor = but.orig_fgcolor
             but._show()
         self.user_callback(button, *args) # user gets button with args they specified
-
 
 class Checkbox(Touchable):
     def __init__(self, objsched, tft, objtouch, location, *, height=30, fillcolor=None,
@@ -465,16 +471,78 @@ class Checkbox(Touchable):
     def _touched(self, x, y): # Was touched
         self.value(not self._value) # Upddate and refresh
 
+# Button/checkbox whose appearance is defined by icon bitmaps
+
+class IconButton(Touchable):
+    def __init__(self, objsched, tft, objtouch, location, *, icon_module, flash=0, toggle=False, callback=dolittle, args=[], state=0):
+        width, height, _, _, _ = icon_module.get_icon(0)
+        self.get_icon = icon_module.get_icon
+        self.num_icons = len(icon_module._icons)
+        super().__init__(objsched, tft, objtouch, location, None, height, width, None, None, None, None, False)
+        self.callback = callback
+        self.callback_args = args
+        self.flash = flash
+        self.toggle = toggle
+        if state >= self.num_icons:
+            raise ugui_exception('Invalid icon index {}'.format(state))
+        self.state = state
+        if self.flash > 0:
+            if self.num_icons < 2:
+                raise ugui_exception('Need > 1 icon for flashing button')
+            self.delay = Delay(objsched, self._show, (0,))
+        self._show(state)
+
+    def _show(self, state):
+        self.state = state
+        tft = self.tft
+        x = self.location[0]
+        y = self.location[1]
+        tft.drawBitmap(x, y, *self.get_icon(state))
+
+    def _touched(self, x, y): # Process touch
+        if self.flash > 0:
+            self._show(1)
+            self.delay.trigger(self.flash)
+        elif self.toggle:
+            self.state = (self.state + 1) % self.num_icons
+            self._show(self.state)
+        self.callback(self, *self.callback_args) # Callback not a bound method so pass self
+
+# Group of buttons at different locations, where pressing one shows
+# only current button highlighted and does callback from current one
+class IconRadioButtons(object):
+    def __init__(self, callback=dolittle, selected=0):
+        self.user_callback = callback
+        self.setbuttons = set()
+        self.selected = selected
+
+    def add_button(self, *args, **kwargs):
+        if self.selected == len(self.setbuttons):
+            kwargs['state'] = 1
+        else:
+            kwargs['state'] = 0
+        button = IconButton(*args, **kwargs) # Create and show
+        self.setbuttons.add(button)
+        button.callback = self._callback
+
+    def _callback(self, button, *args):
+        for but in self.setbuttons:
+            if but is button:
+                but._show(1)
+            else:
+                but._show(0)
+        self.user_callback(button, *args) # Args for button just pressed
+
 # *********** SLIDER CLASSES ***********
 # A slider's text items lie outside its bounding box (area sensitive to touch)
 
 class Slider(Touchable):
-    def __init__(self, objsched, tft, objtouch, location, font, *, height=200, width=30, divisions=10, legends=None,
+    def __init__(self, objsched, tft, objtouch, location, *, font=None, height=200, width=30, divisions=10, legends=None,
                  fgcolor=None, bgcolor=None, fontcolor=None, slidecolor=None, border=None, 
                  cb_end=dolittle, cbe_args=[], cb_move=dolittle, cbm_args=[], value=0.0):
         super().__init__(objsched, tft, objtouch, location, font, height, width, fgcolor, bgcolor, fontcolor, border, True)
         self.divisions = divisions
-        self.legends = legends
+        self.legends = legends if font is not None else None
         self.slidecolor = slidecolor
         self.cb_end = cb_end
         self.cbe_args = cbe_args
@@ -556,12 +624,12 @@ class Slider(Touchable):
         self.cb_end(self, *self.cbe_args) # Callback not a bound method so pass self
 
 class HorizSlider(Touchable):
-    def __init__(self, objsched, tft, objtouch, location, font, *, height=30, width=200, divisions=10, legends=None,
+    def __init__(self, objsched, tft, objtouch, location, *, font=None, height=30, width=200, divisions=10, legends=None,
                  fgcolor=None, bgcolor=None, fontcolor=None, slidecolor=None, border=None, 
                  cb_end=dolittle, cbe_args=[], cb_move=dolittle, cbm_args=[], value=0.0):
         super().__init__(objsched, tft, objtouch, location, font, height, width, fgcolor, bgcolor, fontcolor, border, True)
         self.divisions = divisions
-        self.legends = legends
+        self.legends = legends if font is not None else None
         self.slidecolor = slidecolor
         self.cb_end = cb_end
         self.cbe_args = cbe_args

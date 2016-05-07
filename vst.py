@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from ugui import Slider, Button, Dial, Label, CLIPPED_RECT, WHITE, BLACK, RED, GREEN, BLUE, YELLOW, GREY
 from font10 import font10
 from tft_local import setup
-from ugui import Slider, Button, Dial, Label, CLIPPED_RECT, WHITE, BLACK, RED, GREEN, BLUE, YELLOW, GREY
 from math import pi
 
 # CALLBACKS
@@ -84,16 +84,16 @@ def test():
     Button(objsched, tft, touch, (400, 240), font = font10, callback = doquit, fgcolor = RED,
            height = 30, text = 'Quit', shape = CLIPPED_RECT)
     dial1 = Dial(tft, (350, 10), fgcolor = YELLOW, border = 2, pointers = (0.9, 0.7))
-    dial2 = Dial(tft, (350, 120), fgcolor = YELLOW, bgcolor = GREY, border = 2,  pointers = (0.9, 0.7))
+    dial2 = Dial(tft, (350, 120), fgcolor = YELLOW, border = 2,  pointers = (0.9, 0.7)) #bgcolor = GREY, 
     lstlbl = []
     for n in range(3):
         lstlbl.append(Label(tft, (80 * n, 240), font = font10, **labels))
     y = 5
-    slave1 = Slider(objsched, tft, touch, (80, y), font10,
+    slave1 = Slider(objsched, tft, touch, (80, y), font = font10,
            fgcolor = GREEN, cbe_args = ('Slave1',), cb_move = slave_moved, cbm_args = [lstlbl[1]], **table)
-    slave2 = Slider(objsched, tft, touch, (160, y), font10,
+    slave2 = Slider(objsched, tft, touch, (160, y), font = font10,
            fgcolor = GREEN, cbe_args = ('Slave2',), cb_move = slave_moved, cbm_args = [lstlbl[2]], **table)
-    master = Slider(objsched, tft, touch, (0, y), font10,
+    master = Slider(objsched, tft, touch, (0, y), font = font10,
            fgcolor = YELLOW, cbe_args = ('Master',), cb_move = master_moved, cbm_args = (slave1, slave2, lstlbl[0]), value=0.5, **table)
     objsched.add_thread(mainthread(slave1, dial1))
     objsched.add_thread(mainthread(slave2, dial2))

@@ -22,9 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+from ugui import HorizSlider, Button, Dial, Label, LED, Meter, CLIPPED_RECT, GREEN, RED, YELLOW, WHITE, BLUE
 from font10 import font10
 from tft_local import setup
-from ugui import HorizSlider, Button, Dial, Label, LED, Meter, CLIPPED_RECT, GREEN, RED, YELLOW, WHITE, BLUE
 import pyb
 
 # CALLBACKS
@@ -100,11 +100,11 @@ def test():
     for n in range(3):
         lstlbl.append(Label(tft, (x, 40 + 60 * n), font = font10, **labels))
     x = 0
-    slave1 = HorizSlider(objsched, tft, touch, (x, 100), font10,
+    slave1 = HorizSlider(objsched, tft, touch, (x, 100), font = font10,
            fgcolor = GREEN, cbe_args = ['Slave1'], cb_move = slave_moved, cbm_args = [lstlbl[1]], **table)
-    slave2 = HorizSlider(objsched, tft, touch, (x, 160), font10,
+    slave2 = HorizSlider(objsched, tft, touch, (x, 160), font = font10,
            fgcolor = GREEN, cbe_args = ['Slave2'], cb_move = slave_moved, cbm_args = [lstlbl[2]], **table)
-    master = HorizSlider(objsched, tft, touch, (x, 40), font10,
+    master = HorizSlider(objsched, tft, touch, (x, 40), font = font10,
            fgcolor = YELLOW, cbe_args = ['Master'], cb_move = master_moved, slidecolor=RED, cbm_args = [slave1, slave2, lstlbl[0], led], value=0.5, **table)
     objsched.add_thread(testmeter(meter1))
     objsched.add_thread(testmeter(meter2))

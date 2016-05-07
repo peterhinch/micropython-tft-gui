@@ -50,25 +50,28 @@ Core files:
 Optional files:
  1. font10.py Font used by the test programs.
  2. font14.py Font used by the test programs.
+ 3. radiobutton.py Icon file for icon radio buttons
+ 4. checkbox.py Icon file for icon checkboxes.
 
 Test/demo programs:
  1. vst.py A test program for vertical linear sliders.
  2. hst.py Tests horizontal slider controls, meters and LED.
  3. buttontest.py Pushbuttons and checkboxes.
  4. knobtest.py Rotary control test.
+ 5. ibt.py Test of icon buttons
 
 It should be noted that by the standards of the Pyboard this is a large library. Attempts to use it
 in the normal way are likely to provoke memory errors owing to heap fragmentation. It is
 recommended that the core and optional files are 'frozen' with the firmware as persistent bytecode,
 with the possible exception of tft_local.py: keeping this in the filesystem facilitates adjusting
 the ``confidence`` and ``margin`` values for best response. You may also want to freeze any other
-fonts you plan to use. The hardware divers listed above cannot be frozen as they use inline
-assembler and Viper code.
+fonts and icons you plan to use. The hardware divers listed above cannot be frozen as they use
+inline assembler and Viper code.
 
 It is also wise to issue ctrl-D to soft reset the Pyboard before importing a module which uses the
 library. The test programs require a ctrl-D before import.
 
-Instructions on creating font files may be found in the README for the TFT driver.
+Instructions on creating font and icon files may be found in the README for the TFT driver.
 
 # Concepts
 
@@ -196,6 +199,9 @@ These classes provide touch-sensitive objects capable of both the display and en
 user moves the control, its value will change and an optional callback will be executed. If a
 thread alters a control's value, its appearance will change to reflect this.
 
+Buttons and checkboxes are provided in two variants, one drawn using graphics primitives, and the
+other using icons.
+
 ## Class Slider
 
 These emulate linear potentiometers. Vertical ``Slider`` and horizontal ``HorizSlider`` variants
@@ -207,9 +213,9 @@ Constructor mandatory positional arguments:
  2. ``tft`` The TFT instance.
  3. ``objtouch`` The touch panel instance.
  4. ``location`` 2-tuple defining position.
- 5. ``font`` Font to use for any legends.
 
 Optional keyword only arguments:
+ * ``font`` Font to use for any legends. Default ``None``: no legends will be drawn.
  * ``height`` Dimension of the bounding box. Default 200 pixels (v), 30 (h).
  * ``width`` Dimension of the bounding box. Default 30 pixels (v), 200 (h).
  * ``divisions`` Number of graduations on the scale. Default 10.
@@ -264,8 +270,8 @@ Methods:
 
 ## Class Checkbox
 
-This provides for boolean data entry and display. In the ``True`` state the control can show an 'X'
-or a filled block of color.
+Drawn using graphics primitives. This provides for boolean data entry and display. In the ``True``
+state the control can show an 'X' or a filled block of color.
 
 Constructor mandatory positional arguments:
  1. ``objsched`` The scheduler instance.
@@ -290,8 +296,9 @@ Methods:
 
 ## Class Button
 
-This emulates a pushbutton, with a callback being executed each time the button is pressed. Buttons
-may be any one of three shapes: CIRCLE, RECTANGLE or CLIPPED_RECT.
+Drawn using graphics primitives. This emulates a pushbutton, with a callback being executed each
+time the button is pressed. Buttons may be any one of three shapes: CIRCLE, RECTANGLE or
+CLIPPED_RECT.
 
 Constructor mandatory positional arguments:
  1. ``objsched`` The scheduler instance.
@@ -300,7 +307,7 @@ Constructor mandatory positional arguments:
  4. ``location`` 2-tuple defining position.
 
 Mandatory keyword only argument:
- * ``font`` Font or button text
+ * ``font`` Font for button text
 
 Optional keyword only arguments:
  * ``shape`` CIRCLE, RECTANGLE or CLIPPED_RECT. Default CIRCLE.
@@ -320,7 +327,9 @@ Optional keyword only arguments:
 
 There are no methods for normal access.
 
-## Class Buttonset: a button with multiple states
+## Class Buttonset: emulate a button with multiple states
+
+Drawn using graphics primitives.
 
 A ``Buttonset`` groups a number of buttons together to implement a button which toggles between
 states each time it is pressed. For example it might toggle between a green Start button and a red
@@ -333,7 +342,7 @@ callback which will run each time the object is pressed. However each button can
 of ``args``. The callback will receive the arguments of the currently visible button.
 
 The constructor argument:
- * ``user_callback`` The callback function. Mandatory.
+ * ``callback`` The callback function. Default does nothing.
 
 Methods:
  * ``add_button`` Adds a button to the ``Buttonset``. Arguments: as per the ``Button`` constructor.
@@ -353,13 +362,15 @@ bs.run()
 
 ## Class RadioButtons
 
+Drawn using graphics primitives.
+
 These comprise a set of buttons at different locations. When a button is pressed, it becomes
-highlighted and remains so until another button is pressed. A callback runs each time The
+highlighted and remains so until another button is pressed. A callback runs each time the
 current button is changed.
 
 Constructor positional arguments:
- * ``user_callback`` Callback when a new button is pressed. Mandatory.
  * ``highlight`` Color to use for the highlighted button. Mandatory.
+ * ``callback`` Callback when a new button is pressed. Default does nothing.
  * ``selected`` Index of initial button to be highlighted. Default 0.
 
 Methods:
@@ -382,3 +393,42 @@ for t in table:
     x += 60 # Horizontal row of buttons
 rb.run()
 ```
+
+## Class IconButton (also checkbox)
+
+Drawn using an icon file which must be imported before instantiating. A checkbox may be implemented
+by setting the ``toggle`` argument ``True`` and using an appropriate icon file. An ``IconButton``
+instance has a member variable ``state`` which represents the index of the current icon being
+displayed. User callbacks can interrogate this.
+
+Constructor mandatory positional arguments:
+ 1. ``objsched`` The scheduler instance.
+ 2. ``tft`` The TFT instance.
+ 3. ``objtouch`` The touch panel instance.
+ 4. ``location`` 2-tuple defining position.
+
+Mandatory keyword only argument:
+ * ``icon_module`` Name of the imported icon module.
+
+Optional keyword only arguments:
+ * ``flash`` Numeric, default 0. If ``value`` > 0, button will display icon[1] for ``value`` secs.
+ * ``toggle`` Boolean, default False. If True, each time the button is pressed it will display each
+ icon in turn (modulo number of icons in the module).
+ * ``state`` Initial button state (index of icon displayed). Default 0.
+ * ``callback`` Callback function which runs when button is pressed. Default does nothing.
+ * ``args`` A list of arguments for the above callback. Default ``[]``.
+
+## Class IconRadioButtons
+
+Drawn using an icon file which must be imported before instantiating. These comprise a set of
+buttons at different locations. When initially drawn, all but one button will be in state 0
+(i.e. showing icon[0]). The selected button will be in state 1. When a button in state 0 is
+pressed, the set of buttons changes state so that it is the only one in state 1 (showing
+icon[1]). A callback runs each time the current button changes.
+
+Constructor positional arguments:
+ * ``callback`` Callback when a new button is pressed. Default does nothing.
+ * ``selected`` Index of initial button to be highlighted. Default 0.
+
+Methods:
+ * ``add_button`` Adds a button to the set. Arguments: as per the ``IconButton`` constructor.

@@ -1,6 +1,6 @@
+from ugui import Knob, Dial, Label, Button, WHITE, YELLOW, GREEN, RED, CLIPPED_RECT
 from font10 import font10
 from tft_local import setup
-from ugui import Knob, Dial, Label, Button, WHITE, YELLOW, GREEN, RED, CLIPPED_RECT
 from math import pi
 
 # CALLBACKS
