@@ -286,12 +286,40 @@ class Meter(NoTouch):
         tft.drawHLine(x0, y0, width, self.pointercolor) # Draw pointer
 
     def value(self, val=None):
-        if val is None:
-            return self._value
-        self._value = min(max(val, 0.0), 1.0)
-        if self._value != self._old_value:
-            self._old_value = self._value
+        if val is not None:
+            self._value = min(max(val, 0.0), 1.0)
+            if self._value != self._old_value:
+                self._old_value = self._value
+                self._show()
+        return self._value
+
+class IconGauge(NoTouch):
+    def __init__(self, tft, location, *, icon_module, initial_icon=0):
+        NoTouch.__init__(self, tft, location, None, icon_module.height, icon_module.width, None, None, None, None)
+        self.get_icon = icon_module.get_icon
+        self.num_icons = len(icon_module._icons)
+        self.state = initial_icon
+        self.value = initial_icon / self.num_icons
+        self._show()
+
+    def _show(self):
+        x = self.location[0]
+        y = self.location[1]
+        self.tft.drawBitmap(x, y, *self.get_icon(self.state))
+
+    def icon(self, icon_index): # select icon by index
+        if icon_index >= self.num_icons or icon_index < 0: 
+            raise ugui_exception('Invalid icon index {}'.format(icon_index))
+        else:
+            self.state = int(icon_index)
             self._show()
+
+    def value(val=None): # Float
+        if val is not None:
+            self.value = max(min(val, 1.0), 0.0)
+            self.state = min(int(self.value * self.num_icons), self.num_icons -1)
+            self._show()
+        return self.value
 
 # *********** PUSHBUTTON AND CHECKBOX CLASSES ***********
 
@@ -364,34 +392,46 @@ class Button(Touchable):
             self.delay.trigger(1)
         self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
-class Buttons(object):
-    def __init__(self, callback):
-        self.user_callback = callback
-        self.lstbuttons = []
-
-    def add_button(self, *args, **kwargs):
-        kwargs['show'] = False
-        self.lstbuttons.append(Button(*args, **kwargs))
-
 # Group of buttons, typically at same location, where pressing one shows
 # the next e.g. start/stop toggle or sequential select from short list
-class Buttonset(Buttons):
+class ButtonList(object):
     def __init__(self, callback=dolittle):
-        super().__init__(callback)
+        self.user_callback = callback
+        self.lstbuttons = []
+        self.current = None # No current button
 
-    def run(self):
-        for idx, button in enumerate(self.lstbuttons):
-            if idx:
-                button.visible = False # Only button zero visible and sensitive
-                button.enabled = False
-            button.callback_args.append(idx)
-            button.callback = self._callback
-        self.lstbuttons[0]._show()
+    def add_button(self, *args, **kwargs):
+        kwargs['show'] = False # No show on instantiation
+        button = Button(*args, **kwargs)
+        self.lstbuttons.append(button)
+        active = self.current is None # 1st button added is active
+        button.visible = active
+        button.enabled = active
+        button.callback = self._callback
+        if active:
+            button._show()
+            self.current = button
+        return button
+
+    def value(self, button=None):
+        if button is not None and button is not self.current:
+            old = self.current
+            new = button
+            self.current = new
+            old.enabled = False
+            old.visible = False
+            old._show()
+            new.enabled = True
+            new.visible = True
+            new._show()
+            self.user_callback(new, *new.callback_args)
+        return self.current
 
     def _callback(self, button, *args):
-        button_no = args[-1]
-        old = self.lstbuttons[button_no]
-        new = self.lstbuttons[(button_no + 1) % len(self.lstbuttons)]
+        old = button
+        old_index = self.lstbuttons.index(button)
+        new = self.lstbuttons[(old_index + 1) % len(self.lstbuttons)]
+        self.current = new
         old.enabled = False
         old.visible = False
         old._show()
@@ -399,29 +439,40 @@ class Buttonset(Buttons):
         new.visible = True
         new.busy = True # Don't respond to continued press
         new._show()
-        self.user_callback(new, *args[:-1]) # user gets button with args they specified
+        self.user_callback(new, *args) # user gets button with args they specified
 
 # Group of buttons at different locations, where pressing one shows
 # only current button highlighted and oes callback from current one
-class RadioButtons(Buttons):
+class RadioButtons(object):
     def __init__(self, highlight, callback=dolittle, selected=0):
-        super().__init__(callback)
+        self.user_callback = callback
+        self.lstbuttons = []
+        self.current = None # No current button
         self.highlight = highlight
         self.selected = selected
 
-    def run(self):
-        for idx, button in enumerate(self.lstbuttons):
-            if idx == self.selected: # Initial selection
-                button.fgcolor = self.highlight
-            else:
-                button.fgcolor = button.orig_fgcolor
-            button._show()
-            button.callback = self._callback
+    def add_button(self, *args, **kwargs):
+        kwargs['show'] = False # No show on instantiation
+        button = Button(*args, **kwargs)
+        self.lstbuttons.append(button)
+        active = len(self.lstbuttons) == self.selected + 1
+        button.fgcolor = self.highlight if active else button.orig_fgcolor
+        button.callback = self._callback
+        button._show()
+        if active:
+            self.current = button
+        return button
+
+    def value(self, button=None):
+        if button is not None and button is not self.current:
+            self._callback(button, *button.callback_args)
+        return self.current
 
     def _callback(self, button, *args):
         for but in self.lstbuttons:
             if but is button:
                 but.fgcolor = self.highlight
+                self.current = button
             else:
                 but.fgcolor = but.orig_fgcolor
             but._show()
@@ -460,13 +511,13 @@ class Checkbox(Touchable):
             tft.drawLine(x, y1, x1, y, self.fgcolor)
 
     def value(self, val=None):
-        if val is None:
-            return self._value
-        val = bool(val)
-        if val != self._value:
-            self._value = val
-            self.callback(self, *self.callback_args) # Callback not a bound method so pass self
-            self._show()
+        if val is not None:
+            val = bool(val)
+            if val != self._value:
+                self._value = val
+                self.callback(self, *self.callback_args) # Callback not a bound method so pass self
+                self._show()
+        return self._value
 
     def _touched(self, x, y): # Was touched
         self.value(not self._value) # Upddate and refresh
@@ -474,16 +525,17 @@ class Checkbox(Touchable):
 # Button/checkbox whose appearance is defined by icon bitmaps
 
 class IconButton(Touchable):
-    def __init__(self, objsched, tft, objtouch, location, *, icon_module, flash=0, toggle=False, callback=dolittle, args=[], state=0):
-        width, height, _, _, _ = icon_module.get_icon(0)
+    def __init__(self, objsched, tft, objtouch, location, *, icon_module, flash=0,
+                 toggle=False, callback=dolittle, args=[], state=0):
         self.get_icon = icon_module.get_icon
         self.num_icons = len(icon_module._icons)
-        super().__init__(objsched, tft, objtouch, location, None, height, width, None, None, None, None, False)
+        super().__init__(objsched, tft, objtouch, location, None, icon_module.height,
+                         icon_module.width, None, None, None, None, False)
         self.callback = callback
         self.callback_args = args
         self.flash = flash
         self.toggle = toggle
-        if state >= self.num_icons:
+        if state >= self.num_icons or state < 0:
             raise ugui_exception('Invalid icon index {}'.format(state))
         self.state = state
         if self.flash > 0:
@@ -498,6 +550,16 @@ class IconButton(Touchable):
         x = self.location[0]
         y = self.location[1]
         tft.drawBitmap(x, y, *self.get_icon(state))
+
+    def value(self, val=None):
+        if val is not None:
+            val = int(val)
+            if val >= self.num_icons or val < 0: 
+                raise ugui_exception('Invalid icon index {}'.format(val))
+            if val != self.state:
+                self._show(val)
+                self.callback(self, *self.callback_args) # Callback not a bound method so pass self
+        return self.state
 
     def _touched(self, x, y): # Process touch
         if self.flash > 0:
@@ -524,6 +586,18 @@ class IconRadioButtons(object):
         button = IconButton(*args, **kwargs) # Create and show
         self.setbuttons.add(button)
         button.callback = self._callback
+        return button
+
+    def value(self, but=None):
+        if but is not None:
+            if but not in self.setbuttons:
+                raise ugui_exception('Button not a member of this radio button')
+            else:
+                if but.value() == 0:
+                    self._callback(but, *but.callback_args)
+        resultset = {x for x in self.setbuttons if x.state ==1}
+        assert len(resultset) == 1, 'We have > 1 button selected'
+        return resultset.pop()
 
     def _callback(self, button, *args):
         for but in self.setbuttons:
@@ -608,14 +682,17 @@ class Slider(Touchable):
         color = self.slidecolor if self.slidecolor is not None else self.fgcolor
         tft.fillRectangle(x0, y0, x1, y1, color) # Draw slider
 
-    def value(self, val=None):
-        if val is None:
-            return self._value
-        self._value = min(max(val, 0.0), 1.0)
-        if self._value != self._old_value:
-            self._old_value = self._value
-            self.cb_move(self, *self.cbm_args) # Callback not a bound method so pass self
-            self._show()
+    def value(self, val=None, color=None):
+        if color is not None and color != self.fgcolor:
+            self.fgcolor = color
+            self._show() # save new underlying color
+        if val is not None:
+            self._value = min(max(val, 0.0), 1.0)
+            if self._value != self._old_value:
+                self._old_value = self._value
+                self.cb_move(self, *self.cbm_args) # Callback not a bound method so pass self
+                self._show()
+        return self._value
 
     def _touched(self, x, y): # Touched in bounding box. A drag will call repeatedly.
         self.value((self.location[1] + self.height - y) / self.pot_dimension)
@@ -696,14 +773,17 @@ class HorizSlider(Touchable):
         color = self.slidecolor if self.slidecolor is not None else self.fgcolor
         tft.fillRectangle(x0, y0, x1, y1, color) # Draw slider
 
-    def value(self, val=None):
-        if val is None:
-            return self._value
-        self._value = min(max(val, 0.0), 1.0)
-        if self._value != self._old_value:
-            self._old_value = self._value
-            self.cb_move(self, *self.cbm_args) # Callback not a bound method so pass self
-            self._show()
+    def value(self, val=None, color=None):
+        if color is not None and color != self.fgcolor:
+            self.fgcolor = color
+            self._show() # save new underlying color
+        if val is not None:
+            self._value = min(max(val, 0.0), 1.0)
+            if self._value != self._old_value:
+                self._old_value = self._value
+                self.cb_move(self, *self.cbm_args) # Callback not a bound method so pass self
+                self._show()
+        return self._value
 
     def _touched(self, x, y): # Touched in bounding box. A drag will call repeatedly.
         self.value((x - self.location[0]) / self.pot_dimension)
@@ -760,13 +840,13 @@ class Knob(Touchable):
         self._old_value = self._value # update old
 
     def value(self, val=None):
-        if val is None:
-            return self._value
-        val = min(max(val, 0.0), 1.0)
-        if val != self._value:
-            self._value = val  # Update value for callback
-            self.cb_move(self, *self.cbm_args) # Callback not a bound method so pass self
-            self._show()
+        if val is not None:
+            val = min(max(val, 0.0), 1.0)
+            if val != self._value:
+                self._value = val  # Update value for callback
+                self.cb_move(self, *self.cbm_args) # Callback not a bound method so pass self
+                self._show()
+        return self._value
 
     def _touched(self, x, y): # Touched in bounding box. A drag will call repeatedly.
         dy = self.yorigin - y

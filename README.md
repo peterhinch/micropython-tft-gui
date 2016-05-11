@@ -8,6 +8,7 @@ design.
 
 It is targeted at hardware control and display applications.
 
+Note this API is under development and subject to change!
 
 # Pre requisites
 
@@ -26,7 +27,8 @@ for installing Python modules as persistent bytecode. Instructions on how to do 
 [here](http://forum.micropython.org/viewtopic.php?f=6&t=1776).
 
 Some familiarity with callbacks and event driven programming will be of help in developing
-applications.
+applications. The GUI classes are in two categories, those rendered using icons and those drawn by
+means of graphics primitives. Either (or both) may be used in a project.
 
 ## Python files
 
@@ -42,16 +44,17 @@ Hardware drivers:
 Core files:
  1. tft.py TFT driver.
  2. usched.py Scheduler.
- 3. delay.py Used with the scheduler for watchdog type delays.
+ 3. delay.py Used with the scheduler for watchdog type delays and future events.
  4. ugui.py The micro GUI library.
  5. tft_local.py Local hardware definition (user defined settings including optional calibration
  data).
 
-Optional files:
- 1. font10.py Font used by the test programs.
- 2. font14.py Font used by the test programs.
+Optional files used by test programs:
+ 1. font10.py Font file.
+ 2. font14.py Ditto.
  3. radiobutton.py Icon file for icon radio buttons
  4. checkbox.py Icon file for icon checkboxes.
+ 5. switch.py Icon file for an on/off switch.
 
 Test/demo programs:
  1. vst.py A test program for vertical linear sliders.
@@ -83,7 +86,7 @@ rectangular bounding box; in the case of touch sensitive controls this correspon
 region. The location of the object is defined as the coordinates of the top left hand corner of the
 bounding box. Locations are defined as a 2-tuple (x, y).
 
-### Colours
+### Colors
 
 These are defined as a 3-tuple (r, g, b) with values of red, green and blue in range 0 to 255. The
 interface and this document uses the American spelling (color) throughout for consistency with the
@@ -93,9 +96,9 @@ TFT library.
 
 The interface is event driven. Optional callbacks may be provided which will be executed when a
 given event occurs. A callback function receives positional arguments. The first is a reference to
-the object raising the callback. Subsequent arguments are user defined, and are specified as a list
-of items. Note that a list rather than a tuple should be used. Callbacks are optional, as are the
-argument lists - by default a null function and an empty list are provided.
+the object raising the callback. Subsequent arguments are user defined, and are specified as a
+tuple or list of items. Callbacks are optional, as are the argument lists - a default null
+function and empty list are provided.
 
 # Initialisation Code
 
@@ -106,7 +109,13 @@ objsched, tft, touch = setup()
 tft.backlight(100) # light on
 ```
 The second line produces instances of the scheduler, the tft display and the touch interface. These
-are required when instantiating GUI classes.
+are required when instantiating GUI classes. When all objects have been instantiated and any
+threads created, the scheduler is started by issuing:
+```
+objsched.run()
+```
+Control then passes to the scheduler: the code following this line will not run until the scheduler
+is stopped (``objsched.stop()``). See the scheduler README for full details.
 
 # Displays
 
@@ -165,7 +174,7 @@ Keyword only arguments (all optional):
 
 Methods:
  * ``off`` No arguments. Turns the LED off.
- * ``on`` Optional arguemnt ``color``. Turns the LED on. By default it will use the ``color``
+ * ``on`` Optional argument ``color``. Turns the LED on. By default it will use the ``color``
  specified in the constructor.
 
 ## Class Meter
@@ -190,8 +199,29 @@ Keyword only arguments:
  * ``value`` Initial value to display. Default 0.
 
 Methods:
- * ``value`` Optional argument ``val``. If set, refreshes the meter display with a new value,
- otherwise returns its current value. Range 0.0 to 1.0.
+ * ``value`` Optional argument ``val``. If set, refreshes the meter display with a new value.
+ Range 0.0 to 1.0. Always returns its current value. 
+
+## Class IconGauge
+
+This can display any one of a set of icons at a location. The icon to be displayed can be selected
+by an integer index. Alternatively a float in range 0.0 to 1.0 can be displayed: the control opts
+for the nearest icon.
+
+Constructor mandatory positional arguments:
+ 1. ``tft`` The TFT object.
+ 2. ``location`` 2-tuple defining position.
+
+Mandatory keyword only argument:
+ * ``icon_module`` The name of the (already imported) icon file.
+
+Optional keyword only argument:
+ * ``initial_icon`` Default 0. The index of the initial icon to be displayed.
+
+Methods:
+ * ``choose`` Mandatory argument: index of an icon. Displays that icon.
+ * ``value`` Optional argument ``val``. Range 0.0 to 1.0. If provided, selects the nearest icon and
+ displays it. Always returns the control's current value.
 
 # Controls
 
@@ -205,7 +235,7 @@ other using icons.
 ## Class Slider
 
 These emulate linear potentiometers. Vertical ``Slider`` and horizontal ``HorizSlider`` variants
-are available. These are constructed and used similarly. The shortforms (v) or (h) are used below
+are available. These are constructed and used similarly. The short forms (v) or (h) are used below
 to identify these variants. See the note above on callbacks.
 
 Constructor mandatory positional arguments:
@@ -235,8 +265,11 @@ Optional keyword only arguments:
  * ``value`` The initial value. Default 0.0: slider will be at the bottom (v), left (h).
 
 Methods:
- * ``value`` Optional argument ``val``. If set, moves the slider position to correspond to a new
- value, otherwise returns the control's current value. Range 0.0 to 1.0.
+ * ``value`` Optional arguments ``val`` (default ``None``), ``color`` (default ``None``).
+ If ``color`` exists, the control is rendered in the selected color. This supports dynamic
+ color changes  
+ If ``val`` exists, adjusts the slider to correspond to the new value. The move callback will run.
+ The method constrains the range to 0.0 to 1.0. Always returns the control's value.
 
 ## Class Knob
 
@@ -262,11 +295,12 @@ Optional keyword only arguments:
  * ``cb_move`` Callback function which will run when the user moves the knob or the value is
  changed.
  * ``cbm_args`` A list of arguments for the above callback. Default ``[]``.
- * ``value`` Initial value. Default 0.0: knob will be at its most counterclockwise position.
+ * ``value`` Initial value. Default 0.0: knob will be at its most counter-clockwise position.
 
 Methods:
- * ``value`` Optional argument ``val``. If set, moves the knob to correspond to a new value,
- otherwise returns the control's current value. Range 0.0 to 1.0.
+ * ``value`` Optional argument ``val``. If set, adjusts the pointer to correspond to the new value.
+ The move callback will run. The method constrains the range to 0.0 to 1.0. Always returns the
+ control's value.
 
 ## Class Checkbox
 
@@ -291,8 +325,9 @@ Optional keyword only arguments:
  * ``value`` Initial value. Default ``False``.
 
 Methods:
- * ``value`` Optional boolean argument ``val``. If provided updates the control's value, otherwise
- returns its current value.
+ * ``value`` Optional boolean argument ``val``. If the provided value does not correspond to the
+ control's current value, updates it; the checkbox is re-drawn and the callback executed. Always
+ returns the control's value.
 
 ## Class Button
 
@@ -321,43 +356,48 @@ Optional keyword only arguments:
  * ``border`` Width of border. Default ``None``: no border will be drawn. If a value (typically 2)
  is provided, a border line will be drawn around the control.
  * ``text`` Shown in centre of button. Default ''.
- * ``show`` Boolean, default ``True``. If ``False`` button will not be displayed.
  * ``callback`` Callback function which runs when button is pressed.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
+ * ``show`` Primarily for internal use. Boolean, default ``True``. If ``False`` button will not be
+ displayed.
 
 There are no methods for normal access.
 
-## Class Buttonset: emulate a button with multiple states
+## Class ButtonList: emulate a button with multiple states
 
 Drawn using graphics primitives.
 
-A ``Buttonset`` groups a number of buttons together to implement a button which toggles between
+A ``ButtonList`` groups a number of buttons together to implement a button which moves between
 states each time it is pressed. For example it might toggle between a green Start button and a red
-Stop button. The buttons are defined and added in turn to the ``Buttonset`` object. Typically they
+Stop button. The buttons are defined and added in turn to the ``ButtonList`` object. Typically they
 will be the same size, shape and location but will differ in color and/or text. At any time just
 one of the buttons will be visible, initially the first to be added to the object.
 
-Buttons in a ``Buttonset`` should not have callbacks. The ``Buttonset`` has its own user supplied
+Buttons in a ``ButtonList`` should not have callbacks. The ``ButtonList`` has its own user supplied
 callback which will run each time the object is pressed. However each button can have its own list
-of ``args``. The callback will receive the arguments of the currently visible button.
+of ``args``. Callback arguments comprise the currently visible button followed by its arguments.
 
-The constructor argument:
+Constructor argument:
  * ``callback`` The callback function. Default does nothing.
 
 Methods:
- * ``add_button`` Adds a button to the ``Buttonset``. Arguments: as per the ``Button`` constructor.
- * ``run`` Called once all buttons have been added. No arguments. Displays first button and returns.
+ * ``add_button`` Adds a button to the ``ButtonList``. Arguments: as per the ``Button`` constructor.
+ Returns the button object.
+ * ``value`` Optional argument: a button in the set. If supplied and the button is not active the
+ currency changes to the supplied button and its callback is run. Always returns the active button.
 
 Typical usage is as follows:
 ```python
+def callback(button, arg):
+    print(arg)
+
 table = [
      {'fgcolor' : GREEN, 'shape' : CLIPPED_RECT, 'text' : 'Start', 'args' : ['Live']},
      {'fgcolor' : RED, 'shape' : CLIPPED_RECT, 'text' : 'Stop', 'args' : ['Die']},
 ]
-bs = Buttonset(callback)
+bl = ButtonList(callback)
 for t in table: # Buttons overlay each other at same location
-    bs.add_button(objsched, tft, touch, (10, 10), font = font14, fontcolor = BLACK, **t)
-bs.run()
+    bl.add_button(objsched, tft, touch, (10, 10), font = font14, fontcolor = BLACK, **t)
 ```
 
 ## Class RadioButtons
@@ -374,11 +414,17 @@ Constructor positional arguments:
  * ``selected`` Index of initial button to be highlighted. Default 0.
 
 Methods:
- * ``add_button`` Adds a button to the ``Buttonset``. Arguments: as per the ``Button`` constructor.
- * ``run`` Called once all buttons have been added. No arguments. Displays object and returns.
+ * ``add_button`` Adds a button. Arguments: as per the ``Button`` constructor. Returns the Button
+ instance.
+ * ``value`` Optional argument: a button in the set. If supplied, and the button is not currently
+ active, the currency changes to the supplied button and its callback is run. Always returns the
+ currently active button.
 
 Typical usage:
 ```python
+def callback(button, arg):
+    print(arg)
+
 table = [
     {'text' : '1', 'args' : ['1']},
     {'text' : '2', 'args' : ['2']},
@@ -391,15 +437,14 @@ for t in table:
     rb.add_button(objsched, tft, touch, (x, 180), font = font14, fontcolor = WHITE,
                     fgcolor = (0, 0, 90), height = 40, **t)
     x += 60 # Horizontal row of buttons
-rb.run()
 ```
 
 ## Class IconButton (also checkbox)
 
 Drawn using an icon file which must be imported before instantiating. A checkbox may be implemented
 by setting the ``toggle`` argument ``True`` and using an appropriate icon file. An ``IconButton``
-instance has a member variable ``state`` which represents the index of the current icon being
-displayed. User callbacks can interrogate this.
+instance has a state representing the index of the current icon being displayed. User callbacks can
+interrogate this by means of the ``value`` method described below.
 
 Constructor mandatory positional arguments:
  1. ``objsched`` The scheduler instance.
@@ -418,6 +463,12 @@ Optional keyword only arguments:
  * ``callback`` Callback function which runs when button is pressed. Default does nothing.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
 
+Method:
+ * ``value`` Argument ``val`` default ``None``. If the argument is provided and is a valid index
+ not corresponding to the current button state, changes the button state and displays that icon.
+ The callback will be executed. Always returns the button state (index of the current icon being
+ displayed).
+
 ## Class IconRadioButtons
 
 Drawn using an icon file which must be imported before instantiating. These comprise a set of
@@ -432,3 +483,7 @@ Constructor positional arguments:
 
 Methods:
  * ``add_button`` Adds a button to the set. Arguments: as per the ``IconButton`` constructor.
+ Returns the button instance.
+ * ``value`` Argument ``val`` default ``None``. If the argument is provided which is an inactive
+ button in the set, that button becomes active and the callback is executed. Always returns the
+ button which is currently active.

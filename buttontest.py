@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from ugui import Button, Buttonset, RadioButtons, Checkbox, Label
+from ugui import Button, ButtonList, RadioButtons, Checkbox, Label
 from ugui import CIRCLE, RECTANGLE, CLIPPED_RECT, WHITE, BLACK, RED, GREEN, BLUE, YELLOW, GREY
 from font14 import font14
 from tft_local import setup
@@ -79,18 +79,19 @@ labels = { 'width' : 70,
 
 # USER TEST FUNCTION
 
-def cbtest(checkbox):
-    while True:
-        yield 3
-        checkbox.value(not checkbox.value())
+def cbreset(button, checkbox1, checkbox2, buttonset, bs0, radiobuttons, rb0):
+    checkbox1.value(False)
+    checkbox2.value(False)
+    buttonset.value(bs0)
+    radiobuttons.value(rb0)
 
 def test():
     print('Testing TFT...')
     objsched, tft, touch = setup()
     tft.backlight(100) # light on
     lstlbl = []
-    for n in range(3):
-        lstlbl.append(Label(tft, (350, 50 * n), **labels))
+    for n in range(4):
+        lstlbl.append(Label(tft, (350, 40 * n), **labels))
 
 # Button assortment
     x = 0
@@ -109,27 +110,33 @@ def test():
 
 # On/Off toggle
     x = 0
-    bs = Buttonset(callback)
+    bs = ButtonList(callback)
+    bs0 = None
     for t in table3: # Buttons overlay each other at same location
         t['args'].append(lstlbl[2])
-        bs.add_button(objsched, tft, touch, (x, 120), font = font14, fontcolor = BLACK, **t)
-    bs.run()
+        button = bs.add_button(objsched, tft, touch, (x, 120), font = font14, fontcolor = BLACK, **t)
+        if bs0 is None:
+            bs0 = button
 
 # Radio buttons
     x = 0
     rb = RadioButtons(BLUE, callback) # color of selected button
+    rb0 = None
     for t in table4:
-        t['args'].append(lstlbl[2])
-        rb.add_button(objsched, tft, touch, (x, 180), font = font14, fontcolor = WHITE,
+        t['args'].append(lstlbl[3])
+        button = rb.add_button(objsched, tft, touch, (x, 180), font = font14, fontcolor = WHITE,
                       fgcolor = (0, 0, 90), height = 40, **t)
+        if rb0 is None:
+            rb0 = button
         x += 60
-    rb.run()
 
 # Checkbox
-    Checkbox(objsched, tft, touch, (300, 0), callback = cbcb, args = [lstlbl[0]])
+    cb1 = Checkbox(objsched, tft, touch, (300, 0), callback = cbcb, args = [lstlbl[0]])
     cb2 = Checkbox(objsched, tft, touch, (300, 50), fillcolor = RED, callback = cbcb, args = [lstlbl[1]])
 
-    objsched.add_thread(cbtest(cb2)) # Toggle every 2 seconds
+# Reset button
+    Button(objsched, tft, touch, (300, 180), font = font14, callback = cbreset, fgcolor = BLUE,
+           text = 'Reset', args = [cb1, cb2, bs, bs0, rb, rb0], fill = False, shape = RECTANGLE, width = 80)
     objsched.run()                                          # Run it!
 
 test()

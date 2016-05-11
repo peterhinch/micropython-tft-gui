@@ -49,9 +49,9 @@ def master_moved(slider, slave1, slave2, label, led):
 def slave_moved(slider, label):
     val = slider.value()
     if val > 0.8:
-        slider.fgcolor = RED
+        slider.value(None, RED)
     else:
-        slider.fgcolor = GREEN
+        slider.value(None, GREEN)
     label.show(to_string(val))
 
 def doquit(button):
