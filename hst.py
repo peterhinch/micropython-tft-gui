@@ -22,8 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from ugui import HorizSlider, Button, Dial, Label, LED, Meter, CLIPPED_RECT, GREEN, RED, YELLOW, WHITE, BLUE
+from ugui import HorizSlider, Button, Dial, Label, LED, Meter, RECTANGLE, GREEN, RED, YELLOW, WHITE, BLUE
 from font10 import font10
+from font14 import font14
 from tft_local import setup
 import pyb
 
@@ -54,10 +55,10 @@ def slave_moved(slider, label):
         slider.value(None, GREEN)
     label.show(to_string(val))
 
-def doquit(button):
+def quit(button):
+    button.tft.clrSCR()
     button.objsched.stop()
 
-# USER TEST FUNCTION
 # Common args for the labels
 labels = { 'width' : 70,
           'fontcolor' : WHITE,
@@ -93,8 +94,8 @@ def test():
     led = LED(tft, (420, 0), border = 2)
     meter1 = Meter(tft, (320, 0), font=font10, legends=('0','5','10'), pointercolor = YELLOW, fgcolor = GREEN)
     meter2 = Meter(tft, (360, 0), font=font10, legends=('0','5','10'), pointercolor = YELLOW)
-    Button(objsched, tft, touch, (420, 240), font = font10, callback = doquit, fgcolor = RED,
-           height = 30, text = 'Quit', shape = CLIPPED_RECT)
+    Button(objsched, tft, touch, (390, 240), font = font14, callback = quit, fgcolor = RED,
+           text = 'Quit', shape = RECTANGLE, width = 80, height = 30)
     x = 230
     lstlbl = []
     for n in range(3):

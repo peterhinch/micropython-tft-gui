@@ -22,8 +22,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from ugui import Slider, Button, Dial, Label, CLIPPED_RECT, WHITE, BLACK, RED, GREEN, BLUE, YELLOW, GREY
+from ugui import Slider, Button, Dial, Label, RECTANGLE, WHITE, BLACK, RED, GREEN, BLUE, YELLOW, GREY
 from font10 import font10
+from font14 import font14
 from tft_local import setup
 from math import pi
 
@@ -46,7 +47,8 @@ def slave_moved(slider, label):
     val = slider.value()
     label.show(to_string(val))
 
-def doquit(button):
+def quit(button):
+    button.tft.clrSCR()
     button.objsched.stop()
 
 # THREADS
@@ -81,8 +83,8 @@ def test():
     print('Test TFT panel...')
     objsched, tft, touch = setup()
     tft.backlight(100) # light on
-    Button(objsched, tft, touch, (400, 240), font = font10, callback = doquit, fgcolor = RED,
-           height = 30, text = 'Quit', shape = CLIPPED_RECT)
+    Button(objsched, tft, touch, (390, 240), font = font14, callback = quit, fgcolor = RED,
+           text = 'Quit', shape = RECTANGLE, width = 80, height = 30)
     dial1 = Dial(tft, (350, 10), fgcolor = YELLOW, border = 2, pointers = (0.9, 0.7))
     dial2 = Dial(tft, (350, 120), fgcolor = YELLOW, border = 2,  pointers = (0.9, 0.7)) #bgcolor = GREY, 
     lstlbl = []

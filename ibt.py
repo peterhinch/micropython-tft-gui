@@ -24,15 +24,14 @@
 
 from ugui import IconButton, IconRadioButtons, Label, WHITE, RED
 from tft_local import setup
+from font10 import font10
 from font14 import font14
-import radiobutton, checkbox, switch # icon files
+import radiobutton, checkbox, switch, mdesign # icon files
 import gc
 gc.collect()
 
 def callback(button, arg, label):
     label.show(arg)
-    if arg == 'Q':
-        button.objsched.stop()
 
 def cbcb(checkbox, label):
     label.show(('False', '???', 'True')[checkbox.value()])
@@ -45,6 +44,10 @@ def cb_cancel(button, checkbox):
 
 def cbswitch(button, label):
     label.show(str(button.value()))
+
+def quit(button):
+    button.tft.clrSCR()
+    button.objsched.stop()
 
 labels = { 'width' : 70,
           'fontcolor' : WHITE,
@@ -61,13 +64,17 @@ def test():
     print('Testing TFT...')
     objsched, tft, touch = setup()
     tft.backlight(100) # light on
+    Label(tft, (90, lr(0) + 5), font = font10, width = 150, text = 'Flashing buttons')
+    Label(tft, (244, lr(1) + 5), font = font10, width = 150, text = 'Reset radio button')
+    Label(tft, (244, lr(2) + 5), font = font10, width = 150, text = 'Reset checkbox')
+    Label(tft, (370, 243), font = font14, width = 70, text = 'Quit')
     lstlbl = []
     for n in range(4):
-        lstlbl.append(Label(tft, (300, lr(n)), **labels))
+        lstlbl.append(Label(tft, (400, lr(n)), **labels))
 
-    IconButton(objsched, tft, touch, (10, lr(0)), icon_module = radiobutton, flash = 1.0, callback = callback, args = ['A', lstlbl[0]])
+    IconButton(objsched, tft, touch, (10, lr(0)), icon_module = mdesign, flash = 1.0, callback = callback, args = ['A', lstlbl[0]])
     IconButton(objsched, tft, touch, (50, lr(0)), icon_module = radiobutton, flash = 1.0, callback = callback, args = ['B', lstlbl[0]])
-    IconButton(objsched, tft, touch, (420, 240), icon_module = radiobutton, callback = callback, args = ['Q', lstlbl[0]])
+    IconButton(objsched, tft, touch, (420, 240), icon_module = radiobutton, callback = quit)
     rb = IconRadioButtons(callback = callback)
     rb0 = rb.add_button(objsched, tft, touch, (10, lr(1)), icon_module = radiobutton, args = ['1', lstlbl[1]])
     rb.add_button(objsched, tft, touch, (50, lr(1)), icon_module = radiobutton, args = ['2', lstlbl[1]])

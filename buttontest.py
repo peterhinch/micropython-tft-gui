@@ -29,8 +29,10 @@ from tft_local import setup
 
 def callback(button, arg, label):
     label.show(arg)
-    if arg == 'Q':
-        button.objsched.stop()
+
+def quit(button):
+    button.tft.clrSCR()
+    button.objsched.stop()
 
 def cbcb(checkbox, label):
     if checkbox.value():
@@ -40,10 +42,10 @@ def cbcb(checkbox, label):
 
 # These tables contain args that differ between members of a set of related buttons
 table = [
-    {'fgcolor' : GREEN, 'text' : 'Yes', 'args' : ['A'], 'fontcolor' : (0, 0, 0)},
-    {'fgcolor' : RED, 'text' : 'No', 'args' : ['B']},
-    {'fgcolor' : BLUE, 'text' : '???', 'args' : ['C'], 'fill': False},
-    {'fgcolor' : GREY, 'text' : 'Quit', 'args' : ['Q'], 'shape' : CLIPPED_RECT},
+    {'fgcolor' : GREEN, 'text' : 'Yes', 'args' : ['Oui'], 'fontcolor' : (0, 0, 0)},
+    {'fgcolor' : RED, 'text' : 'No', 'args' : ['Non']},
+    {'fgcolor' : BLUE, 'text' : '???', 'args' : ['Que?'], 'fill': False},
+    {'fgcolor' : GREY, 'text' : 'Rats', 'args' : ['Rats'], 'shape' : CLIPPED_RECT},
 ]
 
 # similar buttons: only tabulate data that varies
@@ -135,8 +137,11 @@ def test():
     cb2 = Checkbox(objsched, tft, touch, (300, 50), fillcolor = RED, callback = cbcb, args = [lstlbl[1]])
 
 # Reset button
-    Button(objsched, tft, touch, (300, 180), font = font14, callback = cbreset, fgcolor = BLUE,
+    Button(objsched, tft, touch, (300, 220), font = font14, callback = cbreset, fgcolor = BLUE,
            text = 'Reset', args = [cb1, cb2, bs, bs0, rb, rb0], fill = False, shape = RECTANGLE, width = 80)
+# Quit
+    Button(objsched, tft, touch, (390, 220), font = font14, callback = quit, fgcolor = RED,
+           text = 'Quit', shape = RECTANGLE, width = 80)
     objsched.run()                                          # Run it!
 
 test()
