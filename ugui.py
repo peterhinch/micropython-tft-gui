@@ -527,7 +527,7 @@ class Checkbox(Touchable):
 class IconButton(Touchable):
     def __init__(self, objsched, tft, objtouch, location, *, icon_module, flash=0,
                  toggle=False, callback=dolittle, args=[], state=0):
-        self.get_icon = icon_module.get_icon
+        self.draw = icon_module.draw
         self.num_icons = len(icon_module._icons)
         super().__init__(objsched, tft, objtouch, location, None, icon_module.height,
                          icon_module.width, None, None, None, None, False)
@@ -546,10 +546,9 @@ class IconButton(Touchable):
 
     def _show(self, state):
         self.state = state
-        tft = self.tft
-        x = self.location[0]
-        y = self.location[1]
-        tft.drawBitmap(x, y, *self.get_icon(state))
+        x = self.location[0] + self.width // 2 # Centre relative
+        y = self.location[1] + self.height // 2
+        self.draw(x, y, state, self.tft.drawBitmap)
 
     def value(self, val=None):
         if val is not None:
