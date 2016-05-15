@@ -100,6 +100,9 @@ the object raising the callback. Subsequent arguments are user defined, and are 
 tuple or list of items. Callbacks are optional, as are the argument lists - a default null
 function and empty list are provided.
 
+All objects capable of raising callbacks have member variables ``tft`` and ``objsched`` being
+references to the TFT and scheduler instances respectively.
+
 # Initialisation Code
 
 The following initialisation code is required in any application:
@@ -205,8 +208,8 @@ Methods:
 ## Class IconGauge
 
 This can display any one of a set of icons at a location. The icon to be displayed can be selected
-by an integer index. Alternatively a float in range 0.0 to 1.0 can be displayed: the control opts
-for the nearest icon.
+by an integer index. Alternatively a float in range 0.0 to 1.0 can be displayed: the control shows
+the nearest icon.
 
 Constructor mandatory positional arguments:
  1. ``tft`` The TFT object.

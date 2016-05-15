@@ -96,7 +96,8 @@ def test():
     slave2 = Slider(objsched, tft, touch, (160, y), font = font10,
            fgcolor = GREEN, cbe_args = ('Slave2',), cb_move = slave_moved, cbm_args = [lstlbl[2]], **table)
     master = Slider(objsched, tft, touch, (0, y), font = font10,
-           fgcolor = YELLOW, cbe_args = ('Master',), cb_move = master_moved, cbm_args = (slave1, slave2, lstlbl[0]), value=0.5, **table)
+           fgcolor = YELLOW, cbe_args = ('Master',), cb_move = master_moved, 
+           cbm_args = (slave1, slave2, lstlbl[0]), value=0.5, border = 2, **table)
     objsched.add_thread(mainthread(slave1, dial1))
     objsched.add_thread(mainthread(slave2, dial2))
     objsched.run()                                          # Run it!

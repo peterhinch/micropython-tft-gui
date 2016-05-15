@@ -69,9 +69,6 @@ def print_left(tft, x, y, s, color, font, clip=False, scroll=False):
     tft.printString(s)
     tft.setTextStyle(*old_style)
 
-def icon(x, y, func, no):
-    tft.drawBitmap(x, y, *func(no)) # usage icon(10, 10, radiobutton.get_icon, 0)
-
 # *********** BASE CLASSES ***********
 # Base class for all displayable objects
 class NoTouch(object):
@@ -163,7 +160,8 @@ class Label(NoTouch):
     def show(self, text):
         tft = self.tft
         bw = self.border
-        if text:
+        if text:        ycentre = y + height // 2
+
             x = self.location[0]
             y = self.location[1]
             tft.fillRectangle(x + bw, y + bw, x + self.width - bw, y + self.height - bw, self.bgcolor)
@@ -296,7 +294,7 @@ class Meter(NoTouch):
 class IconGauge(NoTouch):
     def __init__(self, tft, location, *, icon_module, initial_icon=0):
         NoTouch.__init__(self, tft, location, None, icon_module.height, icon_module.width, None, None, None, None)
-        self.get_icon = icon_module.get_icon
+        self.draw = icon_module.draw
         self.num_icons = len(icon_module._icons)
         self.state = initial_icon
         self.value = initial_icon / self.num_icons
@@ -305,7 +303,7 @@ class IconGauge(NoTouch):
     def _show(self):
         x = self.location[0]
         y = self.location[1]
-        self.tft.drawBitmap(x, y, *self.get_icon(self.state))
+        self.draw(x, y, self.state, self.tft.drawBitmap)
 
     def icon(self, icon_index): # select icon by index
         if icon_index >= self.num_icons or icon_index < 0: 
@@ -613,6 +611,7 @@ class Slider(Touchable):
     def __init__(self, objsched, tft, objtouch, location, *, font=None, height=200, width=30, divisions=10, legends=None,
                  fgcolor=None, bgcolor=None, fontcolor=None, slidecolor=None, border=None, 
                  cb_end=dolittle, cbe_args=[], cb_move=dolittle, cbm_args=[], value=0.0):
+        width &= 0xfe # ensure divisible by 2
         super().__init__(objsched, tft, objtouch, location, font, height, width, fgcolor, bgcolor, fontcolor, border, True)
         self.divisions = divisions
         self.legends = legends if font is not None else None
@@ -643,15 +642,15 @@ class Slider(Touchable):
         y = self.location[1] + bw + self.slideheight // 2 # Allow space above and below slot
         width = self.width - 2 * bw
         height = self.pot_dimension # Height of slot
-        dx = width / 3
-        tft.drawRectangle(x + dx, y, x + 2 * dx, y + height, self.fgcolor)
+        dx = width // 2 - 2 
+        tft.drawRectangle(x + dx, y, x + width - dx, y + height, self.fgcolor)
 
         if self.divisions > 0:
             dy = height / (self.divisions) # Tick marks
             for tick in range(self.divisions + 1):
                 ypos = int(y + dy * tick)
                 tft.drawHLine(x + 1, ypos, dx, self.fgcolor)
-                tft.drawHLine(x + 1 + 2 * dx, ypos, dx, self.fgcolor)
+                tft.drawHLine(x + 1 + width // 2, ypos, dx, self.fgcolor)
 
         if self.legends is not None: # Legends
             if len(self.legends) <= 1:
@@ -703,6 +702,7 @@ class HorizSlider(Touchable):
     def __init__(self, objsched, tft, objtouch, location, *, font=None, height=30, width=200, divisions=10, legends=None,
                  fgcolor=None, bgcolor=None, fontcolor=None, slidecolor=None, border=None, 
                  cb_end=dolittle, cbe_args=[], cb_move=dolittle, cbm_args=[], value=0.0):
+        height &= 0xfe # ensure divisible by 2
         super().__init__(objsched, tft, objtouch, location, font, height, width, fgcolor, bgcolor, fontcolor, border, True)
         self.divisions = divisions
         self.legends = legends if font is not None else None
@@ -733,16 +733,15 @@ class HorizSlider(Touchable):
         y = self.location[1] + bw
         height = self.height - 2 * bw
         width = self.pot_dimension # Length of slot
-        dy = height / 3
-        ycentre = y + height // 2
-        tft.drawRectangle(x, y + dy, x + width, y + 2 * dy, self.fgcolor)
+        dy = height // 2 - 2 # slot is 4 pixels wide
+        tft.drawRectangle(x, y + dy, x + width, y + height - dy, self.fgcolor)
 
         if self.divisions > 0:
             dx = width / (self.divisions) # Tick marks
             for tick in range(self.divisions + 1):
                 xpos = int(x + dx * tick)
                 tft.drawVLine(xpos, y + 1, dy, self.fgcolor) # TODO Why is +1 fiddle required here?
-                tft.drawVLine(xpos, y + 1 + 2 * dy,  dy, self.fgcolor) # and here
+                tft.drawVLine(xpos, y + 1 + height // 2,  dy, self.fgcolor) # and here
 
         if self.legends is not None: # Legends
             if len(self.legends) <= 1:
