@@ -160,8 +160,7 @@ class Label(NoTouch):
     def show(self, text):
         tft = self.tft
         bw = self.border
-        if text:        ycentre = y + height // 2
-
+        if text:
             x = self.location[0]
             y = self.location[1]
             tft.fillRectangle(x + bw, y + bw, x + self.width - bw, y + self.height - bw, self.bgcolor)
@@ -297,7 +296,7 @@ class IconGauge(NoTouch):
         self.draw = icon_module.draw
         self.num_icons = len(icon_module._icons)
         self.state = initial_icon
-        self.value = initial_icon / self.num_icons
+        self._value = initial_icon / self.num_icons
         self._show()
 
     def _show(self):
@@ -312,12 +311,12 @@ class IconGauge(NoTouch):
             self.state = int(icon_index)
             self._show()
 
-    def value(val=None): # Float
+    def value(self, val=None): # Float
         if val is not None:
-            self.value = max(min(val, 1.0), 0.0)
-            self.state = min(int(self.value * self.num_icons), self.num_icons -1)
+            self._value = max(min(val, 1.0), 0.0)
+            self.state = min(int(self._value * self.num_icons), self.num_icons -1)
             self._show()
-        return self.value
+        return self._value
 
 # *********** PUSHBUTTON AND CHECKBOX CLASSES ***********
 

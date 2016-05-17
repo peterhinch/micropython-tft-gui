@@ -10,6 +10,17 @@ It is targeted at hardware control and display applications.
 
 Note this API is under development and subject to change!
 
+# Icons
+
+Most classes use graphics primitives to draw objects on the screen. A few employ icons: this is
+arguably prettier but involves large icon files which must be frozen as bytecode. Objects drawn
+with graphics primitives are scalable. Further properties such as colors can efficiently be changed
+at runtime: to achieve this with an icon-based object would require a set of colored icons to be
+created at design time. The library is usable without the icon classes.
+
+Instructions and a utility for creating icon files may be found on Robert Hammelrath's TFT driver
+site (see below).
+
 # Pre requisites
 
 ## Pre installation
@@ -55,13 +66,18 @@ Optional files used by test programs:
  3. radiobutton.py Icon file for icon radio buttons
  4. checkbox.py Icon file for icon checkboxes.
  5. switch.py Icon file for an on/off switch.
+ 6. traffic.py Icons for traffic light button
+ 7. gauge.py Icons for linear gauge
+ 8. flash.py Icons for flashing button
 
 Test/demo programs:
  1. vst.py A test program for vertical linear sliders.
  2. hst.py Tests horizontal slider controls, meters and LED.
  3. buttontest.py Pushbuttons and checkboxes.
  4. knobtest.py Rotary control test.
- 5. ibt.py Test of icon buttons
+ 5. ibt.py Test of icon buttons.
+
+If you do not intend to use icons, optional files 3-8 and demo 5 may be ignored.
 
 It should be noted that by the standards of the Pyboard this is a large library. Attempts to use it
 in the normal way are likely to provoke memory errors owing to heap fragmentation. It is
