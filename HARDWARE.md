@@ -10,28 +10,28 @@ Most 4.3 inch and 5 inch displays have a 40 way 0.1 inch connector with the foll
 Pins are usually marked on the PCB. Pins marked - are defined as no connect. Signals in parentheses
 are not required by the driver and are no-connect.
 
-| Signal  | Pyboard | Display | Pyboard | Signal   |
-|:-------:|:-------:|:-------:|:-------:|:--------:|
-| Gnd     | Gnd     | 1   21  | X1      | DB0      |
-| 3.3V    | 3.3V    | 2   22  | X2      | DB1      |
-| -       |         | 3   23  | X3      | DB2      |
-| Rs      | Y12     | 4   24  | X4      | DB3      |
-| Wr      | Y11     | 5   25  | X5      | DB4      |
-| Rd      | Y10     | 6   26  | X6      | DB5      |
-| (DB8)   |         | 7   27  | X7      | DB6      |
-| (DB9)   |         | 8   28  | X8      | DB7      |
-| (DB10)  |         | 9   29  | X12     | T_CLK    | Touch panel connections
-| (DB11)  |         | 10  30  | Gnd     | T_CS     |
-| (DB12)  |         | 11  31  | X11     | T_DIN    |
-| (DB13)  |         | 12  32  |         | -        |
-| (DB14)  |         | 13  33  | Y2      | T_DO     |
-| (DB15)  |         | 14  34  | Y1      | T_IRQ    |
-| CS      | Gnd     | 15  35  |         | (SD_DO)  | SD card connections
-| (FCS)[3]|         | 16  36  |         | (SD_CLK) |
-| REST    | Y9      | 17  37  |         | (SD_DIN) |
-| V-LED   | 3.3V [1]| 18  38  |         | (SD_CS)  |
-| LED-A   | Y3   [2]| 19  39  |         | -        |
-| -       |         | 20  40  |         | -        |
+| Signal  | Pyboard | Display   | Pyboard | Signal   |
+|:-------:|:-------:|:---:|:---:|:-------:|:--------:|
+| Gnd     | Gnd     | 1   | 21  | X1      | DB0      |
+| 3.3V    | 3.3V    | 2   | 22  | X2      | DB1      |
+| -       |         | 3   | 23  | X3      | DB2      |
+| Rs      | Y12     | 4   | 24  | X4      | DB3      |
+| Wr      | Y11     | 5   | 25  | X5      | DB4      |
+| Rd      | Y10     | 6   | 26  | X6      | DB5      |
+| (DB8)   |         | 7   | 27  | X7      | DB6      |
+| (DB9)   |         | 8   | 28  | X8      | DB7      |
+| (DB10)  |         | 9   | 29  | X12     | T_CLK    | Touch panel connections
+| (DB11)  |         | 10  | 30  | Gnd     | T_CS     |
+| (DB12)  |         | 11  | 31  | X11     | T_DIN    |
+| (DB13)  |         | 12  | 32  |         | -        |
+| (DB14)  |         | 13  | 33  | Y2      | T_DO     |
+| (DB15)  |         | 14  | 34  | Y1      | T_IRQ    |
+| CS      | Gnd     | 15  | 35  |         | (SD_DO)  | SD card connections
+| (FCS)[3]|         | 16  | 36  |         | (SD_CLK) |
+| REST    | Y9      | 17  | 37  |         | (SD_DIN) |
+| V-LED   | 3.3V [1]| 18  | 38  |         | (SD_CS)  |
+| LED-A   | Y3   [2]| 19  | 39  |         | -        |
+| -       |         | 20  | 40  |         | -        |
 
 [1] Some displays show no connection on pin 18. On others it's the backlight power source.
 [2] This controls backlight brightness. Can be linked to 3.3V if full bightness is always required.
