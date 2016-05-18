@@ -10,7 +10,6 @@ Most 4.3 inch and 5 inch displays have a 40 way 0.1 inch connector with the foll
 Pins are usually marked on the PCB. Pins marked - are defined as no connect. Signals in parentheses
 are not required by the driver and are no-connect.
 
-|:-------:|:-------:|:-------:|:-------:|:--------:|
 | Signal  | Pyboard | Display | Pyboard | Signal   |
 |:-------:|:-------:|:-------:|:-------:|:--------:|
 | Gnd     | Gnd     | 1   21  | X1      | DB0      |
@@ -33,7 +32,6 @@ are not required by the driver and are no-connect.
 | V-LED   | 3.3V [1]| 18  38  |         | (SD_CS)  |
 | LED-A   | Y3   [2]| 19  39  |         | -        |
 | -       |         | 20  40  |         | -        |
-|:-------:|:-------:|:-------:|:-------:|:--------:|
 
 [1] Some displays show no connection on pin 18. On others it's the backlight power source.
 [2] This controls backlight brightness. Can be linked to 3.3V if full bightness is always required.
