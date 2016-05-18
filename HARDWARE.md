@@ -38,8 +38,8 @@ right TFT connector pins as viewed in this way.
 | LED-A   | Y3   [2]| 19  | 39  |         | -        |
 | -       |         | 20  | 40  |         | -        |
 
-[1] Some displays show no connection on pin 18. On others it's the backlight power source.
-[2] This controls backlight brightness. Can be linked to 3.3V if full bightness is always required.
+[1] Some displays show no connection on pin 18. On others it's the backlight power source.  
+[2] This controls backlight brightness. Can be linked to 3.3V if full bightness is always required.  
 [3] This is a chip select for an onboard 2MB Flash chip. It is unused by the driver.
 
 # Power
