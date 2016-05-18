@@ -42,6 +42,7 @@ Notes:
 [1] This is a chip select for an onboard 2MB Flash chip. It is unused by the driver.  
 [2] Some displays show no connection on pin 18. On others it's the backlight power source.  
 [3] Pin 19 controls backlight brightness. The TFT driver supports brightness control using PWM.
+
 This pin can be linked to 3.3V if full brightness is always required.
 
 Signals T_* are the touch panel controller chip connections.  
