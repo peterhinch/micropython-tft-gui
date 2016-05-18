@@ -8,7 +8,7 @@ design.
 
 It is targeted at hardware control and display applications.
 
-Note this API is under development and subject to change!
+For hardware notes see this [reference](./HARDWARE.md).
 
 # Icons
 
