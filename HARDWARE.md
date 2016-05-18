@@ -10,7 +10,12 @@ Most 4.3 inch and 5 inch displays have a 40 way 0.1 inch connector with the foll
 Pins are usually marked on the PCB. Pins marked - are defined as no connect. Signals in parentheses
 are not required by the driver and are no-connect.
 
-| Signal  | Pyboard | Display   | Pyboard | Signal   |
+Looking at the underside of the display (i.e. viewing the socket) with the socket to your left and
+the display underside to your right, pin 1 is at bottom left. L and R below denote the left and
+right TFT connector pins as viewed in this way.
+
+
+| Signal  | Pyboard | L   | R   | Pyboard | Signal   |
 |:-------:|:-------:|:---:|:---:|:-------:|:--------:|
 | Gnd     | Gnd     | 1   | 21  | X1      | DB0      |
 | 3.3V    | 3.3V    | 2   | 22  | X2      | DB1      |
@@ -36,9 +41,6 @@ are not required by the driver and are no-connect.
 [1] Some displays show no connection on pin 18. On others it's the backlight power source.
 [2] This controls backlight brightness. Can be linked to 3.3V if full bightness is always required.
 [3] This is a chip select for an onboard 2MB Flash chip. It is unused by the driver.
-
-Looking at the underside of the display (i.e. viewing the socket) with the socket to your left and
-the display underside to your right, pin 1 is at bottom left.
 
 # Power
 
