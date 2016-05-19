@@ -11,8 +11,8 @@ Most 4.3 inch and 5 inch displays have a 40 way 0.1 inch connector with the foll
 Pins are usually marked on the PCB. Pins marked - are defined as no connect. Signals in parentheses
 are not required by the driver and are no-connect. Most 7 inch displays use a different connector.
 
-The table below is laid out looking at the underside of the display with the socket to the left and
-the display underside to the right. L and R denote the left and right TFT connector pins when
+The table below is laid out looking at the underside of the display with the plug to the left and
+the bulk of the PCB to the right. L and R denote the left and right TFT connector pins when
 viewed in this way. Check your own display to ensure it conforms to this pinout!
 
 
