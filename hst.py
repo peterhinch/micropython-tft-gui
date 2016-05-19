@@ -106,7 +106,8 @@ def test():
     slave2 = HorizSlider(objsched, tft, touch, (x, 160), font = font10,
            fgcolor = GREEN, cbe_args = ['Slave2'], cb_move = slave_moved, cbm_args = [lstlbl[2]], **table)
     master = HorizSlider(objsched, tft, touch, (x, 40), font = font10,
-           fgcolor = YELLOW, cbe_args = ['Master'], cb_move = master_moved, slidecolor=RED, cbm_args = [slave1, slave2, lstlbl[0], led], value=0.5, **table)
+           fgcolor = YELLOW, cbe_args = ['Master'], cb_move = master_moved, slidecolor=RED, border = 2,
+           cbm_args = [slave1, slave2, lstlbl[0], led], value=0.5, **table)
     objsched.add_thread(testmeter(meter1))
     objsched.add_thread(testmeter(meter2))
     objsched.run()                                          # Run it!

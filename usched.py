@@ -1,37 +1,32 @@
-# ledflash, pause, instrument, roundrobin work
-
 # Lightweight threading library for the micropython board.
 # Author: Peter Hinch
-# V1.03 Implements gc
+# V1.05 Uses utime for improved portability.
 # Copyright Peter Hinch 2016 Released under the MIT license
 
-import pyb, micropython, gc
-micropython.alloc_emergency_exception_buf(100)
+import gc
+from utime import ticks_us
 
 # TIMER ACCESS
 
-TIMERPERIOD = 0x7fffffff                        # 35.79 minutes 2148 secs
-MAXTIME     = TIMERPERIOD//2                    # 1073 seconds maximum timeout
-MAXSECS     = MAXTIME//1000000
+TIMERPERIOD = const(0x3fffffff)                 # 1073.74 seconds: 17 minutes 53.7 secs
+MAXTIME     = const(TIMERPERIOD // 2)           # 536.87 seconds maximum timeout
+MAXSECS     = const(MAXTIME // 1000000)
 
 class TimerException(Exception) : pass
 
 def microsWhen(timediff):                       # Expected value of counter in a given no. of uS
     if timediff >= MAXTIME:
         raise TimerException()
-    return (pyb.micros() + timediff) & TIMERPERIOD
-
-def microsSince(oldtime):                       # No of uS since timer held this value
-    return (pyb.micros() - oldtime) & TIMERPERIOD
+    return (ticks_us() + timediff) & TIMERPERIOD
 
 def after(trigtime):                            # If current time is after the specified value return
-    res = ((pyb.micros() - trigtime) & TIMERPERIOD) # the no. of uS after. Otherwise return zero
+    res = ((ticks_us() - trigtime) & TIMERPERIOD) # the no. of uS after. Otherwise return zero
     if res >= MAXTIME:
         res = 0
     return res
 
 def microsUntil(tim):                           # uS from now until a specified time (used in Delay class)
-    return ((tim - pyb.micros()) & TIMERPERIOD)
+    return ((tim - ticks_us()) & TIMERPERIOD)
 
 def seconds(S):                                 # Utility functions to convert to integer microseconds
     return int(1000000*S)
@@ -101,8 +96,8 @@ class Waitfor(object):
             self.customcallback(irqno)
         self.interruptcount += 1                # Increments count to enable trigger to operate
 
-class Roundrobin(Waitfor):                      # Compatibility only. A thread yielding a Roundrobin
-    def __init__(self):                         # will be rescheduled as soon as priority threads have been serviced
+class Roundrobin(Waitfor):                      # Compatibility only. Use a plain yield
+    def __init__(self):
         super().__init__()
         self.roundrobin = True
 
@@ -127,16 +122,22 @@ def wait(secs):
         count -= 1
     return (0, 0, overshoot)
 
-# Block on an interrupt from a pin subject to optional timeout
+# Block on an interrupt from a pin subject to optional timeout. pyb specific.
 class Pinblock(Waitfor):
+    initialised = False
     def __init__(self, pin, mode, pull, customcallback = None, timeout = None):
         super().__init__()
+        if not Pinblock.initialised:
+            import pyb
+            import micropython
+            micropython.alloc_emergency_exception_buf(100) 
+            Pinblock.initialised = True
         self.customcallback = customcallback
         if timeout is None:
             self.forever = True
         else:
             self.setdelay(timeout)
-        self.irq = pyb.ExtInt(pin, mode, pull, self.intcallback)
+        self.irq = pyb.ExtInt(pin, mode, pull, self.intcallback) # Porting: needs adaptation
 
 class Poller(Waitfor):
     def __init__(self, pollfunc, pollfunc_args = (), timeout = None):
@@ -194,9 +195,9 @@ class Sched(object):
         return self.pid
 
     def _idle_thread(self):                     # Runs once then in roundrobin or when there's nothing else to do
-        if self.gc_enable and (self.last_gc == 0 or microsSince(self.last_gc) > GCTIME):
+        if self.gc_enable and (self.last_gc == 0 or after(self.last_gc) > GCTIME):
             gc.collect()
-            self.last_gc = pyb.micros()
+            self.last_gc = ticks_us()
 
     def triggered(self, thread):
         wf = thread[YIELDED]
@@ -234,7 +235,6 @@ class Sched(object):
                         p_run = priority
                         thr_run = thread
         return thr_run, p_run
-
 
     def _runthreads(self):
         while not self.bStop:

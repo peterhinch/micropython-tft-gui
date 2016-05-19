@@ -649,7 +649,7 @@ class Slider(Touchable):
             for tick in range(self.divisions + 1):
                 ypos = int(y + dy * tick)
                 tft.drawHLine(x + 1, ypos, dx, self.fgcolor)
-                tft.drawHLine(x + 1 + width // 2, ypos, dx, self.fgcolor)
+                tft.drawHLine(x + 2 + width // 2, ypos, dx, self.fgcolor) # Add half slot width
 
         if self.legends is not None: # Legends
             if len(self.legends) <= 1:
@@ -740,7 +740,7 @@ class HorizSlider(Touchable):
             for tick in range(self.divisions + 1):
                 xpos = int(x + dx * tick)
                 tft.drawVLine(xpos, y + 1, dy, self.fgcolor) # TODO Why is +1 fiddle required here?
-                tft.drawVLine(xpos, y + 1 + height // 2,  dy, self.fgcolor) # and here
+                tft.drawVLine(xpos, y + 2 + height // 2,  dy, self.fgcolor) # Add half slot width
 
         if self.legends is not None: # Legends
             if len(self.legends) <= 1:
