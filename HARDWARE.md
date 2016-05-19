@@ -50,7 +50,7 @@ backlight brightness control. Pin 19 can be linked to 3.3V if full brightness is
 Signal descriptions:
 Signals T_* are the touch panel controller chip connections.  
 Signals (SD_*) are for the onboard SD card which is unused.  
-DB0-15 is the parallel bidirectional data bus (lower 8 bits only are uased).  
+DB0-15 is the parallel bidirectional data bus (lower 8 bits only are used).  
 Rd, Wr, Rs (read, write, command/data) are the active low bus control signals.  
 CS is the active low chip select (always selected).  
 REST is the controller reset.
@@ -75,3 +75,15 @@ adaptor, connecting only RXD, TXD and GND and powering the entire system from th
 If the system is always to be powered by USB an option is to connect a Pololu S7V8F3 to the Pyboard
 Vin pin (which will be an output in this case), and use its 3.3V output to power the display. If
 doing this, use a good quality USB cable capable of handing the current involved.
+
+# Pyboard Free Pins
+
+The following I/O pins are unused by the interface and code:
+
+Y5-Y8, X9, X10, X17-X22, P18-P21 (LED pins)  
+Ranges are inclusive.
+
+If not using brightness or power control it seems that _in extremis_ Pins Y3 and Y4 could be freed:
+they are initialised by the TFT constructor but could subsequently be re-defined and used for other
+purposes, along with timer 4. Note Robert Hammelrath is the author of this module; I haven't
+actually tried this...
