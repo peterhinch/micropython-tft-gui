@@ -43,7 +43,7 @@ means of graphics primitives. Either (or both) may be used in a project.
 
 ## Python files
 
-Documentation for the underlying libraries may be found at these sites:
+Documentation for the underlying libraries may be found at these sites:  
 [TFT driver](https://github.com/robert-hh/SSD1963-TFT-Library-for-PyBoard.git)  
 [XPT2046 driver](https://github.com/robert-hh/XPT2046-touch-pad-driver-for-PyBoard.git)  
 [Scheduler](https://github.com/peterhinch/Micropython-scheduler.git)

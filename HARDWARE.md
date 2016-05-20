@@ -3,7 +3,7 @@
 The tft driver (comprising ``tft.py``, ``TFT_io.py`` and ``touch.py``) was developed by Robert
 Hammelrath (robert-hh on Github, roberthh on the MicroPython forum). These notes aim to augment his
 documentation with additional hardware details. Driver sites:  
-[TFT driver](https://github.com/robert-hh/SSD1963-TFT-Library-for-PyBoard.git)
+[TFT driver](https://github.com/robert-hh/SSD1963-TFT-Library-for-PyBoard.git)  
 [XPT2046 driver](https://github.com/robert-hh/XPT2046-touch-pad-driver-for-PyBoard.git)
 
 The easiest way to acquire these displays is to search eBay for SSD1963.
@@ -48,11 +48,13 @@ this way. Check your own display to ensure it conforms to this pinout!
 
 Notes:  
 [1] Pin 19 controls backlight brightness. The TFT driver supports brightness control using PWM
-at 500Hz. Not all panels allow PWM in which case it can be wired to 3.3V. Consult panel manual.  
+at 500Hz. Not all panels allow PWM in which case it would normally be wired to 3.3V. Consult panel
+manual.  
 [2] Backlight power source. Some displays show no connection on pin 18. Others require 3.3V or
 more: consult the panel manual for the power requirements.  
-[3] This is a chip select for an onboard 2MB Flash chip. It is unused by the driver and is not
-fitted to all display models.  
+[3] This is a chip select for an onboard 2MB Flash chip. It is unused by the driver and the chip is
+not fitted to all display models.
+
 The TFT driver tft.py uses pin Y3 and timer 4 for backlight brightness control. Pin 19 can be
 linked to 3.3V if full brightness is always required. It also uses pin Y4 for power control: with
 suitable hardware this enables power to be conserved by powering the display down when not in use.
