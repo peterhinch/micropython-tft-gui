@@ -1,5 +1,11 @@
 # Hardware notes
 
+The tft driver (comprising ``tft.py``, ``TFT_io.py`` and ``touch.py``) was developed by Robert
+Hammelrath (robert-hh on Github, roberthh on the MicroPython forum). These notes aim to augment his
+documentation with additional hardware details. Driver sites:  
+[TFT driver](https://github.com/robert-hh/SSD1963-TFT-Library-for-PyBoard.git)
+[XPT2046 driver](https://github.com/robert-hh/XPT2046-touch-pad-driver-for-PyBoard.git)
+
 The easiest way to acquire these displays is to search eBay for SSD1963.
 
 # Minimal connections for TFT display
@@ -8,19 +14,20 @@ These notes are intended for users not intending to use Robert Hammelrath's exce
 has features including the ability to power down the display to conserve power when not in use.
 
 Most 4.3 inch and 5 inch displays have a 40 way 0.1 inch connector with the following pinout.
-Pins are usually marked on the PCB. Pins marked - are defined as no connect. Signals in parentheses
-are not required by the driver and are no-connect. Most 7 inch displays use a different connector.
+Pins are usually marked on the PCB silkscreen. Pins marked - are defined as no connect. Signals in
+parentheses are not required by the driver and are no-connect. Most 7 inch displays use a different
+connector. Note that the 5 inch 800*480 display is not currently supported by the TFT driver.
 
 The table below is laid out looking at the underside of the display with the plug to the left and
-the bulk of the PCB to the right. L and R denote the left and right TFT connector pins when
-viewed in this way. Check your own display to ensure it conforms to this pinout!
+most of the PCB to the right. L and R denote the left and right TFT connector pins when viewed
+this way. Check your own display to ensure it conforms to this pinout!
 
 
 | Signal  | Pyboard | L   | R   | Pyboard | Signal   |
 |:-------:|:-------:|:---:|:---:|:-------:|:--------:|
 | -       |         | 20  | 40  |         | -        |
 | LED-A   | Y3   [1]| 19  | 39  |         | -        |
-| V-LED   | 3.3V [2]| 18  | 38  |         | (SD_CS)  |
+| V-LED   | Note [2]| 18  | 38  |         | (SD_CS)  |
 | REST    | Y9      | 17  | 37  |         | (SD_DIN) |
 | (FCS)[3]|         | 16  | 36  |         | (SD_CLK) |
 | CS      | Gnd     | 15  | 35  |         | (SD_DO)  |
@@ -40,12 +47,17 @@ viewed in this way. Check your own display to ensure it conforms to this pinout!
 | Gnd     | Gnd     | 1   | 21  | X1      | DB0      |
 
 Notes:  
-[1] Pin 19 controls backlight brightness. The TFT driver supports brightness control using PWM.  
-[2] Some displays show no connection on pin 18. On others it's the backlight power source.  
-[3] This is a chip select for an onboard 2MB Flash chip. It is unused by the driver.  
-The TFT driver tft.py uses pin Y4 for power control: with suitable hardware this enables power to
-be conserved by powering the display down when not in use. It also uses pin Y3 and timer 4 for
-backlight brightness control. Pin 19 can be linked to 3.3V if full brightness is always required.
+[1] Pin 19 controls backlight brightness. The TFT driver supports brightness control using PWM
+at 500Hz. Not all panels allow PWM in which case it can be wired to 3.3V. Consult panel manual.  
+[2] Backlight power source. Some displays show no connection on pin 18. Others require 3.3V or
+more: consult the panel manual for the power requirements.  
+[3] This is a chip select for an onboard 2MB Flash chip. It is unused by the driver and is not
+fitted to all display models.  
+The TFT driver tft.py uses pin Y3 and timer 4 for backlight brightness control. Pin 19 can be
+linked to 3.3V if full brightness is always required. It also uses pin Y4 for power control: with
+suitable hardware this enables power to be conserved by powering the display down when not in use.
+If the display is powered down it requires re-initialisation by calling ``tft.tft_init()``. The
+touch panel requires no initialisation.
 
 Signal descriptions:
 Signals T_* are the touch panel controller chip connections.  
