@@ -27,6 +27,8 @@ from ugui import CIRCLE, RECTANGLE, CLIPPED_RECT, WHITE, BLACK, RED, GREEN, BLUE
 from font14 import font14
 from tft_local import setup
 
+# Callbacks
+
 def callback(button, arg, label):
     label.show(arg)
 
@@ -39,6 +41,13 @@ def cbcb(checkbox, label):
         label.show('True')
     else:
         label.show('False')
+
+def cbreset(button, checkbox1, checkbox2, buttonset, bs0, radiobuttons, rb0, label):
+    checkbox1.value(False)
+    checkbox2.value(False)
+    buttonset.value(bs0)
+    radiobuttons.value(rb0)
+    label.show('Short')
 
 # These tables contain args that differ between members of a set of related buttons
 table = [
@@ -79,20 +88,13 @@ labels = { 'width' : 70,
           'font' : font14,
           }
 
-# USER TEST FUNCTION
-
-def cbreset(button, checkbox1, checkbox2, buttonset, bs0, radiobuttons, rb0):
-    checkbox1.value(False)
-    checkbox2.value(False)
-    buttonset.value(bs0)
-    radiobuttons.value(rb0)
-
 def test():
     print('Testing TFT...')
     objsched, tft, touch = setup()
     tft.backlight(100) # light on
+# Labels
     lstlbl = []
-    for n in range(4):
+    for n in range(5):
         lstlbl.append(Label(tft, (350, 40 * n), **labels))
 
 # Button assortment
@@ -138,7 +140,8 @@ def test():
 
 # Reset button
     Button(objsched, tft, touch, (300, 220), font = font14, callback = cbreset, fgcolor = BLUE,
-           text = 'Reset', args = [cb1, cb2, bs, bs0, rb, rb0], fill = False, shape = RECTANGLE, width = 80)
+           text = 'Reset', args = [cb1, cb2, bs, bs0, rb, rb0, lstlbl[4]], fill = False, shape = RECTANGLE, width = 80,
+           lp_callback=callback, lp_args=['long', lstlbl[4]])
 # Quit
     Button(objsched, tft, touch, (390, 220), font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80)

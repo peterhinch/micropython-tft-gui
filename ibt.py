@@ -27,29 +27,36 @@ from tft_local import setup
 from font10 import font10
 from font14 import font14
 import radiobutton, checkbox, switch, mdesign, flash, gauge, traffic # icon files
-import gc
+#import gc
 
-gc.collect()
-
+#gc.collect()
+# CALLBACKS
+# Default CB displays text on a label
 def callback(button, arg, label):
     label.show(arg)
 
+# Checkbox CB
 def cbcb(checkbox, label):
     label.show(('False', '???', 'True')[checkbox.value()])
 
+# CB for button 'reset radio button': test radiobutton response to value change
 def rb_cancel(button, radiobutton, rb0):
-    radiobutton.value(rb0) # Test radiobutton response to forced change
+    radiobutton.value(rb0)
 
+# CB for button 'reset checkbox': test checkbox response to forced change
 def cb_cancel(button, checkbox):
-    checkbox.value(0) # Test checkbox response to forced change
+    checkbox.value(0)
 
+# Switch CB
 def cbswitch(button, label):
     label.show(str(button.value()))
 
+# Quit button CB
 def quit(button):
     button.tft.clrSCR()
     button.objsched.stop()
 
+# Label common attributes
 labels = { 'width' : 70,
           'fontcolor' : WHITE,
           'border' : 2,
@@ -58,10 +65,7 @@ labels = { 'width' : 70,
           'font' : font14,
           }
 
-def lr(n): # y coordinate from logical row
-    return 10 + 50 * n
-
-# THREADS
+# THREAD: keep the gauge moving
 def mainthread(objgauge):
     INC = 0.05
     oldvalue = 0
@@ -78,32 +82,50 @@ def mainthread(objgauge):
         objgauge.value(oldvalue)
         yield 0.1
 
+def lr(n): # y coordinate from logical row
+    return 10 + 50 * n
+
 def test():
     print('Testing TFT...')
     objsched, tft, touch = setup()
     tft.backlight(100) # light on
+# Static labels
     Label(tft, (90, lr(0) + 5), font = font10, width = 150, text = 'Flashing buttons')
     Label(tft, (244, lr(1) + 5), font = font10, width = 150, text = 'Reset radio button')
     Label(tft, (244, lr(2) + 5), font = font10, width = 150, text = 'Reset checkbox')
     Label(tft, (370, 243), font = font14, width = 70, text = 'Quit')
+# Dynamic labels
     lstlbl = []
     for n in range(4):
         lstlbl.append(Label(tft, (400, lr(n)), **labels))
-
-    IconButton(objsched, tft, touch, (10, lr(0)), icon_module = mdesign, flash = 1.0, callback = callback, args = ['A', lstlbl[0]])
-    IconButton(objsched, tft, touch, (50, lr(0)), icon_module = flash, flash = 1.0, callback = callback, args = ['B', lstlbl[0]])
+# Flashing buttons (RH one responds to long press)
+    IconButton(objsched, tft, touch, (10, lr(0)), icon_module = mdesign, flash = 1.0,
+               callback = callback, args = ['A', lstlbl[0]])
+    IconButton(objsched, tft, touch, (50, lr(0)), icon_module = flash, flash = 1.0,
+               callback = callback, args = ['Short', lstlbl[0]],
+               lp_callback = callback, lp_args = ['Long', lstlbl[0]])
+# Quit button
     IconButton(objsched, tft, touch, (420, 240), icon_module = radiobutton, callback = quit)
+# Radio buttons
     rb = IconRadioButtons(callback = callback)
     rb0 = rb.add_button(objsched, tft, touch, (10, lr(1)), icon_module = radiobutton, args = ['1', lstlbl[1]])
     rb.add_button(objsched, tft, touch, (50, lr(1)), icon_module = radiobutton, args = ['2', lstlbl[1]])
     rb.add_button(objsched, tft, touch, (90, lr(1)), icon_module = radiobutton, args = ['3', lstlbl[1]])
     rb.add_button(objsched, tft, touch, (130, lr(1)), icon_module = radiobutton, args = ['4', lstlbl[1]])
-
-    cb = IconButton(objsched, tft, touch, (10, lr(2)), icon_module = checkbox, toggle = True, callback = cbcb, args =[lstlbl[2]])
+# Checkbox
+    cb = IconButton(objsched, tft, touch, (10, lr(2)), icon_module = checkbox, toggle = True,
+                    callback = cbcb, args =[lstlbl[2]])
+# Traffic light state change button
     IconButton(objsched, tft, touch, (10, lr(4)), icon_module = traffic, toggle = True)
-    IconButton(objsched, tft, touch, (200, lr(1)), icon_module = radiobutton, callback = rb_cancel, args = [rb, rb0])
-    IconButton(objsched, tft, touch, (200, lr(2)), icon_module = radiobutton, callback = cb_cancel, args = [cb])
-    IconButton(objsched, tft, touch, (10, lr(3)), icon_module = switch, callback = cbswitch, toggle = True, args = [lstlbl[3]])
+# Reset buttons
+    IconButton(objsched, tft, touch, (200, lr(1)), icon_module = radiobutton,
+               callback = rb_cancel, args = [rb, rb0])
+    IconButton(objsched, tft, touch, (200, lr(2)), icon_module = radiobutton,
+               callback = cb_cancel, args = [cb])
+# Switch
+    IconButton(objsched, tft, touch, (10, lr(3)), icon_module = switch,
+               callback = cbswitch, toggle = True, args = [lstlbl[3]])
+# Gauge
     ig = IconGauge(tft, (80, lr(5)), icon_module = gauge)
     objsched.add_thread(mainthread(ig))
     objsched.run()

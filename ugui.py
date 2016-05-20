@@ -325,9 +325,11 @@ class IconGauge(NoTouch):
 # If font is None button will be rendered without text
 
 class Button(Touchable):
+    lit_time = 1
+    long_press_time = 1
     def __init__(self, objsched, tft, objtouch, location, *, font, shape=CIRCLE, height=50, width=50, fill=True,
                  fgcolor=None, bgcolor=None, fontcolor=None, litcolor=None, text='', show=True, callback=dolittle,
-                 args=[]):
+                 args=[], lp_callback=None, lp_args=[]):
         super().__init__(objsched, tft, objtouch, location, font, height, width, fgcolor, bgcolor, fontcolor, None, False)
         self.shape = shape
         self.radius = height // 2
@@ -336,6 +338,9 @@ class Button(Touchable):
         self.text = text
         self.callback = callback
         self.callback_args = args
+        self.lp_callback = lp_callback
+        self.lp_args = lp_args
+        self.lp = False # Long press not in progress
         self.orig_fgcolor = fgcolor
         if self.litcolor is not None:
             self.delay = Delay(objsched, self._shownormal)
@@ -386,8 +391,20 @@ class Button(Touchable):
         if self.litcolor is not None:
             self.fgcolor = self.litcolor
             self._show()
-            self.delay.trigger(1)
+            self.delay.trigger(Button.lit_time)
+        if self.lp_callback is not None:
+            self.objsched.add_thread(self.longpress())
         self.callback(self, *self.callback_args) # Callback not a bound method so pass self
+
+    def _untouched(self):
+        self.lp = False
+
+    def longpress(self):
+        self.lp = True
+        yield
+        yield self.long_press_time
+        if self.lp:
+            self.lp_callback(self, *self.lp_args)
 
 # Group of buttons, typically at same location, where pressing one shows
 # the next e.g. start/stop toggle or sequential select from short list
@@ -522,14 +539,18 @@ class Checkbox(Touchable):
 # Button/checkbox whose appearance is defined by icon bitmaps
 
 class IconButton(Touchable):
+    long_press_time = 1
     def __init__(self, objsched, tft, objtouch, location, *, icon_module, flash=0,
-                 toggle=False, callback=dolittle, args=[], state=0):
+                 toggle=False, callback=dolittle, args=[], state=0, lp_callback=None, lp_args=[]):
         self.draw = icon_module.draw
         self.num_icons = len(icon_module._icons)
         super().__init__(objsched, tft, objtouch, location, None, icon_module.height,
                          icon_module.width, None, None, None, None, False)
         self.callback = callback
         self.callback_args = args
+        self.lp_callback = lp_callback
+        self.lp_args = lp_args
+        self.lp = False # Long press not in progress
         self.flash = flash
         self.toggle = toggle
         if state >= self.num_icons or state < 0:
@@ -564,7 +585,19 @@ class IconButton(Touchable):
         elif self.toggle:
             self.state = (self.state + 1) % self.num_icons
             self._show(self.state)
+        if self.lp_callback is not None:
+            self.objsched.add_thread(self.longpress())
         self.callback(self, *self.callback_args) # Callback not a bound method so pass self
+
+    def _untouched(self):
+        self.lp = False
+
+    def longpress(self):
+        self.lp = True
+        yield
+        yield self.long_press_time
+        if self.lp:
+            self.lp_callback(self, *self.lp_args)
 
 # Group of buttons at different locations, where pressing one shows
 # only current button highlighted and does callback from current one

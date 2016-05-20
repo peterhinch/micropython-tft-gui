@@ -377,10 +377,17 @@ Optional keyword only arguments:
  * ``text`` Shown in centre of button. Default ''.
  * ``callback`` Callback function which runs when button is pressed.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
+ * ``lp_callback`` Callback to be used if button is to respond to a long press. Default ``None``.
+ * ``lp_args`` A list of arguments for the above callback. Default ``[]``.
  * ``show`` Primarily for internal use. Boolean, default ``True``. If ``False`` button will not be
  displayed.
 
 There are no methods for normal access.
+
+Class variables:
+ * ``lit_time`` Period in seconds the ``litcolor`` is displayed. Default 1.
+ * ``long_press_time`` Press duration for a long press. Default 1 second.
+
 
 ## Class ButtonList: emulate a button with multiple states
 
@@ -481,12 +488,17 @@ Optional keyword only arguments:
  * ``state`` Initial button state (index of icon displayed). Default 0.
  * ``callback`` Callback function which runs when button is pressed. Default does nothing.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
+ * ``lp_callback`` Callback to be used if button is to respond to a long press. Default ``None``.
+ * ``lp_args`` A list of arguments for the above callback. Default ``[]``.
 
 Method:
  * ``value`` Argument ``val`` default ``None``. If the argument is provided and is a valid index
  not corresponding to the current button state, changes the button state and displays that icon.
  The callback will be executed. Always returns the button state (index of the current icon being
  displayed).
+
+Class variables:
+ * ``long_press_time`` Press duration for a long press. Default 1 second.
 
 ## Class IconRadioButtons
 
@@ -506,3 +518,10 @@ Methods:
  * ``value`` Argument ``val`` default ``None``. If the argument is provided which is an inactive
  button in the set, that button becomes active and the callback is executed. Always returns the
  button which is currently active.
+
+# Developer Notes
+
+The ugui module is large by Pyboard standards. This presents no problem if frozen, but if you wish
+to modify it, freezing is cumbersome. Compiling it on the Pyboard is likely to result in memory
+errors. The solution is to cross-compile, replacing ugui.py with ugui.mpy on the target.
+Alternatively you may opt to split the module into two.
