@@ -92,12 +92,17 @@ doing this, use a good quality USB cable capable of handing the current involved
 
 # Pyboard Free Pins
 
+### Unused pins
+
 The following I/O pins are unused by the interface and code:
 
 Y5-Y8, X9, X10, X17-X22, P18-P21 (LED pins)  
 Ranges are inclusive.
 
-If not using brightness or power control it seems that _in extremis_ Pins Y3 and Y4 could be freed:
-they are initialised by the TFT constructor but could subsequently be re-defined and used for other
-purposes, along with timer 4. Note Robert Hammelrath is the author of this module; I haven't
-actually tried this...
+### Pins Y3 and Y4
+
+The TFT driver's use of these pins is optional. If not using power control hardware edit ``tft_local.py``
+to initialise the display with ``power_control = False``. This will free pin Y4.
+
+Pin Y3 is configured on first use of the TFT class ``backlight()`` method: to use this pin for
+other purposes simply avoid calling this method. This also leaves timer(4) free for use.

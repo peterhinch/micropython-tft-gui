@@ -58,10 +58,12 @@ LANDSCAPE = const(0)
 
 class TFT:
 
-    def __init__(self, controller = "SSD1963", lcd_type = "LB04301", orientation = LANDSCAPE,  v_flip = False, h_flip = False):
+    def __init__(self, controller = "SSD1963", lcd_type = "LB04301", orientation = LANDSCAPE,  
+                 v_flip = False, h_flip = False, power_control = True):
         self.tft_init(controller, lcd_type, orientation, v_flip, h_flip)
 
-    def tft_init(self, controller = "SSD1963", lcd_type = "LB04301", orientation = LANDSCAPE,  v_flip = False, h_flip = False):
+    def tft_init(self, controller = "SSD1963", lcd_type = "LB04301", orientation = LANDSCAPE,  
+                 v_flip = False, h_flip = False, power_control = True):
 #
 # For convenience, define X1..X1 and Y9..Y12 as output port using thy python functions.
 # X1..X8 will be redefind on the fly as Input by accessing the MODER control registers
@@ -79,15 +81,14 @@ class TFT:
 
         self.setColor((255, 255, 255)) # set FG color to white as can be.
         self.setBGColor((0, 0, 0))     # set BG to black
-# special treat for BG LED
-        self.pin_led = pyb.Pin("Y3", pyb.Pin.OUT_PP)
-        self.led_tim = pyb.Timer(4, freq=500)
-        self.led_ch = self.led_tim.channel(3, pyb.Timer.PWM, pin=self.pin_led)
-        self.led_ch.pulse_width_percent(0)  # led off
-        self.pin_led.value(0)  ## switch BG LED off
+#
+        self.pin_led = None     # deferred init Flag
+        self.power_control = power_control
+        if self.power_control:
 # special treat for Power Pin
-        self.pin_power = pyb.Pin("Y4", pyb.Pin.OUT_PP)
-        self.pin_power.value(1)  ## switch Power on
+            self.pin_power = pyb.Pin("Y4", pyb.Pin.OUT_PP)
+            self.power(True)    ## switch Power on
+#            
         pyb.delay(10)
 # this may have to be moved to the controller specific section
         if orientation == PORTRAIT:
@@ -277,16 +278,23 @@ class TFT:
 # set backlight brightness
 #
     def backlight(self, percent):
+# deferred init of LED PIN
+        if self.pin_led is None:
+# special treat for BG LED
+            self.pin_led = pyb.Pin("Y3", pyb.Pin.OUT_PP)
+            self.led_tim = pyb.Timer(4, freq=500)
+            self.led_ch = self.led_tim.channel(3, pyb.Timer.PWM, pin=self.pin_led)
         percent = max(0, min(percent, 100))
         self.led_ch.pulse_width_percent(percent)  # set LED
 #
 # switch power on/off
 #
     def power(self, onoff):
-        if onoff:
-            self.pin_power.value(True)  ## switch power on or off
-        else:
-            self.pin_power.value(False)
+        if self.power_control:
+            if onoff:
+                self.pin_power.value(True)  ## switch power on or off
+            else:
+                self.pin_power.value(False)
 
 #
 # set the tft flip modes
