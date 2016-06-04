@@ -22,8 +22,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from ugui import Button, ButtonList, RadioButtons, Checkbox, Label
-from ugui import CIRCLE, RECTANGLE, CLIPPED_RECT, WHITE, BLACK, RED, GREEN, BLUE, YELLOW, GREY
+from constants import *
+from ugui import Button, ButtonList, RadioButtons, Checkbox, Label, GUI
 from font14 import font14
 from tft_local import setup
 
@@ -33,8 +33,8 @@ def callback(button, arg, label):
     label.show(arg)
 
 def quit(button):
-    button.tft.clrSCR()
-    button.objsched.stop()
+    GUI.tft.clrSCR()
+    GUI.objsched.stop()
 
 def cbcb(checkbox, label):
     if checkbox.value():
@@ -48,6 +48,10 @@ def cbreset(button, checkbox1, checkbox2, buttonset, bs0, radiobuttons, rb0, lab
     buttonset.value(bs0)
     radiobuttons.value(rb0)
     label.show('Short')
+
+def cb_en_dis(button, disable, itemlist):
+    for item in itemlist:
+        item.greyed_out(disable)
 
 # These tables contain args that differ between members of a set of related buttons
 table = [
@@ -90,26 +94,28 @@ labels = { 'width' : 70,
 
 def test():
     print('Testing TFT...')
-    objsched, tft, touch = setup()
-    tft.backlight(100) # light on
+    my_screen = setup()
+# Uncomment this line to see 'skeleton' style greying-out:
+#    GUI.tft.grey_color()
+
 # Labels
     lstlbl = []
     for n in range(5):
-        lstlbl.append(Label(tft, (350, 40 * n), **labels))
+        lstlbl.append(Label((350, 40 * n), **labels))
 
 # Button assortment
     x = 0
     for t in table:
         t['args'].append(lstlbl[2])
-        Button(objsched, tft, touch, (x, 0), font = font14, callback = callback, **t)
+        Button((x, 0), font = font14, callback = callback, **t)
         x += 70
 
 # Highlighting buttons
     x = 0
     for t in table2:
         t['args'].append(lstlbl[2])
-        Button(objsched, tft, touch, (x, 60), fgcolor = GREY,
-               fontcolor = BLACK, litcolor = WHITE, font = font14, callback = callback, **t)
+        Button((x, 60), fgcolor = GREY, fontcolor = BLACK, litcolor = WHITE,
+               font = font14, callback = callback, **t)
         x += 70
 
 # On/Off toggle
@@ -118,7 +124,7 @@ def test():
     bs0 = None
     for t in table3: # Buttons overlay each other at same location
         t['args'].append(lstlbl[2])
-        button = bs.add_button(objsched, tft, touch, (x, 120), font = font14, fontcolor = BLACK, **t)
+        button = bs.add_button((x, 120), font = font14, fontcolor = BLACK, **t)
         if bs0 is None:
             bs0 = button
 
@@ -128,23 +134,31 @@ def test():
     rb0 = None
     for t in table4:
         t['args'].append(lstlbl[3])
-        button = rb.add_button(objsched, tft, touch, (x, 180), font = font14, fontcolor = WHITE,
-                      fgcolor = (0, 0, 90), height = 40, **t)
+        button = rb.add_button((x, 180), font = font14, fontcolor = WHITE,
+                               fgcolor = (0, 0, 90), height = 40, width = 40, **t)
         if rb0 is None:
             rb0 = button
         x += 60
 
 # Checkbox
-    cb1 = Checkbox(objsched, tft, touch, (300, 0), callback = cbcb, args = [lstlbl[0]])
-    cb2 = Checkbox(objsched, tft, touch, (300, 50), fillcolor = RED, callback = cbcb, args = [lstlbl[1]])
+    cb1 = Checkbox((300, 0), callback = cbcb, args = [lstlbl[0]])
+    cb2 = Checkbox((300, 50), fillcolor = RED, callback = cbcb, args = [lstlbl[1]])
 
 # Reset button
-    Button(objsched, tft, touch, (300, 220), font = font14, callback = cbreset, fgcolor = BLUE,
-           text = 'Reset', args = [cb1, cb2, bs, bs0, rb, rb0, lstlbl[4]], fill = False, shape = RECTANGLE, width = 80,
+    Button((300, 240), font = font14, callback = cbreset, fgcolor = BLUE,
+           text = 'Reset', args = [cb1, cb2, bs, bs0, rb, rb0, lstlbl[4]], fill = True, shape = RECTANGLE,
+           height = 30, width = 80,
            lp_callback=callback, lp_args=['long', lstlbl[4]])
 # Quit
-    Button(objsched, tft, touch, (390, 220), font = font14, callback = quit, fgcolor = RED,
-           text = 'Quit', shape = RECTANGLE, width = 80)
-    objsched.run()                                          # Run it!
+    Button((390, 240), font = font14, callback = quit, fgcolor = RED, text = 'Quit', shape = RECTANGLE,
+           height = 30, width = 80)
+# On/Off toggle 
+    bs_en = ButtonList(cb_en_dis)
+    lst_en_dis = [cb1, cb2, rb, bs]
+    button = bs_en.add_button((200, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
+                           fgcolor = GREEN, shape = RECTANGLE, text = 'Disable', args = [True, lst_en_dis])
+    button = bs_en.add_button((200, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
+                           fgcolor = RED, shape = RECTANGLE, text = 'Enable', args = [False, lst_en_dis])
+    my_screen.run()                                          # Run it!
 
 test()

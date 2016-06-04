@@ -21,8 +21,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
-from ugui import HorizSlider, Button, Dial, Label, LED, Meter, RECTANGLE, GREEN, RED, YELLOW, WHITE, BLUE
+from constants import *
+from ugui import HorizSlider, Button, ButtonList, Dial, Label, GUI, LED, Meter
 from font10 import font10
 from font14 import font14
 from tft_local import setup
@@ -56,8 +56,12 @@ def slave_moved(slider, label):
     label.show(to_string(val))
 
 def quit(button):
-    button.tft.clrSCR()
-    button.objsched.stop()
+    GUI.tft.clrSCR()
+    GUI.objsched.stop()
+
+def cb_en_dis(button, disable, itemlist):
+    for item in itemlist:
+        item.greyed_out(disable)
 
 # Common args for the labels
 labels = { 'width' : 70,
@@ -89,27 +93,33 @@ def testmeter(meter):
 
 def test():
     print('Test TFT panel...')
-    objsched, tft, touch = setup()
-    tft.backlight(100) # light on
-    led = LED(tft, (420, 0), border = 2)
-    meter1 = Meter(tft, (320, 0), font=font10, legends=('0','5','10'), pointercolor = YELLOW, fgcolor = GREEN)
-    meter2 = Meter(tft, (360, 0), font=font10, legends=('0','5','10'), pointercolor = YELLOW)
-    Button(objsched, tft, touch, (390, 240), font = font14, callback = quit, fgcolor = RED,
+    my_screen = setup()
+    led = LED((420, 0), border = 2)
+    meter1 = Meter((320, 0), font=font10, legends=('0','5','10'), pointercolor = YELLOW, fgcolor = GREEN)
+    meter2 = Meter((360, 0), font=font10, legends=('0','5','10'), pointercolor = YELLOW)
+    btnquit = Button((390, 240), font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80, height = 30)
     x = 230
     lstlbl = []
     for n in range(3):
-        lstlbl.append(Label(tft, (x, 40 + 60 * n), font = font10, **labels))
+        lstlbl.append(Label((x, 40 + 60 * n), font = font10, **labels))
     x = 0
-    slave1 = HorizSlider(objsched, tft, touch, (x, 100), font = font10,
-           fgcolor = GREEN, cbe_args = ['Slave1'], cb_move = slave_moved, cbm_args = [lstlbl[1]], **table)
-    slave2 = HorizSlider(objsched, tft, touch, (x, 160), font = font10,
-           fgcolor = GREEN, cbe_args = ['Slave2'], cb_move = slave_moved, cbm_args = [lstlbl[2]], **table)
-    master = HorizSlider(objsched, tft, touch, (x, 40), font = font10,
-           fgcolor = YELLOW, cbe_args = ['Master'], cb_move = master_moved, slidecolor=RED, border = 2,
-           cbm_args = [slave1, slave2, lstlbl[0], led], value=0.5, **table)
-    objsched.add_thread(testmeter(meter1))
-    objsched.add_thread(testmeter(meter2))
-    objsched.run()                                          # Run it!
+    slave1 = HorizSlider((x, 100), font = font10, fgcolor = GREEN, cbe_args = ['Slave1'],
+                         cb_move = slave_moved, cbm_args = [lstlbl[1]], **table)
+    slave2 = HorizSlider((x, 160), font = font10, fgcolor = GREEN, cbe_args = ['Slave2'],
+                         cb_move = slave_moved, cbm_args = [lstlbl[2]], **table)
+    master = HorizSlider((x, 40), font = font10, fgcolor = YELLOW, cbe_args = ['Master'],
+                         cb_move = master_moved, slidecolor=RED, border = 2,
+                         cbm_args = [slave1, slave2, lstlbl[0], led], value=0.5, **table)
+# On/Off toggle: enable/disable quit button and one slider
+    bs = ButtonList(cb_en_dis)
+    lst_en_dis = [slave1, btnquit]
+    button = bs.add_button((280, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
+                           fgcolor = GREEN, shape = RECTANGLE, text = 'Disable', args = [True, lst_en_dis])
+    button = bs.add_button((280, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
+                           fgcolor = RED, shape = RECTANGLE, text = 'Enable', args = [False, lst_en_dis])
+    GUI.objsched.add_thread(testmeter(meter1))
+    GUI.objsched.add_thread(testmeter(meter2))
+    my_screen.run()                                          # Run it!
 
 test()

@@ -1,8 +1,4 @@
-# tft_local.py Configuration for Pybboard TFT GUI
-
-# This file is intended for definition of the local hardware. It's also a
-# convenient place to store constants used on a project such as colors.
-
+# constants.py Micropython GUI library for TFT displays: useful constants
 # The MIT License (MIT)
 #
 # Copyright (c) 2016 Peter Hinch
@@ -25,16 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-from tft import LANDSCAPE
-from usched import Sched
-from touch import TOUCH
-from ugui import Screen, GUI, TFT_G
+CIRCLE = 1
+RECTANGLE = 2
+CLIPPED_RECT = 3
 
-def setup():
-    objsched = Sched()                                      # Instantiate the scheduler
-    tft = TFT_G("SSD1963", "LB04301", LANDSCAPE)
-    touch = TOUCH("XPT2046", objsched, confidence = 50, margin = 50)
-    # (-3886,-0.1287,-3812,-0.132,-3797,-0.07685,-3798,-0.07681))
-    tft.backlight(100) # light on: remove this line if you don't have backlight control hardware
-    GUI.setup(objsched, tft, touch)
-    return Screen()
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+YELLOW = (255, 255, 0)
+GREY = (100, 100, 100)
+MAGENTA = (255, 0, 255)
+CYAN = (0, 255, 255)

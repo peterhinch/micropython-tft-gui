@@ -58,7 +58,8 @@ Core files:
  3. delay.py Used with the scheduler for watchdog type delays and future events.
  4. ugui.py The micro GUI library.
  5. tft_local.py Local hardware definition (user defined settings including optional calibration
- data).
+ data). This file should be edited to match your hardware.
+ 6. constants.py Constants such as colors and shapes (import using ``from constants import *``)
 
 Optional files used by test programs:
  1. font10.py Font file.
@@ -69,6 +70,7 @@ Optional files used by test programs:
  6. traffic.py Icons for traffic light button
  7. gauge.py Icons for linear gauge
  8. flash.py Icons for flashing button
+ 9. threestate.py Icon for 3-state checkbox
 
 Test/demo programs:
  1. vst.py A test program for vertical linear sliders.
@@ -76,16 +78,16 @@ Test/demo programs:
  3. buttontest.py Pushbuttons and checkboxes.
  4. knobtest.py Rotary control test.
  5. ibt.py Test of icon buttons.
+ 6. screentest.py Test of multiple screens
 
-If you do not intend to use icons, optional files 3-8 and demo 5 may be ignored.
+If you do not intend to use icons, optional files 3-9 and demo 5 may be ignored.
 
 It should be noted that by the standards of the Pyboard this is a large library. Attempts to use it
-in the normal way are likely to provoke memory errors owing to heap fragmentation. It is
-recommended that the core and optional files are 'frozen' with the firmware as persistent bytecode,
-with the possible exception of tft_local.py: keeping this in the filesystem facilitates adjusting
-the ``confidence`` and ``margin`` values for best response. You may also want to freeze any other
-fonts and icons you plan to use. The hardware divers listed above cannot be frozen as they use
-inline assembler and Viper code.
+in the normal way will provoke memory errors owing to heap fragmentation. It is necessary to
+'freeze' core files 1-4 and optional files with the firmware as persistent bytecode. tft_local.py
+may optionally be kept in the filesystem to facilitate adjusting the ``confidence`` and ``margin``
+values for best response. You should plan to freeze any other fonts and icons you intend to use.
+The hardware divers listed above cannot be frozen as they use inline assembler and Viper code.
 
 It is also wise to issue ctrl-D to soft reset the Pyboard before importing a module which uses the
 library. The test programs require a ctrl-D before import.
@@ -119,32 +121,99 @@ function and empty list are provided.
 All objects capable of raising callbacks have member variables ``tft`` and ``objsched`` being
 references to the TFT and scheduler instances respectively.
 
+### Screens
+
+The GUI supports multiple screens, where a set of displayed controls may be replaced by another,
+redrawing the physical display to suit. This enables nested screens. The screen class provides
+access to the TFT and Scheduler objects via class variables. The former allows direct drawing to
+the physical display, and the latter enables thread-based programming.
+
+### The GUI class
+
+This provides access to the underlying ``TFT`` and scheduler objects. The former can be used for
+direct drawing to the display screen, and the latter for creating threads for concurrent execution
+(the file ``hst.py`` demonstrates this).
+
 # Initialisation Code
 
 The following initialisation code is required in any application:
 ```python
-from tft_local import setup
-objsched, tft, touch = setup()
-tft.backlight(100) # light on
+from tft_local import Button # Whatever objects you need
+from ugui import Screen
+my_screen = setup()
 ```
-The second line produces instances of the scheduler, the tft display and the touch interface. These
-are required when instantiating GUI classes. When all objects have been instantiated and any
-threads created, the scheduler is started by issuing:
+The last line produces a Screen instance which will be the location for GUI objects subsequently
+instantiated (unless you create a new ``Screen`` instance). When all objects have been instantiated
+and any threads created, the GUI is started by issuing:
 ```
-objsched.run()
+my_screen.run()
 ```
 Control then passes to the scheduler: the code following this line will not run until the scheduler
-is stopped (``objsched.stop()``). See the scheduler README for full details.
+is stopped (``Screen.objsched.stop()``). See the scheduler README for full details.
 
-# Displays
+# Class GUI
+
+This provides access to system-wide objects and behaviours.
+
+## Class variables
+
+In normal use only the following class variable should be accessed.  
+``objsched`` The ``Sched`` scheduler instance: enables threaded code.
+
+## Class methods
+
+``get_tft`` Return the ``TFT`` instance. This allows direct drawing to the physical screen.
+Anything so drawn will be lost when the screen is changed.  
+``set_grey_style`` Sets the way in which greyed-out objects are displayed. Options are to show them
+in their normal colors but dimmed, or to show them in a user defined color (typically grey).
+Optional keyword arguments ``color`` (default ''GREY'') and ``factor`` (default 0). If a nonzero
+``factor`` is provided, ``color`` will be ignored and dimming will be used. Typical values are on
+the order of 2-3. The dimming option tends to be best if controls such as radiobuttons are used, as
+the current selection status remains apparent when greyed-out.
+
+# Class Screen
+
+The ``Screen`` class presents a full-screen canvas onto which displayable objects are rendered. The
+``tft_local.setup()`` method instantiates a screen and returns it. This screen will be the current
+one util another is instantiated. When a GUI object is instantiated it is associated with the
+current screen.
+
+Thus a single screen system merely needs to call ``setup`` and instantiate GUI objects. In a multi
+screen system it is easiest to instantiate the bottom (most deeply nested) screen first thus:
+
+```python
+s2 = setup()
+create_screen_2() # function instantiates display items on s2
+s1 = Screen()
+create_screen_1(s2) # Next level display items on s1 (reference to S2 allows change screen button).
+s0 = Screen()
+create_screen_0(s1) # Top level display items with change screen to s1
+s0.run()
+```
+
+## Class methods
+
+In normal use the following methods only are required:
+``change`` Change screen, refreshing the display. Argument: the new ``Screen`` instance.
+``back`` Restore previous screen.
+
+## Constructor
+
+This takes no arguments.
+
+## Method
+
+``run`` Start the scheduler and display the ``Screen`` instance. Execution passes to the scheduler.
+Subsequent intsructions will not be executed until the scheduler is stopped.
+
+# Display Classes
 
 These classes provide ways to display data and are not touch sensitive.
 
 ## Class Label
 
-Displays text in a fixed length field. Constructor mandatory positional arguments:
- 1. ``tft`` The TFT object.
- 2. ``location`` 2-tuple defining position.
+Displays text in a fixed length field. Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
 Keyword only arguments:
  * ``font`` Mandatory. Font object to use.
  * ``width`` Mandatory. The width of the object in pixels.
@@ -162,9 +231,8 @@ Method:
 Displays angles in a circular dial. Angles are in radians with zero represented by a vertical
 pointer. Positive angles appear as clockwise rotation of the pointer. The object can display
 multiple angles using pointers of differing lengths (e.g. clock face). Constructor mandatory
-positional arguments:
- 1. ``tft`` The TFT object.
- 2. ``location`` 2-tuple defining position.
+positional argument:
+ 1. ``location`` 2-tuple defining position.
 Keyword only arguments (all optional):
  * ``height`` Dimension of the square bounding box. Default 100 pixels.
  * ``fgcolor`` Color of border. Defaults to system color.
@@ -181,9 +249,8 @@ Method:
 ## Class LED
 
 Displays a boolean state. Can display other information by varying the color. Constructor mandatory
-positional arguments:
- 1. ``tft`` The TFT object.
- 2. ``location`` 2-tuple defining position.
+positional argument:
+ 1. ``location`` 2-tuple defining position.
 Keyword only arguments (all optional):
  * ``height`` Dimension of the square bounding box. Default 30 pixels.
  * ``fgcolor`` Color of border. Defaults to system color.
@@ -199,9 +266,8 @@ Methods:
 ## Class Meter
 
 This displays a single value in range 0.0 to 1.0 on a vertical linear meter. Constructor mandatory
-positional arguments:
- 1. ``tft`` The TFT object.
- 2. ``location`` 2-tuple defining position.
+positional argument:
+ 1. ``location`` 2-tuple defining position.
 
 Keyword only arguments:
  * ``height`` Dimension of the bounding box. Default 200 pixels.
@@ -227,9 +293,8 @@ This can display any one of a set of icons at a location. The icon to be display
 by an integer index. Alternatively a float in range 0.0 to 1.0 can be displayed: the control shows
 the nearest icon.
 
-Constructor mandatory positional arguments:
- 1. ``tft`` The TFT object.
- 2. ``location`` 2-tuple defining position.
+Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
 
 Mandatory keyword only argument:
  * ``icon_module`` The name of the (already imported) icon file.
@@ -242,7 +307,7 @@ Methods:
  * ``value`` Optional argument ``val``. Range 0.0 to 1.0. If provided, selects the nearest icon and
  displays it. Always returns the control's current value.
 
-# Controls
+# Control Classes
 
 These classes provide touch-sensitive objects capable of both the display and entry of data. If the
 user moves the control, its value will change and an optional callback will be executed. If a
@@ -257,11 +322,8 @@ These emulate linear potentiometers. Vertical ``Slider`` and horizontal ``HorizS
 are available. These are constructed and used similarly. The short forms (v) or (h) are used below
 to identify these variants. See the note above on callbacks.
 
-Constructor mandatory positional arguments:
- 1. ``objsched`` The scheduler instance.
- 2. ``tft`` The TFT instance.
- 3. ``objtouch`` The touch panel instance.
- 4. ``location`` 2-tuple defining position.
+Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
 
 Optional keyword only arguments:
  * ``font`` Font to use for any legends. Default ``None``: no legends will be drawn.
@@ -276,7 +338,8 @@ Optional keyword only arguments:
  * ``slidecolor`` Color for the slider. Defaults to the foreground color.
  * ``border`` Width of border. Default ``None``: no border will be drawn. If a value (typically 2)
  is provided, a border line will be drawn around the control.
- * ``cb_end`` Callback function which will run when the user stops touching the control.
+ * ``c 4. ``location`` 2-tuple defining position.
+b_end`` Callback function which will run when the user stops touching the control.
  * ``cbe_args`` A list of arguments for the above callback. Default ``[]``.
  * ``cb_move`` Callback function which will run when the user moves the slider or the value is
  changed.
@@ -284,6 +347,9 @@ Optional keyword only arguments:
  * ``value`` The initial value. Default 0.0: slider will be at the bottom (v), left (h).
 
 Methods:
+ * ``greyed_out`` Optional boolean argument ``val`` default ``None``. If ``None`` returns the
+ current 'greyed out' status of the control. Otherwise enables or disables it, showing it in its
+ new state.
  * ``value`` Optional arguments ``val`` (default ``None``), ``color`` (default ``None``).
  If ``color`` exists, the control is rendered in the selected color. This supports dynamic
  color changes  
@@ -294,11 +360,8 @@ Methods:
 
 This emulates a rotary control capable of being rotated through a predefined arc.
 
-Constructor mandatory positional arguments:
- 1. ``objsched`` The scheduler instance.
- 2. ``tft`` The TFT instance.
- 3. ``objtouch`` The touch panel instance.
- 4. ``location`` 2-tuple defining position.
+Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
 
 Optional keyword only arguments:
  * ``height`` Dimension of the square bounding box. Default 100 pixels.
@@ -317,6 +380,9 @@ Optional keyword only arguments:
  * ``value`` Initial value. Default 0.0: knob will be at its most counter-clockwise position.
 
 Methods:
+ * ``greyed_out`` Optional boolean argument ``val`` default ``None``. If ``None`` returns the
+ current 'greyed out' status of the control. Otherwise enables or disables it, showing it in its
+ new state.
  * ``value`` Optional argument ``val``. If set, adjusts the pointer to correspond to the new value.
  The move callback will run. The method constrains the range to 0.0 to 1.0. Always returns the
  control's value.
@@ -326,11 +392,8 @@ Methods:
 Drawn using graphics primitives. This provides for boolean data entry and display. In the ``True``
 state the control can show an 'X' or a filled block of color.
 
-Constructor mandatory positional arguments:
- 1. ``objsched`` The scheduler instance.
- 2. ``tft`` The TFT instance.
- 3. ``objtouch`` The touch panel instance.
- 4. ``location`` 2-tuple defining position.
+Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
 
 Optional keyword only arguments:
  * ``height`` Dimension of the square bounding box. Default 30 pixels.
@@ -344,6 +407,9 @@ Optional keyword only arguments:
  * ``value`` Initial value. Default ``False``.
 
 Methods:
+ * ``greyed_out`` Optional boolean argument ``val`` default ``None``. If ``None`` returns the
+ current 'greyed out' status of the control. Otherwise enables or disables it, showing it in its
+ new state.
  * ``value`` Optional boolean argument ``val``. If the provided value does not correspond to the
  control's current value, updates it; the checkbox is re-drawn and the callback executed. Always
  returns the control's value.
@@ -354,11 +420,8 @@ Drawn using graphics primitives. This emulates a pushbutton, with a callback bei
 time the button is pressed. Buttons may be any one of three shapes: CIRCLE, RECTANGLE or
 CLIPPED_RECT.
 
-Constructor mandatory positional arguments:
- 1. ``objsched`` The scheduler instance.
- 2. ``tft`` The TFT instance.
- 3. ``objtouch`` The touch panel instance.
- 4. ``location`` 2-tuple defining position.
+Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
 
 Mandatory keyword only argument:
  * ``font`` Font for button text
@@ -379,15 +442,15 @@ Optional keyword only arguments:
  * ``args`` A list of arguments for the above callback. Default ``[]``.
  * ``lp_callback`` Callback to be used if button is to respond to a long press. Default ``None``.
  * ``lp_args`` A list of arguments for the above callback. Default ``[]``.
- * ``show`` Primarily for internal use. Boolean, default ``True``. If ``False`` button will not be
- displayed.
 
-There are no methods for normal access.
+Method:
+ * ``greyed_out`` Optional boolean argument ``val`` default ``None``. If ``None`` returns the
+ current 'greyed out' status of the control. Otherwise enables or disables it, showing it in its
+ new state.
 
 Class variables:
  * ``lit_time`` Period in seconds the ``litcolor`` is displayed. Default 1.
  * ``long_press_time`` Press duration for a long press. Default 1 second.
-
 
 ## Class ButtonList: emulate a button with multiple states
 
@@ -409,6 +472,9 @@ Constructor argument:
 Methods:
  * ``add_button`` Adds a button to the ``ButtonList``. Arguments: as per the ``Button`` constructor.
  Returns the button object.
+ * ``greyed_out`` Optional boolean argument ``val`` default ``None``. If ``None`` returns the
+ current 'greyed out' status of the control. Otherwise enables or disables it, showing it in its
+ new state.
  * ``value`` Optional argument: a button in the set. If supplied and the button is not active the
  currency changes to the supplied button and its callback is run. Always returns the active button.
 
@@ -442,6 +508,9 @@ Constructor positional arguments:
 Methods:
  * ``add_button`` Adds a button. Arguments: as per the ``Button`` constructor. Returns the Button
  instance.
+ * ``greyed_out`` Optional boolean argument ``val`` default ``None``. If ``None`` returns the
+ current 'greyed out' status of the control. Otherwise enables or disables it, showing it in its
+ new state.
  * ``value`` Optional argument: a button in the set. If supplied, and the button is not currently
  active, the currency changes to the supplied button and its callback is run. Always returns the
  currently active button.
@@ -472,11 +541,8 @@ by setting the ``toggle`` argument ``True`` and using an appropriate icon file. 
 instance has a state representing the index of the current icon being displayed. User callbacks can
 interrogate this by means of the ``value`` method described below.
 
-Constructor mandatory positional arguments:
- 1. ``objsched`` The scheduler instance.
- 2. ``tft`` The TFT instance.
- 3. ``objtouch`` The touch panel instance.
- 4. ``location`` 2-tuple defining position.
+Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
 
 Mandatory keyword only argument:
  * ``icon_module`` Name of the imported icon module.
@@ -491,7 +557,10 @@ Optional keyword only arguments:
  * ``lp_callback`` Callback to be used if button is to respond to a long press. Default ``None``.
  * ``lp_args`` A list of arguments for the above callback. Default ``[]``.
 
-Method:
+Methods:
+ * ``greyed_out`` Optional boolean argument ``val`` default ``None``. If ``None`` returns the
+ current 'greyed out' status of the control. Otherwise enables or disables it. If greyed out, the
+ button is displayed with colors dimmed.
  * ``value`` Argument ``val`` default ``None``. If the argument is provided and is a valid index
  not corresponding to the current button state, changes the button state and displays that icon.
  The callback will be executed. Always returns the button state (index of the current icon being
@@ -522,6 +591,6 @@ Methods:
 # Developer Notes
 
 The ugui module is large by Pyboard standards. This presents no problem if frozen, but if you wish
-to modify it, freezing is cumbersome. Compiling it on the Pyboard is likely to result in memory
-errors. The solution is to cross-compile, replacing ugui.py with ugui.mpy on the target.
-Alternatively you may opt to split the module into two.
+to modify it, freezing is cumbersome. Compiling it on the Pyboard will result in memory errors. The
+solution is to cross-compile, replacing ugui.py with ugui.mpy on the target. Alternatively you may
+opt to split the module into two.
