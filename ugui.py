@@ -487,8 +487,8 @@ class Button(Touchable):
     lit_time = 1
     long_press_time = 1
     def __init__(self, location, *, font, shape=CIRCLE, height=50, width=50, fill=True,
-                 fgcolor=None, bgcolor=None, fontcolor=None, litcolor=None, text='', callback=dolittle,
-                 args=[], lp_callback=None, lp_args=[]):
+                 fgcolor=None, bgcolor=None, fontcolor=None, litcolor=None, text='',
+                 callback=dolittle, args=[], onrelease=False, lp_callback=None, lp_args=[]):
         super().__init__(location, font, height, width, fgcolor, bgcolor, fontcolor, None, False)
         self.shape = shape
         self.radius = height // 2
@@ -497,6 +497,7 @@ class Button(Touchable):
         self.text = text
         self.callback = callback
         self.callback_args = args
+        self.onrelease = onrelease
         self.lp_callback = lp_callback
         self.lp_args = lp_args
         self.lp = False # Long press not in progress
@@ -551,10 +552,13 @@ class Button(Touchable):
             self.delay.trigger(Button.lit_time)
         if self.lp_callback is not None:
             GUI.objsched.add_thread(self.longpress())
-        self.callback(self, *self.callback_args) # Callback not a bound method so pass self
+        if not self.onrelease:
+            self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
     def _untouched(self):
         self.lp = False
+        if self.onrelease:
+            self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
     def longpress(self):
         self.lp = True
@@ -713,14 +717,15 @@ class Checkbox(Touchable):
 
 class IconButton(Touchable):
     long_press_time = 1
-    def __init__(self, location, *, icon_module, flash=0,
-                 toggle=False, callback=dolittle, args=[], state=0, lp_callback=None, lp_args=[]):
+    def __init__(self, location, *, icon_module, flash=0, toggle=False, state=0,
+                 callback=dolittle, args=[], onrelease=False, lp_callback=None, lp_args=[]):
         self.draw = icon_module.draw
         self.num_icons = len(icon_module._icons)
         super().__init__(location, None, icon_module.height,
                          icon_module.width, None, None, None, None, False)
         self.callback = callback
         self.callback_args = args
+        self.onrelease = onrelease
         self.lp_callback = lp_callback
         self.lp_args = lp_args
         self.lp = False # Long press not in progress
@@ -767,10 +772,13 @@ class IconButton(Touchable):
             self._show(self.state)
         if self.lp_callback is not None:
             GUI.objsched.add_thread(self.longpress())
-        self.callback(self, *self.callback_args) # Callback not a bound method so pass self
+        if not self.onrelease:
+            self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
     def _untouched(self):
         self.lp = False
+        if self.onrelease:
+            self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
     def longpress(self):
         self.lp = True

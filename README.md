@@ -440,6 +440,7 @@ Optional keyword only arguments:
  * ``text`` Shown in centre of button. Default ''.
  * ``callback`` Callback function which runs when button is pressed.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
+ * ``onrelease`` Default ``False``. If ``True`` the callback will occur when the button is released.
  * ``lp_callback`` Callback to be used if button is to respond to a long press. Default ``None``.
  * ``lp_args`` A list of arguments for the above callback. Default ``[]``.
 
@@ -554,6 +555,7 @@ Optional keyword only arguments:
  * ``state`` Initial button state (index of icon displayed). Default 0.
  * ``callback`` Callback function which runs when button is pressed. Default does nothing.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
+ * ``onrelease`` Default ``False``. If ``True`` the callback will occur when the button is released.
  * ``lp_callback`` Callback to be used if button is to respond to a long press. Default ``None``.
  * ``lp_args`` A list of arguments for the above callback. Default ``[]``.
 
