@@ -165,7 +165,7 @@ class GUI(object):
         cls.objsched = objsched
         cls.objtouch = objtouch
         cls.tft = tft
-
+# get_tft() when called from user code, ensure any prior greyed_out status is cleared.
     @classmethod
     def get_tft(cls, greyed_out=False):
         cls.tft.usegrey(greyed_out)

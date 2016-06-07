@@ -139,7 +139,7 @@ direct drawing to the display screen, and the latter for creating threads for co
 The following initialisation code is required in any application:
 ```python
 from tft_local import Button # Whatever objects you need
-from ugui import Screen
+from ugui import Screen, GUI
 my_screen = setup()
 ```
 The last line produces a Screen instance which will be the location for GUI objects subsequently
@@ -149,7 +149,7 @@ and any threads created, the GUI is started by issuing:
 my_screen.run()
 ```
 Control then passes to the scheduler: the code following this line will not run until the scheduler
-is stopped (``Screen.objsched.stop()``). See the scheduler README for full details.
+is stopped (``GUI.objsched.stop()``). See the scheduler README for full details.
 
 # Class GUI
 
@@ -230,10 +230,12 @@ Method:
 
 Displays angles in a circular dial. Angles are in radians with zero represented by a vertical
 pointer. Positive angles appear as clockwise rotation of the pointer. The object can display
-multiple angles using pointers of differing lengths (e.g. clock face). Constructor mandatory
-positional argument:
+multiple angles using pointers of differing lengths (e.g. clock face).
+
+Constructor mandatory positional argument:
  1. ``location`` 2-tuple defining position.
-Keyword only arguments (all optional):
+
+Keyword only arguments (all optional):  
  * ``height`` Dimension of the square bounding box. Default 100 pixels.
  * ``fgcolor`` Color of border. Defaults to system color.
  * ``bgcolor`` Background color of object. Defaults to system background.
@@ -249,9 +251,11 @@ Method:
 
 ## Class LED
 
-Displays a boolean state. Can display other information by varying the color. Constructor mandatory
-positional argument:
+Displays a boolean state. Can display other information by varying the color.
+
+Constructor mandatory positional argument:
  1. ``location`` 2-tuple defining position.
+
 Keyword only arguments (all optional):
  * ``height`` Dimension of the square bounding box. Default 30 pixels.
  * ``fgcolor`` Color of border. Defaults to system color.
@@ -266,8 +270,9 @@ Methods:
 
 ## Class Meter
 
-This displays a single value in range 0.0 to 1.0 on a vertical linear meter. Constructor mandatory
-positional argument:
+This displays a single value in range 0.0 to 1.0 on a vertical linear meter.
+
+Constructor mandatory positional argument:
  1. ``location`` 2-tuple defining position.
 
 Keyword only arguments:
