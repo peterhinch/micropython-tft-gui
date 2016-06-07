@@ -33,11 +33,11 @@ import radiobutton, checkbox, flash, threestate, switch, gauge, traffic # icon f
 # CALLBACKS
 # Default CB displays text on a label
 def callback(button, arg, label):
-    label.show(arg)
+    label.value(arg)
 
 # Checkbox CB
 def cbcb(checkbox, label):
-    label.show(('False', '???', 'True')[checkbox.value()])
+    label.value(('False', '???', 'True')[checkbox.value()])
 
 # CB for button 'reset radio button': test radiobutton response to value change
 def rb_cancel(button, radiobutton, rb0):
@@ -49,7 +49,7 @@ def cb_cancel(button, checkbox):
 
 # Switch CB
 def cbswitch(button, label):
-    label.show(str(button.value()))
+    label.value(str(button.value()))
 
 # Quit button CB
 def quit(button):
@@ -94,11 +94,11 @@ def test():
     print('Testing TFT...')
     my_screen = setup()
 # Static labels
-    Label((90, lr(0) + 5), font = font10, width = 150, text = 'Flashing buttons')
-    Label((244, lr(1) + 5), font = font10, width = 150, text = 'Reset radio button')
-    Label((244, lr(2) + 5), font = font10, width = 150, text = 'Reset checkbox')
-    Label((244, lr(3) + 5), font = font10, width = 150, text = 'Disable rb, checkbox')
-    Label((370, 243), font = font14, width = 70, text = 'Quit')
+    Label((90, lr(0) + 5), font = font10, width = 150, value = 'Flashing buttons')
+    Label((244, lr(1) + 5), font = font10, width = 150, value = 'Reset radio button')
+    Label((244, lr(2) + 5), font = font10, width = 150, value = 'Reset checkbox')
+    Label((244, lr(3) + 5), font = font10, width = 150, value = 'Disable rb, checkbox')
+    Label((370, 243), font = font14, width = 70, value = 'Quit')
 # Dynamic labels
     lstlbl = []
     for n in range(4):

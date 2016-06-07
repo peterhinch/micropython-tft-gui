@@ -40,12 +40,12 @@ def master_moved(slider, slave1, slave2, label):
     val = slider.value()
     slave1.value(val)
     slave2.value(val)
-    label.show(to_string(val))
+    label.value(to_string(val))
 
 # Either slave has had its slider moved (by user or by having value altered)
 def slave_moved(slider, label):
     val = slider.value()
-    label.show(to_string(val))
+    label.value(to_string(val))
 
 def quit(button):
     GUI.tft.clrSCR()
@@ -63,8 +63,8 @@ def mainthread(slider, dial):
         yield 0.1
         delta = slider.value()
         angle += pi * 2 * delta / 10
-        dial.show(angle)
-        dial.show(angle /10, 1)
+        dial.value(angle)
+        dial.value(angle /10, 1)
 
 # DATA
 # Common args for the labels
@@ -84,7 +84,7 @@ table = {'fontcolor' : WHITE,
 def test():
     print('Test TFT panel...')
     my_screen = setup()
-    GUI.set_grey_style() # grey out
+    GUI.set_grey_style(desaturate = False) # dim
     btnquit = Button((390, 240), font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80, height = 30)
     dial1 = Dial((350, 10), fgcolor = YELLOW, border = 2, pointers = (0.9, 0.7))

@@ -40,20 +40,17 @@ def master_moved(slider, slave1, slave2, label, led):
     val = slider.value()
     slave1.value(val)
     slave2.value(val)
-    label.show(to_string(val))
-    if val > 0.8:
-        led.on()
-    else:
-        led.off()
+    label.value(to_string(val))
+    led.value(val > 0.8)
 
 # Either slave has had its slider moved (by user or by having value altered)
 def slave_moved(slider, label):
     val = slider.value()
     if val > 0.8:
-        slider.value(None, RED)
+        slider.color(RED)
     else:
-        slider.value(None, GREEN)
-    label.show(to_string(val))
+        slider.color(GREEN)
+    label.value(to_string(val))
 
 def quit(button):
     GUI.tft.clrSCR()
@@ -103,7 +100,7 @@ def test():
     lstlbl = []
     for n in range(3):
         lstlbl.append(Label((x, 40 + 60 * n), font = font10, **labels))
-    x = 0
+    x = 10
     slave1 = HorizSlider((x, 100), font = font10, fgcolor = GREEN, cbe_args = ['Slave1'],
                          cb_move = slave_moved, cbm_args = [lstlbl[1]], **table)
     slave2 = HorizSlider((x, 160), font = font10, fgcolor = GREEN, cbe_args = ['Slave2'],

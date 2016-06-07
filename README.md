@@ -123,10 +123,10 @@ references to the TFT and scheduler instances respectively.
 
 ### Screens
 
-The GUI supports multiple screens, where a set of displayed controls may be replaced by another,
-redrawing the physical display to suit. This enables nested screens. The screen class provides
-access to the TFT and Scheduler objects via class variables. The former allows direct drawing to
-the physical display, and the latter enables thread-based programming.
+GUI controls and displays are rendered on a ``Screen`` instance. A user program may instantiate
+multiple screens, each with its own set of GUI objects. The ``Screen`` class has class methods
+enabling runtime changes of the screen being rendered to the physical display. This enables nested
+screens. The feature is demonstrated in ``screentest.py``.
 
 ### The GUI class
 
@@ -164,14 +164,13 @@ In normal use only the following class variable should be accessed.
 
 ``get_tft`` Return the ``TFT`` instance. This allows direct drawing to the physical screen.
 Anything so drawn will be lost when the screen is changed.  
-``set_grey_style`` Sets the way in which greyed-out objects are displayed. Options are to show them
-in their normal colors but dimmed, or to show them in a user defined color (typically grey).
-Optional keyword arguments ``color`` (default ''GREY'') and ``factor`` (default 0). If a nonzero
-``factor`` is provided, ``color`` will be ignored and dimming will be used. Typical values are on
-the order of 2-3. The dimming option tends to be best if controls such as radiobuttons are used, as
-the current selection status remains apparent when greyed-out.
+``set_grey_style`` Sets the way in which disabled ('greyed-out') objects are displayed. The colors
+of disabled objects are dimmed by a factor and optionally desaturated (turned to shades of grey).
+Optional keyword arguments: ``desaturate`` default ``True`` and ``factor`` default 2. A
+``ValueError`` will result if ``factor`` is <= 1. The default style is to desaturate and dim by a
+factor of 2.
 
-# Class Screen
+# Class Screen (GUI subclass)
 
 The ``Screen`` class presents a full-screen canvas onto which displayable objects are rendered. The
 ``tft_local.setup()`` method instantiates a screen and returns it. This screen will be the current
@@ -179,7 +178,7 @@ one util another is instantiated. When a GUI object is instantiated it is associ
 current screen.
 
 Thus a single screen system merely needs to call ``setup`` and instantiate GUI objects. In a multi
-screen system it is easiest to instantiate the bottom (most deeply nested) screen first thus:
+screen system it is easiest to instantiate the most deeply nested screen first thus:
 
 ```python
 s2 = setup()
@@ -221,10 +220,11 @@ Keyword only arguments:
  * ``fgcolor`` Color of border. Defaults to system color.
  * ``bgcolor`` Background color of object. Defaults to system background.
  * ``fontcolor`` Text color. Defaults to system text color.
- * ``text`` Initial text. Defaults to ''.
+ * ``value`` Initial text. Default: ``None``.
 
 Method:
- * ``show`` Argument: ``text``. Displays the string in the label.
+ * ``value`` Argument ``val`` boolean, default ``None``. If provided, refreshes the label with the
+ passed text otherwise clears the text in the label.
 
 ## Class Dial
 
@@ -243,8 +243,9 @@ Keyword only arguments (all optional):
  * ``ticks`` Defines the number of graduations around the dial. Default 4.
 
 Method:
- * ``show`` Displays an angle. Arguments: ``angle`` (mandatory), ``pointer`` the pointer index
- (default 0).
+ * ``value`` Arguments ``angle``  Arguments: ``angle`` (mandatory), ``pointer`` the pointer index
+ (default 0). Displays an angle. A ``ValueError`` will be raised if the pointer index exceeds the
+ number of pointers defined by the constructor ``pointers`` argument.
 
 ## Class LED
 
@@ -259,9 +260,9 @@ Keyword only arguments (all optional):
  * ``color`` The color of the LED. Default RED.
 
 Methods:
- * ``off`` No arguments. Turns the LED off.
- * ``on`` Optional argument ``color``. Turns the LED on. By default it will use the ``color``
- specified in the constructor.
+ * ``value`` Argument ``val`` boolean, default ``None``. If provided, lights or extinguishes the
+ LED. Always returns its current state.
+ * ``color`` Argument ``color``. Change the LED color without altering its state.
 
 ## Class Meter
 

@@ -9,9 +9,9 @@ from math import pi
 def callback(knob, control_name):
     print('{} returned {}'.format(control_name, knob.value()))
 
-def knob_moved(knob, dial):
+def knob_moved(knob, dial, pointer):
     val = knob.value() # range 0..1
-    dial.show(2 * (val - 0.5) * pi)
+    dial.value(2 * (val - 0.5) * pi, pointer)
 
 def quit(button):
     GUI.tft.clrSCR()
@@ -23,9 +23,9 @@ def cb_en_dis(button, disable, itemlist):
 
 def cb_style(button, skeleton):
     if skeleton:
-        GUI.set_grey_style()
+        GUI.set_grey_style(desaturate = True)
     else:
-        GUI.set_grey_style(factor = 2)
+        GUI.set_grey_style(desaturate = False)
 
 def test():
     print('Test TFT panel...')
@@ -34,14 +34,15 @@ def test():
            text = 'Quit', shape = RECTANGLE, width = 80, height = 30)
     dial1 = Dial((120, 0), fgcolor = YELLOW, border = 2, pointers = (0.9, 0.7))
     k0 = Knob((0, 0), fgcolor = GREEN, bgcolor=(0, 0, 80), color = (168,63,63), border = 2,
-         cb_end = callback, cbe_args = ['Knob1'], cb_move = knob_moved, cbm_args = [dial1]) #, arc = pi * 1.5)
-    k1 = Knob((0, 120), fgcolor = WHITE, border = 2, cb_end = callback, cbe_args = ['Knob2'], arc = pi * 1.5)
+              cb_end = callback, cbe_args = ['Knob1'], cb_move = knob_moved, cbm_args = [dial1, 0])
+    k1 = Knob((0, 120), fgcolor = WHITE, border = 2, arc = pi * 1.5,
+              cb_end = callback, cbe_args = ['Knob2'], cb_move = knob_moved, cbm_args = [dial1, 1])
 # On/Off toggle grey style
     bstyle = ButtonList(cb_style)
     button = bstyle.add_button((170, 240), font = font14, fontcolor = WHITE, height = 30, width = 90,
-                           fgcolor = GREEN, shape = RECTANGLE, text = 'Grey', args = [True])
-    button = bstyle.add_button((170, 240), font = font14, fontcolor = WHITE, height = 30, width = 90,
                            fgcolor = RED, shape = RECTANGLE, text = 'Dim', args = [False])
+    button = bstyle.add_button((170, 240), font = font14, fontcolor = WHITE, height = 30, width = 90,
+                           fgcolor = GREEN, shape = RECTANGLE, text = 'Grey', args = [True])
 # On/Off toggle enable/disable
     bs = ButtonList(cb_en_dis)
     lst_en_dis = [bstyle, k0, k1]

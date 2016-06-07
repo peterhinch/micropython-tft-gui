@@ -30,7 +30,7 @@ from tft_local import setup
 # Callbacks
 
 def callback(button, arg, label):
-    label.show(arg)
+    label.value(arg)
 
 def quit(button):
     GUI.tft.clrSCR()
@@ -38,16 +38,16 @@ def quit(button):
 
 def cbcb(checkbox, label):
     if checkbox.value():
-        label.show('True')
+        label.value('True')
     else:
-        label.show('False')
+        label.value('False')
 
 def cbreset(button, checkbox1, checkbox2, buttonset, bs0, radiobuttons, rb0, label):
     checkbox1.value(False)
     checkbox2.value(False)
     buttonset.value(bs0)
     radiobuttons.value(rb0)
-    label.show('Short')
+    label.value('Short')
 
 def cb_en_dis(button, disable, itemlist):
     for item in itemlist:
@@ -70,7 +70,6 @@ table2 = [
 ]
 
 # A Buttonset with two entries
-# If buttons to be used in a buttonset, Use list rather than tuple for args because buttonset appends.
 
 table3 = [
      {'fgcolor' : GREEN, 'shape' : CLIPPED_RECT, 'text' : 'Start', 'args' : ['Live']},
