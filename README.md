@@ -8,7 +8,8 @@ design.
 
 It is targeted at hardware control and display applications.
 
-For hardware notes see this [reference](./HARDWARE.md).
+For hardware notes see this [reference](./HARDWARE.md). An extension for plotting simple graphs is
+described [here](./PLOT.md).
 
 # Icons
 
@@ -211,9 +212,12 @@ These classes provide ways to display data and are not touch sensitive.
 
 ## Class Label
 
-Displays text in a fixed length field. Constructor mandatory positional argument:
+Displays text in a fixed length field.
+
+Constructor mandatory positional argument:
  1. ``location`` 2-tuple defining position.
-Keyword only arguments:
+
+Keyword only arguments:  
  * ``font`` Mandatory. Font object to use.
  * ``width`` Mandatory. The width of the object in pixels.
  * ``border`` Border width in pixels - typically 2. If omitted, no border will be drawn.
