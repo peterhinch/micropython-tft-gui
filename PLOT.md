@@ -1,35 +1,37 @@
 # plot module
 
-This provides a rudimentary means of displaying Cartesian and polar graphs on TFT displays using
-the SSD1963 driver. It is an optional extension to the MicroPython GUI library: this should be
-installed, configured and tested before use.
+This provides a rudimentary means of displaying two dimensional Cartesian (xy) and polar graphs on
+TFT displays using the SSD1963 driver. It is an optional extension to the MicroPython GUI library:
+this should be installed, configured and tested before use.
 
 # Python files
 
  1. plot.py The plot library
- 2. pt.py Test programs: run pt.ct() for a Cartesian graph, pt.pt() for polar.
+ 2. pt.py Test program.
+
+plot.py should be installed as frozen bytecode.
 
 # concepts
 
 ## Graph classes
 
 A user program first instantiates a graph object (``PolarGraph`` or ``CartesianGraph``). This
-creates an empty graph image upon which one or more curves may be plotted. Graphs are rendered
-directly onto the display hardware: this means that they are transient images rather than GUI
-controls. If the user code changes the current screen, on return the graph will be lost. Treating
-them otherwise would consume unreasonable amounts of RAM.
+creates an empty graph image upon which one or more curves may be plotted. Graphs are GUI display
+objects: they do not respond to touch.
 
 ## Curve classes
 
 The user program then instantiates one or more curves (``Curve`` or ``PolarCurve``) as appropriate
-to the graph. Curves may be assigned colors to distinguish them. Points are then assigned to a
+to the graph. Curves may be assigned colors to distinguish them.
+
+A curve is plotted by means of a user defined ``populate`` callback. This assigns points to the
 curve in the order in which they are to be plotted. The curve will be displayed on the graph as a
 sequence of straight line segments between successive points.
 
 ## Coordinates
 
-Graph objects are defined in terms of TFT screen pixel coordinates, with (0, 0) being the top left
-corner of the display, with x increasing to the right and y increasing downwards.
+Graph objects are sized and positioned in terms of TFT screen pixel coordinates, with (0, 0) being
+the top left corner of the display, with x increasing to the right and y increasing downwards.
 
 Scaling is provided on Cartesian curves enabling user defined ranges for x and y values. Points on
 polar curves aredefined as Python ``complex`` types and should lie within the unit circle. Points
@@ -40,7 +42,7 @@ the physical limits of the display.
 
 ## Class CartesianGraph
 
-The only user access is via the constructor.  
+Constructor.  
 Mandatory positional argument:  
  1. ``location`` 2-tuple defining position.
 
@@ -57,9 +59,12 @@ Keyword only arguments (all optional):
  * ``yorigin`` As ``xorigin``. The default of 5, 5 with 10 grid lines on each axis puts the origin
  at the centre of the graph. Settings of 0, 0 would be used to plot positive values only.
 
+Method:
+ * ``clear`` Removes all curves from the graph and re-displays the grid.
+
 ## Class PolarGraph
 
-The only user access is via the constructor.  
+Constructor.  
 Mandatory positional argument:  
  1. ``location`` 2-tuple defining position.
 
@@ -72,35 +77,63 @@ Keyword only arguments (all optional):
  * ``adivs`` Number of angle divisions per quadrant. Default 3.
  * ``rdivs`` Number radius divisions. Default 4.
 
+Method:
+ * ``clear`` Removes all curves from the graph and re-displays the grid.
+
 # Curve classes
 
 ## class Curve
 
 The Cartesian curve constructor takes the following positional arguments:
 
- 1. ``graph`` Mandatory. The ``CartesianGraph`` instance.
- 2. ``origin`` 2-tuple containing x and y values for the origin. Default (0, 0).
- 3. ``excursion`` 2-tuple containing scaling values for x and y. Default (1, 1).
- 4. ``color`` Default YELLOW.
+Mandatory arguments:
+ 1. ``graph`` The ``CartesianGraph`` instance.
+ 2. ``populate`` A callback function to populate the curve. See below.
 
-Method:
+Optional arguments:
+ 3. ``args`` List or tuple of arguments for ``populate`` callback. Default [].
+ 4. ``origin`` 2-tuple containing x and y values for the origin. Default (0, 0).
+ 5. ``excursion`` 2-tuple containing scaling values for x and y. Default (1, 1).
+ 6. ``color`` Default YELLOW.
+
+Methods:
  * ``point`` Arguments x, y. Adds a point to the curve. If a prior point exists a line will be drawn
  between it and the current point.
+ * ``show`` No args. This can be used to redraw a curve which has been erased by the graph's
+ ``clear`` method. In practice likely to be used when plotting changing data from sensors.
+
+The ``populate`` callback may take one or more positional arguments. The first argument is always
+the ``Curve`` instance. Subsequent arguments are any specified in the curve's constructor's
+``args``. It should repeatedly call the curve's ``point`` method to plot the curve before
+returning.
 
 ### Scaling
 
 To plot x values from 1000 to 4000 we would set the ``origin`` x value to 1000 and the ``excursion``
-x value to 3000.
+x value to 3000. The ``excursion`` values scale the plotted values to fit the corresponding axis.
 
 ## class PolarCurve
 
 The constructor takes the following positional arguments:
- 1. ``graph`` Mandatory. The ``CartesianGraph`` instance.
- 2. ``color`` Default YELLOW.
 
-Method:
+Mandatory arguments:
+ 1. ``graph`` The ``CartesianGraph`` instance.
+ 2. ``populate`` A callback function to populate the curve. See below.
+
+Optional arguments:
+ 3. ``args`` List or tuple of arguments for ``populate`` callback. Default [].
+ 4. ``color`` Default YELLOW.
+
+Methods:
  * ``point`` Argument z which must be ``complex``. Adds a point to the curve. If a prior point
  exists a line will be drawn between it and the current point.
+ * ``show`` No args. This can be used to redraw a curve which has been erased by the graph's
+ ``clear`` method. In practice likely to be used when plotting changing data from sensors.
+
+The ``populate`` callback may take one or more positional arguments. The first argument is always
+the ``Curve`` instance. Subsequent arguments are any specified in the curve's constructor's
+``args``. It should repeatedly call the curve's ``point`` method to plot the curve before
+returning.
 
 ### Scaling
 

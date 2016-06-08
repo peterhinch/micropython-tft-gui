@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Precompiled MicroPython files
+*.mpy
+
 # Distribution / packaging
 .Python
 env/

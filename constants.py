@@ -1,4 +1,6 @@
 # constants.py Micropython GUI library for TFT displays: useful constants
+# constants.py Constants for TFT GUI library
+
 # The MIT License (MIT)
 #
 # Copyright (c) 2016 Peter Hinch

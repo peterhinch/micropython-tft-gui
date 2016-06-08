@@ -1,3 +1,27 @@
+# screentest.py Test/demo of multiple screens for Pybboard TFT GUI
+
+# The MIT License (MIT)
+#
+# Copyright (c) 2016 Peter Hinch
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 from constants import *
 from ugui import Knob, Dial, Label, Button, RadioButtons, ButtonList, Meter, Screen, Slider, Checkbox, LED, GUI
 from font14 import font14
@@ -9,8 +33,9 @@ from math import pi
 
 def quitbutton(x, y):
     def quit(button):
-        Screen.tft.clrSCR()
-        Screen.objsched.stop()
+        tft = GUI.get_tft()
+        tft.clrSCR()
+        GUI.objsched.stop()
     Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80)
 
@@ -179,6 +204,7 @@ def create_assorted_screen(next_screen):
 
 def create_base_screen(knob_screen, slider_screen, assorted_screen):
     screen = Screen()
+    Label((0, 0), font = font14, width = 400, value = 'Screen change demo')
     fwdbutton(0, 242, knob_screen, 'Knobs')
     fwdbutton(100, 242, slider_screen, 'Sliders')
     fwdbutton(200, 242, assorted_screen, 'Various')
