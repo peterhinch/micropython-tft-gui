@@ -150,7 +150,7 @@ class PolarGraph(NoTouch, Graph):
             for r in range(1, self.rdivs + 1):
                 tft.draw_circle(self.xp_origin, self.yp_origin, int(radius * r / self.rdivs), self.gridcolor)
         if self.adivs > 0:
-            v = 1 + 0j
+            v = complex(1)
             m = rect(1, pi / self.adivs)
             for _ in range(self.adivs):
                 self.line(-v, v, self.gridcolor)
