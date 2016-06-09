@@ -54,8 +54,8 @@ class Curve(object):
         return (x - x0) / xr, (y - y0) / yr
 
 class PolarCurve(Curve): # Points are complex
-    def __init__(self, graph, populate, color=YELLOW):
-        super().__init__(graph, populate, color=color)
+    def __init__(self, graph, populate, args=[], color=YELLOW):
+        super().__init__(graph, populate, args, color=color)
 
     def point(self, z):
         if self.lastpoint is not None:
