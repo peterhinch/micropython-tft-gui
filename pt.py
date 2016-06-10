@@ -38,32 +38,32 @@ def quitbutton(x, y):
         tft = GUI.get_tft()
         tft.clrSCR()
         GUI.objsched.stop()
-    Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,
+    return Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80)
 
 def fwdbutton(x, y, screen, text='Next'):
     def fwd(button, screen):
         Screen.change(screen)
-    Button((x, y), height = 30, font = font14, callback = fwd, args = [screen], fgcolor = RED,
+    return Button((x, y), height = 30, font = font14, callback = fwd, args = [screen], fgcolor = RED,
            text = text, shape = RECTANGLE, width = 80)
 
 def backbutton(x, y):
     def back(button):
         Screen.back()
-    Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back, onrelease = True,
+    return Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back, onrelease = True,
            fgcolor = CYAN,  text = 'Back', shape = RECTANGLE, width = 80)
 
 def clearbutton(x, y, graph):
     def clear(button):
         graph.clear()
-    Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = clear,
+    return Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = clear,
            fgcolor = GREEN,  text = 'Clear', shape = RECTANGLE, width = 80)
 
 def refreshbutton(x, y, curvelist):
     def refresh(button):
         for curve in curvelist:
             curve.show()
-    Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = refresh,
+    return Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = refresh,
            fgcolor = GREEN,  text = 'Refresh', shape = RECTANGLE, width = 80)
 
 # SCREEN CREATION
@@ -72,11 +72,13 @@ def create_back_screen():
     Label((0, 0), font = font14, width = 400, value = 'Ensure back refreshes properly')
     backbutton(390, 242)
 
-def create_base_screen(polar_screen, xy_screen):
+def create_base_screen(polar_screen, xy_screen, realtime_screen):
     screen = Screen()
     Label((0, 0), font = font14, width = 400, value = 'plot module demo')
+    Label((0, 200), font = font10, width = 400, value = 'RT: simulate realtime data acquisition')
     fwdbutton(0, 242, polar_screen, 'Polar')
     fwdbutton(100, 242, xy_screen, 'XY')
+    fwdbutton(200, 242, realtime_screen, 'RT')
     quitbutton(390, 242)
     return screen
 
@@ -122,13 +124,49 @@ def create_xy_screen(next_screen):
     refreshbutton(390, 140, (curve1, curve2))
     return screen
 
+# Simulate slow real time data acquisition and plotting
+def create_rt_screen(next_screen):
+    def populate(curve, buttonlist):
+        GUI.objsched.add_thread(acquire(curve, buttonlist))
+
+    def acquire(curve, buttonlist):
+        yield
+        for but in buttonlist:
+            but.greyed_out(True)
+        x = -1
+        yield
+        while x < 1.01:
+            y = max(1 - x * x, 0) # possible precison issue
+            curve.point(x, y ** 0.5)
+            x += 0.05
+            yield 0.25
+        x = 1
+        while x > -1.01:
+            y = max(1 - x * x, 0)
+            curve.point(x, -(y ** 0.5))
+            x -= 0.05
+            yield 0.25
+        for but in buttonlist:
+            but.greyed_out(False)
+
+    screen = Screen()
+    buttonlist = []
+    buttonlist.append(backbutton(390, 242))
+    buttonlist.append(fwdbutton(390, 0, next_screen))
+    g = CartesianGraph((10, 10))
+    buttonlist.append(clearbutton(390, 70, g))
+    curve = Curve(g, populate, (buttonlist,))
+    buttonlist.append(refreshbutton(390, 140, (curve,)))
+    return screen
+
 def pt():
     print('Testing plot module...')
     back_screen = setup()
     create_back_screen() # Most deeply nested screen first
     polar_screen = create_polar_screen(back_screen)
     xy_screen = create_xy_screen(back_screen)
-    base_screen = create_base_screen(polar_screen, xy_screen)
+    realtime_screen = create_rt_screen(back_screen)
+    base_screen = create_base_screen(polar_screen, xy_screen, realtime_screen)
     base_screen.run()                                          # Run it!
 
 pt()

@@ -86,11 +86,11 @@ Method:
 
 The Cartesian curve constructor takes the following positional arguments:
 
-Mandatory arguments:
+Mandatory argument:
  1. ``graph`` The ``CartesianGraph`` instance.
- 2. ``populate`` A callback function to populate the curve. See below.
 
 Optional arguments:
+ 2. ``populate`` A callback function to populate the curve. See below. Default: a null function.
  3. ``args`` List or tuple of arguments for ``populate`` callback. Default [].
  4. ``origin`` 2-tuple containing x and y values for the origin. Default (0, 0).
  5. ``excursion`` 2-tuple containing scaling values for x and y. Default (1, 1).
@@ -107,6 +107,10 @@ the ``Curve`` instance. Subsequent arguments are any specified in the curve's co
 ``args``. It should repeatedly call the curve's ``point`` method to plot the curve before
 returning.
 
+If ``populate`` is not provided the curve may be plotted by successive calls to the ``point``
+method. This may be of use where data points are acquired in real time, and realtime plotting is
+required.
+
 ### Scaling
 
 To plot x values from 1000 to 4000 we would set the ``origin`` x value to 1000 and the ``excursion``
@@ -116,11 +120,11 @@ x value to 3000. The ``excursion`` values scale the plotted values to fit the co
 
 The constructor takes the following positional arguments:
 
-Mandatory arguments:
+Mandatory argument:
  1. ``graph`` The ``CartesianGraph`` instance.
- 2. ``populate`` A callback function to populate the curve. See below.
 
 Optional arguments:
+ 2. ``populate`` A callback function to populate the curve. See below. Default: a null function.
  3. ``args`` List or tuple of arguments for ``populate`` callback. Default [].
  4. ``color`` Default YELLOW.
 
@@ -134,6 +138,10 @@ The ``populate`` callback may take one or more positional arguments. The first a
 the ``Curve`` instance. Subsequent arguments are any specified in the curve's constructor's
 ``args``. It should repeatedly call the curve's ``point`` method to plot the curve before
 returning.
+
+If ``populate`` is not provided the curve may be plotted by successive calls to the ``point``
+method. This may be of use where data points are acquired in real time, and realtime plotting is
+required.
 
 ### Scaling
 

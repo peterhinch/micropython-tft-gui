@@ -21,13 +21,13 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-from ugui import GUI, NoTouch
+from ugui import GUI, NoTouch, dolittle
 from constants import *
 from math import pi
 from cmath import rect
 
 class Curve(object):
-    def __init__(self, graph, populate, args=[], origin=(0, 0), excursion=(1, 1), color=YELLOW):
+    def __init__(self, graph, populate=dolittle, args=[], origin=(0, 0), excursion=(1, 1), color=YELLOW):
         self.graph = graph
         self.populate = populate
         self.callback_args = args
@@ -54,7 +54,7 @@ class Curve(object):
         return (x - x0) / xr, (y - y0) / yr
 
 class PolarCurve(Curve): # Points are complex
-    def __init__(self, graph, populate, args=[], color=YELLOW):
+    def __init__(self, graph, populate=dolittle, args=[], color=YELLOW):
         super().__init__(graph, populate, args, color=color)
 
     def point(self, z):
