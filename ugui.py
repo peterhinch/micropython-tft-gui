@@ -249,6 +249,7 @@ class Screen(GUI):
 class NoTouch(object):
     def __init__(self, location, font, height, width, fgcolor, bgcolor, fontcolor, border, value, initial_value):
         Screen.addobject(self)
+        self.screen = Screen.current_screen
         self.location = location
         self._value = value
         self._initial_value = initial_value # Optionally enables show() method to handle initialisation
@@ -284,6 +285,10 @@ class NoTouch(object):
     def _value_change(self, show): # Optional override in subclass
         self.callback(self, *self.args) # CB is not a bound method. 1st arg is self
         if show:
+            self.show_if_current()
+
+    def show_if_current(self):
+        if self.screen == Screen.current_screen:
             self.show()
 
 # Called by Screen.show(). Draw background and bounding box if required
@@ -319,7 +324,7 @@ class Touchable(NoTouch):
             GUI.get_tft(self.greyed_out())
             self.draw_border()
             self.redraw = True
-            self.show()
+            self.show_if_current()
         return self._greyed_out
 
     def _trytouch(self, x, y): # If touched in bounding box, process it otherwise do nothing
@@ -395,7 +400,7 @@ class Dial(NoTouch):
         if pointer > len(self.pointers):
             raise ValueError('pointer index out of range')
         self.new_value = [angle, pointer]
-        self.show()
+        self.show_if_current()
 
     def _drawpointer(self, radians, pointer, color):
         tft = GUI.get_tft(self.greyed_out())
@@ -421,7 +426,7 @@ class LED(NoTouch):
 
     def color(self, color):
         self._color = color
-        self.show()
+        self.show_if_current()
 
 class Meter(NoTouch):
     def __init__(self, location, *, font=None, height=200, width=30,
@@ -499,11 +504,11 @@ class IconGauge(NoTouch):
             raise ugui_exception('Invalid icon index {}'.format(icon_index))
         else:
             self.state = int(icon_index)
-            self.show()
+            self.show_if_current()
 
     def _value_change(self, show):
         self.state = min(int(self._value * self.num_icons), self.num_icons -1)
-        self.show()
+        self.show_if_current()
 
 # *********** PUSHBUTTON AND CHECKBOX CLASSES ***********
 
@@ -516,7 +521,7 @@ class Button(Touchable):
     long_press_time = 1
     def __init__(self, location, *, font, shape=CIRCLE, height=50, width=50, fill=True,
                  fgcolor=None, bgcolor=None, fontcolor=None, litcolor=None, text='',
-                 callback=dolittle, args=[], onrelease=False, lp_callback=None, lp_args=[]):
+                 callback=dolittle, args=[], onrelease=True, lp_callback=None, lp_args=[]):
         super().__init__(location, font, height, width, fgcolor, bgcolor, fontcolor, None, False, text, None)
         self.shape = shape
         self.radius = height // 2
@@ -571,12 +576,12 @@ class Button(Touchable):
 
     def shownormal(self):
         self.fgcolor = self.orig_fgcolor
-        self.show()
+        self.show_if_current()
 
     def _touched(self, x, y): # Process touch
         if self.litcolor is not None:
             self.fgcolor = self.litcolor
-            self.show()
+            self.show() # must be on current screen
             self.delay.trigger(Button.lit_time)
         if self.lp_callback is not None:
             GUI.objsched.add_thread(self.longpress())
@@ -938,7 +943,7 @@ class Slider(Touchable):
         if color != self.fgcolor:
             self.fgcolor = color
             self.redraw = True
-            self.show()
+            self.show_if_current()
 
     def _touched(self, x, y): # Touched in bounding box. A drag will call repeatedly.
         self.value((self.location[1] + self.height - y) / self.pot_dimension)
@@ -1031,7 +1036,7 @@ class HorizSlider(Touchable):
         if color != self.fgcolor:
             self.fgcolor = color
             self.redraw = True
-            self.show()
+            self.show_if_current()
 
     def _touched(self, x, y): # Touched in bounding box. A drag will call repeatedly.
         self.value((x - self.location[0]) / self.pot_dimension)

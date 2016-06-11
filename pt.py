@@ -50,7 +50,7 @@ def fwdbutton(x, y, screen, text='Next'):
 def backbutton(x, y):
     def back(button):
         Screen.back()
-    return Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back, onrelease = True,
+    return Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back,
            fgcolor = CYAN,  text = 'Back', shape = RECTANGLE, width = 80)
 
 def clearbutton(x, y, graph):

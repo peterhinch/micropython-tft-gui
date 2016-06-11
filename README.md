@@ -212,7 +212,8 @@ These classes provide ways to display data and are not touch sensitive.
 
 ## Class Label
 
-Displays text in a fixed length field.
+Displays text in a fixed length field. The height of a label is determined by the metrics of the
+specified font.
 
 Constructor mandatory positional argument:
  1. ``location`` 2-tuple defining position.
@@ -450,7 +451,8 @@ Optional keyword only arguments:
  * ``text`` Shown in centre of button. Default ''.
  * ``callback`` Callback function which runs when button is pressed.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
- * ``onrelease`` Default ``False``. If ``True`` the callback will occur when the button is released.
+ * ``onrelease`` Default ``True``. If ``True`` the callback will occur when the button is released
+ otherwise it will occur when pressed.
  * ``lp_callback`` Callback to be used if button is to respond to a long press. Default ``None``.
  * ``lp_args`` A list of arguments for the above callback. Default ``[]``.
 

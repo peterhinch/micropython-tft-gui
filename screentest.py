@@ -48,7 +48,7 @@ def fwdbutton(x, y, screen, text='Next'):
 def backbutton(x, y):
     def back(button):
         Screen.back()
-    Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back, onrelease = True,
+    Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back,
            fgcolor = CYAN,  text = 'Back', shape = RECTANGLE, width = 80)
 
 # SCREEN CREATION
