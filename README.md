@@ -117,7 +117,8 @@ The interface is event driven. Optional callbacks may be provided which will be 
 given event occurs. A callback function receives positional arguments. The first is a reference to
 the object raising the callback. Subsequent arguments are user defined, and are specified as a
 tuple or list of items. Callbacks are optional, as are the argument lists - a default null
-function and empty list are provided.
+function and empty list are provided. Callbacks may be bound methods - see the Screens section for
+a reason why this is useful.
 
 All objects capable of raising callbacks have member variables ``tft`` and ``objsched`` being
 references to the TFT and scheduler instances respectively.
@@ -127,7 +128,11 @@ references to the TFT and scheduler instances respectively.
 GUI controls and displays are rendered on a ``Screen`` instance. A user program may instantiate
 multiple screens, each with its own set of GUI objects. The ``Screen`` class has class methods
 enabling runtime changes of the screen being rendered to the physical display. This enables nested
-screens. The feature is demonstrated in ``screentest.py``.
+screens. The feature is demonstrated in ``screentest.py``. In real applications screens may contain
+a number of controls needing to share data. In such cases it can be simplest to subclass ``Screen``
+to create the user screen. Control callbacks will be methods bound to the user screen, with access
+to the screen's bound variables via ``self`` and to the control's bound methods via the callback's
+first argument.
 
 ### The GUI class
 
@@ -608,3 +613,5 @@ The ugui module is large by Pyboard standards. This presents no problem if froze
 to modify it, freezing is cumbersome. Compiling it on the Pyboard will result in memory errors. The
 solution is to cross-compile, replacing ugui.py with ugui.mpy on the target. Alternatively you may
 opt to split the module into two.
+
+For developers wishing to extend the library with new controls or displays, see this [reference](./DEVELOPER.md).

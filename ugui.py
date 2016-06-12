@@ -250,6 +250,7 @@ class NoTouch(object):
     def __init__(self, location, font, height, width, fgcolor, bgcolor, fontcolor, border, value, initial_value):
         Screen.addobject(self)
         self.screen = Screen.current_screen
+        self.redraw = True # Force drawing of static part of image
         self.location = location
         self._value = value
         self._initial_value = initial_value # Optionally enables show() method to handle initialisation
@@ -263,8 +264,7 @@ class NoTouch(object):
         self.fgcolor = fgcolor if fgcolor is not None else tft.getColor()
         self.bgcolor = bgcolor if bgcolor is not None else tft.getBGColor()
         self.fontcolor = fontcolor if fontcolor is not None else tft.getColor()
-        self.hasborder = border is not None
-        self.border = 0 if border is None else border # width
+        self.border = 0 if border is None else int(max(border, 0)) # width
         self.callback = dolittle # Value change callback
         self.args = []
         self.cb_end = dolittle # Touch release callbacks
@@ -298,9 +298,9 @@ class NoTouch(object):
         y = self.location[1]
         if self.fill:
             tft.fill_rectangle(x, y, x + self.width, y + self.height, self.bgcolor)
-        if self.hasborder: # Draw a bounding box
+        if self.border > 0: # Draw a bounding box
             tft.draw_rectangle(x, y, x + self.width, y + self.height, self.fgcolor)
-        return self.border if self.hasborder else 0 # border width in pixels
+        return self.border # border width in pixels
 
 # Base class for touch-enabled classes.
 class Touchable(NoTouch):
@@ -309,7 +309,6 @@ class Touchable(NoTouch):
         self.can_drag = can_drag
         self.busy = False
         self.was_touched = False
-        self.redraw = True # Force drawing of static part of image
 
     def _set_callbacks(self, cb, args, cb_end=None, cbe_args=None):
         self.callback = cb
@@ -433,7 +432,7 @@ class Meter(NoTouch):
                  fgcolor=None, bgcolor=None, pointercolor=None, fontcolor=None,
                  divisions=10, legends=None, value=0):
         border = 5 if font is None else 1 + font.bits_vert / 2
-        NoTouch.__init__(self, location, font, height, width, fgcolor, bgcolor, fontcolor, border, value, None) # __super__ provoked Python bug
+        NoTouch.__init__(self, location, font, height, width, fgcolor, bgcolor, fontcolor, border, value, None) # super() provoked Python bug
         border = self.border # border width
         self.ptrbytes = 3 * (self.width + 1) # 3 bytes per pixel
         self.ptrbuf = bytearray(self.ptrbytes) #???
@@ -443,8 +442,8 @@ class Meter(NoTouch):
         self.y1 = self.location[1] + self.height - border
         self.divisions = divisions
         self.legends = legends
-        self.pointercolor = pointercolor if pointercolor is not None else fgcolor
-        self.ptr_y = -1 # Invalidate old position
+        self.pointercolor = pointercolor if pointercolor is not None else self.fgcolor
+        self.ptr_y = None # Invalidate old position
 
     def show(self):
         tft = GUI.get_tft(self.greyed_out())
@@ -472,18 +471,13 @@ class Meter(NoTouch):
                 print_centered(tft, int(self.x0 + self.width /2), int(yl), legend, self.fontcolor, self.font)
                 yl -= dy
 
-        y0 = self.ptr_y
-        y1 = y0
-        if self.ptr_y >= 0: # Restore background
-            tft.setXY(x0, y0, x1, y1)
+        if self.ptr_y is not None: # Restore background if it was saved
+            tft.setXY(x0, self.ptr_y, x1, self.ptr_y)
             TFT_io.tft_write_data_AS(self.ptrbuf, self.ptrbytes)
-        ptrpos = int(self.y1 - self._value * height)
-        y0 = ptrpos
-        y1 = ptrpos
-        tft.setXY(x0, y0, x1, y1) # Read background
+        self.ptr_y = int(self.y1 - self._value * height) # y position of slider
+        tft.setXY(x0, self.ptr_y, x1, self.ptr_y) # Read background
         TFT_io.tft_read_cmd_data_AS(0x2e, self.ptrbuf, self.ptrbytes)
-        self.ptr_y = y0
-        tft.draw_hline(x0, y0, width, self.pointercolor) # Draw pointer
+        tft.draw_hline(x0, self.ptr_y, width, self.pointercolor) # Draw pointer
 
 class IconGauge(NoTouch):
     def __init__(self, location, *, icon_module, initial_icon=0):
