@@ -35,7 +35,7 @@ from cmath import rect
 
 def quitbutton(x, y):
     def quit(button):
-        tft = GUI.get_tft()
+        tft = button.tft
         tft.clrSCR()
         GUI.objsched.stop()
     return Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,

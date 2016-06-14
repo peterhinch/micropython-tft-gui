@@ -98,7 +98,7 @@ class CartesianGraph(NoTouch, Graph):
         self.yp_origin = self.y0 + (ydivs - yorigin) * height / ydivs
 
     def show(self):
-        tft = GUI.get_tft()
+        tft = self.tft
         x0 = self.x0
         x1 = self.x1
         y0 = self.y0
@@ -121,7 +121,7 @@ class CartesianGraph(NoTouch, Graph):
             curve.show()
 
     def line(self, start, end, color): # start and end relative to origin and scaled -1 .. 0 .. +1
-        tft = GUI.get_tft()
+        tft = self.tft
         xs = int(self.xp_origin + start[0] * self.x_axis_len)
         ys = int(self.yp_origin - start[1] * self.y_axis_len)
         xe = int(self.xp_origin + end[0] * self.x_axis_len)
@@ -141,7 +141,7 @@ class PolarGraph(NoTouch, Graph):
         self.yp_origin = self.y0 + self.radius
 
     def show(self):
-        tft = GUI.get_tft()
+        tft = self.tft
         x0 = self.x0
         y0 = self.y0
         radius = self.radius
@@ -161,7 +161,7 @@ class PolarGraph(NoTouch, Graph):
             curve.show()
 
     def line(self, start, end, color): # start and end are complex, 0 <= magnitude <= 1
-        tft = GUI.get_tft()
+        tft = self.tft
         xs = int(self.xp_origin + start.real * self.radius)
         ys = int(self.yp_origin - start.imag * self.radius)
         xe = int(self.xp_origin + end.real * self.radius)

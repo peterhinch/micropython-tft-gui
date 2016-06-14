@@ -68,10 +68,12 @@ methods, called without arguments.
 The ``Screen`` class is subclassed from the ``GUI`` class. This has a ``setup`` class method which
 is called from ``tft_local`` after initialising the hardware. It stores the tft, touchscreen and
 scheduler instances in class methods for access throughout the library. It also supports the
-``set_grey_style`` class method and the ``get_tft`` method. This should be used in the methods of
-all controls where access to the TFT is required: the method accepts the greyed-out status of the
-control instance as its argument and instructs the ``TFT_G`` class of the correct greyed-out status
-to use.
+``set_grey_style`` class method and the ``get_tft`` method. This provides access to the TFT. It
+accepts the greyed-out status of the control instance as its argument and instructs the ``TFT_G``
+class of the correct greyed-out status to use.
+
+In practice, controls and displays access the TFT by means of the ``tft`` property of the ``NoTouch``
+base class. This sets the greyed out status of the ``TFT_G`` and returns the instance.
 
 Access to the TFT module is mediated by the ``TFT_G`` class. This is subclassed from the TFT
 module's ``TFT`` class. Its purpose is to handle the colors of greyed out controls: for consistency
@@ -104,32 +106,32 @@ Constructor arguments (all mandatory, positional):
 
 Bound variables:
 
- 1. ``fgcolor`` Foreground color. See fontcolor below.
- 2. ``bgcolor`` Background color. See fontcolor below.
- 3. ``fontcolor`` These should be used in all methods, notably in constructors, as they reflect the
+ * ``fgcolor`` Foreground color. See fontcolor below.
+ * ``bgcolor`` Background color. See fontcolor below.
+ * ``fontcolor`` These should be used in all methods, notably in constructors, as they reflect the
  defaults applied by the superclass where the user passed ``None`` to the constructor.
- 4. ``screen`` The screen object on which this instance should be drawn. This is set to the current
+ * ``screen`` The screen object on which this instance should be drawn. This is set to the current
  screen by the ``NoTouch`` constructor.
- 5. ``redraw`` Set by the GUI system. When set the ``show`` method must redraw the entire control.
+ * ``redraw`` Set by the GUI system. When set the ``show`` method must redraw the entire control.
  If the ``show`` method is to avoid redrawing the entire control on every call, it should clear
  the flag down when drawing the elements which are intended to persist.
- 6. ``location`` The following are simply storage for the constructor args described above.
- 7. ``_value``
- 8. ``_initial_value`` Available for any purpose, notably initialisation detection.
- 9. ``font``
- 10. ``height``
- 11. ``width``
- 12. ``fill`` True if a ``bgcolor`` was provided to the constructor.
- 13. ``enabled`` For compound cotrols only (pseudo controls consisting of more than one physical
+ * ``location`` The following are simply storage for the constructor args described above.
+ * ``_value``
+ * ``_initial_value`` Available for any purpose, notably initialisation detection.
+ * ``font``
+ * ``height``
+ * ``width``
+ * ``fill`` True if a ``bgcolor`` was provided to the constructor.
+ * ``enabled`` For compound cotrols only (pseudo controls consisting of more than one physical
  control). Currently only the ``ButtonList`` sets it ``False` and ``Button`` honours it. If ``False``
  the control will be invisible.
- 14. ``_greyed_out`` Always ``False`` in the case of displays (which don't respond to touch).
- 15. ``border`` Border width in pixels. 0 if there is no border.
- 16. ``callback`` Callback function on value change. Primarily for control classes: default is a
+ * ``_greyed_out`` Always ``False`` in the case of displays (which don't respond to touch).
+ * ``border`` Border width in pixels. 0 if there is no border.
+ * `callback`` Callback function on value change. Primarily for control classes: default is a
  null function.
- 17. ``args`` Args for above, default [].
- 18. ``cb_end`` Callback on touch release: for control classes.
- 19. ``cbe_args`` Args for above, default [].
+ * ``args`` Args for above, default [].
+ * ``cb_end`` Callback on touch release: for control classes.
+ * ``cbe_args`` Args for above, default [].
 
 Methods:
 
@@ -142,6 +144,9 @@ Methods:
  changed it updates it, calls the callback, and calls the control's ``show`` method if it is on the
  current screen. The optional ``show`` argument is set ``False`` by the ``show`` method where that
  method calls the control's ``value`` method. This prevents needless recursion.
+
+Property:
+ * ``tft`` Returns the ``TFT_G`` instance with greyed_out status set to that of ``self``.
 
 # class Touchable (subclass of NoTouch)
  

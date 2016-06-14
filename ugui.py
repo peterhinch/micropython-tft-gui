@@ -165,7 +165,7 @@ class GUI(object):
         cls.objsched = objsched
         cls.objtouch = objtouch
         cls.tft = tft
-# get_tft() when called from user code, ensure any prior greyed_out status is cleared.
+# get_tft() when called from user code, ensure greyed_out status is updated.
     @classmethod
     def get_tft(cls, greyed_out=False):
         cls.tft.usegrey(greyed_out)
@@ -270,6 +270,10 @@ class NoTouch(object):
         self.cb_end = dolittle # Touch release callbacks
         self.cbe_args = []
 
+    @property
+    def tft(self):
+        return GUI.get_tft(self._greyed_out)
+
     def greyed_out(self):
         return self._greyed_out # Subclass may be greyed out
 
@@ -293,7 +297,7 @@ class NoTouch(object):
 
 # Called by Screen.show(). Draw background and bounding box if required
     def draw_border(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         x = self.location[0]
         y = self.location[1]
         if self.fill:
@@ -320,7 +324,7 @@ class Touchable(NoTouch):
     def greyed_out(self, val=None):
         if val is not None and self._greyed_out != val:
             self._greyed_out = val
-            GUI.get_tft(self.greyed_out())
+#            GUI.get_tft(self.greyed_out())
             self.draw_border()
             self.redraw = True
             self.show_if_current()
@@ -349,7 +353,7 @@ class Label(NoTouch):
         self.height += 2 * self.border  # Height determined by font and border
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         bw = self.border
         x = self.location[0]
         y = self.location[1]
@@ -372,7 +376,7 @@ class Dial(NoTouch):
         self.new_value = None
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         ticks = self.ticks
         radius = self.radius
         ticklen = 0.1 * radius
@@ -402,7 +406,7 @@ class Dial(NoTouch):
         self.show_if_current()
 
     def _drawpointer(self, radians, pointer, color):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         length = self.pointers[pointer]
         x_end = int(self.xorigin + length * math.sin(radians))
         y_end = int(self.yorigin - length * math.cos(radians))
@@ -418,7 +422,7 @@ class LED(NoTouch):
         self.y = location[1] + self.radius + self.border
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         color = self._color if self._value else BLACK
         tft.fill_circle(int(self.x), int(self.y), int(self.radius), color)
         tft.draw_circle(int(self.x), int(self.y), int(self.radius), self.fgcolor)
@@ -446,7 +450,7 @@ class Meter(NoTouch):
         self.ptr_y = None # Invalidate old position
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         width = self.width
         dx = 5
         x0 = self.x0
@@ -488,7 +492,7 @@ class IconGauge(NoTouch):
         self.state = initial_icon
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         x = self.location[0]
         y = self.location[1]
         self.draw(x, y, self.state, tft.drawBitmap)
@@ -534,7 +538,7 @@ class Button(Touchable):
         self.litcolor = litcolor if self.fgcolor is not None else None
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         x = self.location[0]
         y = self.location[1]
         if not self.enabled:   # erase the button
@@ -708,7 +712,7 @@ class Checkbox(Touchable):
         self._show()
 
     def _show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         bw = self.border
         x = self.location[0] + bw
         y = self.location[1] + bw
@@ -758,7 +762,7 @@ class IconButton(Touchable):
         self._show(self.state)
 
     def _show(self, state):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         self.state = state
         x = self.location[0] + self.width // 2 # Centre relative
         y = self.location[1] + self.height // 2
@@ -874,7 +878,7 @@ class Slider(Touchable):
         self.slide_y = None # Invalidate slide position
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         bw = self.border
         width = self.width - 2 * bw
         height = self.pot_dimension # Height of slot
@@ -966,7 +970,7 @@ class HorizSlider(Touchable):
         self.slide_x = None # invalidate: slide has not yet been drawn
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         bw = self.border
         height = self.height - 2 * bw
         width = self.pot_dimension # Length of slot
@@ -1056,7 +1060,7 @@ class Knob(Touchable):
         self.color = color
 
     def show(self):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         if self._value is None or self.redraw: # Initialising
             self.redraw = False
             arc = self.arc
@@ -1084,7 +1088,7 @@ class Knob(Touchable):
             else:
                 color = self.bgcolor if self.color is None else self.color # Fill color
             self._drawpointer(self._old_value, color) # erase old
-            GUI.get_tft(self.greyed_out()) # Reset GUI greyed-out status
+            self.tft # Reset GUI greyed-out status
 
         self._drawpointer(self._value, self.fgcolor) # draw new
         self._old_value = self._value # update old
@@ -1100,7 +1104,7 @@ class Knob(Touchable):
         self.value(alpha / arc)
 
     def _drawpointer(self, value, color):
-        tft = GUI.get_tft(self.greyed_out())
+        tft = self.tft
         arc = self.arc
         length = self.pointerlen
         angle = value * arc - arc / 2

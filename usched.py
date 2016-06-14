@@ -1,10 +1,15 @@
 # Lightweight threading library for the micropython board.
 # Author: Peter Hinch
+# V1.06 Type check threads, heartbeat LED on Pyboard
 # V1.05 Uses utime for improved portability.
 # Copyright Peter Hinch 2016 Released under the MIT license
 
 import gc
 from utime import ticks_us
+
+def _g(): # Avoid hauling in entire types module
+    yield 1
+GeneratorType = type(_g())
 
 # TIMER ACCESS
 
@@ -153,6 +158,7 @@ class Poller(Waitfor):
 
 class Sched(object):
     GCTIME = const(50000)
+    HBTIME = const(200000)
     DEAD = const(0)
     RUNNING = const(1)
     PAUSED = const(2)
@@ -161,12 +167,20 @@ class Sched(object):
     PID = const(2)
     STATE = const(3)
     DUE = const(4)
-    def __init__(self, gc_enable = True):
+    def __init__(self, gc_enable=True, heartbeat=None):
         self.lstThread = []                     # Entries contain [Waitfor object, function, pid, state]
         self.bStop = False
         self.last_gc = 0
         self.pid = 0
         self.gc_enable = gc_enable
+        self.last_heartbeat = 0
+        self.heartbeat = heartbeat
+        if heartbeat is not None:
+            if heartbeat > 0 and heartbeat < 5:
+                import pyb
+                self.heartbeat = pyb.LED(heartbeat)
+            else:
+                raise ValueError('heartbeat must be a valid LED no.')
 
     def __getitem__(self, pid):                 # Index by pid
         threads = [thread for thread in self.lstThread if thread[PID] == pid]
@@ -189,15 +203,23 @@ class Sched(object):
     def resume(self, pid):
         self[pid][STATE] = RUNNING
 
-    def add_thread(self, func):                 # Thread list contains [Waitfor object, generator, pid, state]
-        self.pid += 1                           # Run thread to first yield to acquire a Waitfor instance
-        self.lstThread.append([func.send(None), func, self.pid, RUNNING, True]) # and put the resultant thread onto the threadlist
+# Thread list contains [Waitfor object, generator, pid, state]: Run thread to first yield to acquire 
+# a Waitfor instance and put the resultant thread onto the threadlist
+    def add_thread(self, func):
+        if type(func) is not GeneratorType:
+            raise ValueError('Threads must be added using function call syntax')
+        self.pid += 1
+        self.lstThread.append([func.send(None), func, self.pid, RUNNING, True])
         return self.pid
 
-    def _idle_thread(self):                     # Runs once then in roundrobin or when there's nothing else to do
+# Runs once then in roundrobin or when there's nothing else to do
+    def _idle_thread(self):
         if self.gc_enable and (self.last_gc == 0 or after(self.last_gc) > GCTIME):
             gc.collect()
             self.last_gc = ticks_us()
+        if self.heartbeat is not None and (self.last_heartbeat == 0 or after(self.last_heartbeat) > HBTIME):
+            self.heartbeat.toggle()
+            self.last_heartbeat = ticks_us()
 
     def triggered(self, thread):
         wf = thread[YIELDED]

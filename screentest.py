@@ -33,7 +33,7 @@ from math import pi
 
 def quitbutton(x, y):
     def quit(button):
-        tft = GUI.get_tft()
+        tft = button.tft
         tft.clrSCR()
         GUI.objsched.stop()
     Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,

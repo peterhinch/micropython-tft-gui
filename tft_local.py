@@ -31,7 +31,7 @@ from touch import TOUCH
 from ugui import Screen, GUI, TFT_G
 
 def setup():
-    objsched = Sched()                                      # Instantiate the scheduler
+    objsched = Sched(True, 1) # Instantiate the scheduler with GC and heartbeat on red LED
     tft = TFT_G("SSD1963", "LB04301", LANDSCAPE)
     touch = TOUCH("XPT2046", objsched, confidence = 50, margin = 50)
     # (-3886,-0.1287,-3812,-0.132,-3797,-0.07685,-3798,-0.07681))

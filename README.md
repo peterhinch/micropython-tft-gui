@@ -157,6 +157,10 @@ my_screen.run()
 Control then passes to the scheduler: the code following this line will not run until the scheduler
 is stopped (``GUI.objsched.stop()``). See the scheduler README for full details.
 
+By default tft_local.py instantiates the scheduler with a heartbeat on the Pyboard's red LED. If
+writing threaded code it provides visual confirmation that the scheduler is running, and that no
+thread is hogging execution by failing to yield.
+
 # Class GUI
 
 This provides access to system-wide objects and behaviours.
