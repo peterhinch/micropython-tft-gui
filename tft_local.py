@@ -37,4 +37,3 @@ def setup():
     # (-3886,-0.1287,-3812,-0.132,-3797,-0.07685,-3798,-0.07681))
     tft.backlight(100) # light on: remove this line if you don't have backlight control hardware
     GUI.setup(objsched, tft, touch)
-    return Screen()

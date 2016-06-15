@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 from constants import *
-from ugui import HorizSlider, Button, ButtonList, Dial, Label, GUI, LED, Meter
+from ugui import HorizSlider, Button, ButtonList, Dial, Label, GUI, LED, Meter, Screen
 from font10 import font10
 from font14 import font14
 from tft_local import setup
@@ -90,7 +90,8 @@ def testmeter(meter):
 
 def test():
     print('Test TFT panel...')
-    my_screen = setup()
+    setup()
+    my_screen = Screen()
     led = LED((420, 0), border = 2)
     meter1 = Meter((320, 0), font=font10, legends=('0','5','10'), pointercolor = YELLOW, fgcolor = GREEN)
     meter2 = Meter((360, 0), font=font10, legends=('0','5','10'), pointercolor = YELLOW)

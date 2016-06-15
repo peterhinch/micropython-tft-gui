@@ -23,7 +23,7 @@
 # THE SOFTWARE.
 
 from constants import *
-from ugui import Button, ButtonList, RadioButtons, Checkbox, Label, GUI
+from ugui import Button, ButtonList, RadioButtons, Checkbox, Label, GUI, Screen
 from font14 import font14
 from tft_local import setup
 
@@ -93,7 +93,8 @@ labels = { 'width' : 70,
 
 def test():
     print('Testing TFT...')
-    my_screen = setup()
+    setup()
+    my_screen = Screen()
 # Uncomment this line to see 'skeleton' style greying-out:
 #    GUI.tft.grey_color()
 

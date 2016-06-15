@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 from constants import *
-from ugui import Knob, Dial, Label, Button, ButtonList, GUI
+from ugui import Knob, Dial, Label, Button, ButtonList, GUI, Screen
 from font14 import font14
 from tft_local import setup
 from math import pi
@@ -52,7 +52,8 @@ def cb_style(button, skeleton):
 
 def test():
     print('Test TFT panel...')
-    my_screen = setup()
+    setup()
+    my_screen = Screen()
     Button((390, 240), font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80, height = 30)
     dial1 = Dial((120, 0), fgcolor = YELLOW, border = 2, pointers = (0.9, 0.7))

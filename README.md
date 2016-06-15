@@ -97,6 +97,12 @@ Instructions on creating font and icon files may be found in the README for the 
 
 # Concepts
 
+### Terminology
+
+The GUI does not support windows. The corresponding notion is a ``Screen`` comprising a full screen
+containing displayable objects. These comprise ``control`` and ``display`` objects. The former can
+respond to touch (e.g. Pushbutton instances) while the latter cannot (LED or Dial instances).
+
 ### Coordinates
 
 In common with most displays, the top left hand corner of the display is (0, 0) with increasing
@@ -113,7 +119,7 @@ TFT library.
 
 ### Callbacks
 
-The interface is event driven. Optional callbacks may be provided which will be executed when a
+The interface is event driven. Controls may have optional callbacks which will be executed when a
 given event occurs. A callback function receives positional arguments. The first is a reference to
 the object raising the callback. Subsequent arguments are user defined, and are specified as a
 tuple or list of items. Callbacks are optional, as are the argument lists - a default null
@@ -134,6 +140,14 @@ to create the user screen. Control callbacks will be methods bound to the user s
 to the screen's bound variables via ``self`` and to the control's bound methods via the callback's
 first argument.
 
+User subclasses of ``Screen`` may have callbacks, ``on_open`` which occurs when a screen is opened
+but prior to its display, and ``on_hide`` which runs when a screen change is about to make the
+screen disappear. These may be used to instantiate or control threads. If callbacks are implemented
+they must be bound methods of the ``Screen`` subclass. They may take positional args provided as
+an optional argument list. Where used, callbacks and argument lists must be named as follows:
+ * ``on_open``, ``open_args``
+ * ``on_hide``, ``hide_args``
+
 ### The GUI class
 
 This provides access to the underlying ``TFT`` and scheduler objects. The former can be used for
@@ -146,7 +160,8 @@ The following initialisation code is required in any application:
 ```python
 from tft_local import Button # Whatever objects you need
 from ugui import Screen, GUI
-my_screen = setup()
+setup()
+my_screen = Screen()
 ```
 The last line produces a Screen instance which will be the location for GUI objects subsequently
 instantiated (unless you create a new ``Screen`` instance). When all objects have been instantiated
@@ -191,13 +206,20 @@ Thus a single screen system merely needs to call ``setup`` and instantiate GUI o
 screen system it is easiest to instantiate the most deeply nested screen first thus:
 
 ```python
-s2 = setup()
-create_screen_2() # function instantiates display items on s2
-s1 = Screen()
-create_screen_1(s2) # Next level display items on s1 (reference to S2 allows change screen button).
-s0 = Screen()
-create_screen_0(s1) # Top level display items with change screen to s1
+setup()
+s2 = create_screen_2() # function instantiates display items on s2
+s1 = create_screen_1(s2) # Next level display items on s1 (reference to S2 allows change screen button).
+s0 = create_screen_0(s1) # Top level display items with change screen to s1
 s0.run()
+```
+
+A create_screen function looks like this:
+
+```python
+def create_screen_2():
+    s = Screen()
+    # Instantiate controls and displays
+    return s
 ```
 
 ## Class methods

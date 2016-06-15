@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 from constants import *
-from ugui import Slider, Button, ButtonList, Dial, Label, GUI
+from ugui import Slider, Button, ButtonList, Dial, Label, GUI, Screen
 from font10 import font10
 from font14 import font14
 from tft_local import setup
@@ -83,7 +83,8 @@ table = {'fontcolor' : WHITE,
 
 def test():
     print('Test TFT panel...')
-    my_screen = setup()
+    setup()
+    my_screen = Screen()
     GUI.set_grey_style(desaturate = False) # dim
     btnquit = Button((390, 240), font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80, height = 30)

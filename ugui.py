@@ -194,10 +194,23 @@ class Screen(GUI):
 
     @classmethod
     def change(cls, new_screen, forward=True):
+        cs = cls.current_screen
+        if cs is not None:
+            if hasattr(cs, 'on_hide'):
+                if hasattr(cs, 'hide_args'):
+                    cs.on_hide(*cs.hide_args) # Callbacks are screen subclass instance bound methods
+                else:
+                    cs.on_hide()
         if forward:
-            new_screen.parent = cls.current_screen
-        cls.current_screen = new_screen
+            new_screen.parent = cs
+        cs = new_screen
+        cls.current_screen = cs
         cls.tft.clrSCR()
+        if hasattr(cs, 'on_open'):
+            if hasattr(cs, 'open_args'):
+                cs.on_open(*cs.open_args) # bound method
+            else:
+                cs.on_open()
         cls.show()
 
     @classmethod
@@ -208,6 +221,8 @@ class Screen(GUI):
 
     @classmethod
     def addobject(cls, obj):
+        if cls.current_screen is None:
+            raise OSError('You must create a Screen instance')
         if isinstance(obj, Touchable):
             cls.current_screen.touchlist.append(obj)
         cls.current_screen.displaylist.append(obj)
@@ -241,8 +256,7 @@ class Screen(GUI):
         self.parent = None
 
     def run(self):
-        self.current_screen = self
-        self.show()
+        Screen.change(self)
         self.objsched.run()
 
 # Base class for all displayable objects
@@ -324,7 +338,6 @@ class Touchable(NoTouch):
     def greyed_out(self, val=None):
         if val is not None and self._greyed_out != val:
             self._greyed_out = val
-#            GUI.get_tft(self.greyed_out())
             self.draw_border()
             self.redraw = True
             self.show_if_current()

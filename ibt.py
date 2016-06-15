@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 from constants import *
-from ugui import IconButton, IconGauge, IconRadioButtons, Label, GUI
+from ugui import IconButton, IconGauge, IconRadioButtons, Label, GUI, Screen
 from tft_local import setup
 from font10 import font10
 from font14 import font14
@@ -92,7 +92,8 @@ def lr(n): # y coordinate from logical row
 
 def test():
     print('Testing TFT...')
-    my_screen = setup()
+    setup()
+    my_screen = Screen()
 # Static labels
     Label((90, lr(0) + 5), font = font10, width = 150, value = 'Flashing buttons')
     Label((244, lr(1) + 5), font = font10, width = 150, value = 'Reset radio button')

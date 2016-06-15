@@ -69,8 +69,10 @@ def refreshbutton(x, y, curvelist):
 # SCREEN CREATION
 
 def create_back_screen():
+    screen = Screen()
     Label((0, 0), font = font14, width = 400, value = 'Ensure back refreshes properly')
     backbutton(390, 242)
+    return screen
 
 def create_base_screen(polar_screen, xy_screen, realtime_screen):
     screen = Screen()
@@ -161,8 +163,8 @@ def create_rt_screen(next_screen):
 
 def pt():
     print('Testing plot module...')
-    back_screen = setup()
-    create_back_screen() # Most deeply nested screen first
+    setup()
+    back_screen = create_back_screen() # Most deeply nested screen first
     polar_screen = create_polar_screen(back_screen)
     xy_screen = create_xy_screen(back_screen)
     realtime_screen = create_rt_screen(back_screen)
