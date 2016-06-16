@@ -53,27 +53,63 @@ def backbutton(x, y):
 
 # SCREEN CREATION
 
-# Demo of subclassing a screen to use callbacks
+# Demo of on_open and on_hide methods
 class BackScreen(Screen):
     def __init__(self):
         super().__init__()
         Label((0, 0), font = font14, width = 400, value = 'Ensure back refreshes properly')
         backbutton(390, 242)
-        self.open_args = ['Opening']
-        self.hide_args = ['Hiding']
+        self.open_arg = 'Opening'
+        self.hide_arg = 'Hiding'
 
-    def on_open(self, text):
-        print(text)
+    def on_open(self):
+        print(self.open_arg)
 
-    def on_hide(self, text):
-        print(text)
+    def on_hide(self):
+        print(self.hide_arg)
+
+class ThreadScreen(Screen):
+    def __init__(self, next_screen):
+        super().__init__()
+        Label((0, 0), font = font14, width = 400, value = 'Green dial runs only')
+        Label((0, 30), font = font14, width = 400, value = 'when screen is visible')
+        Label((0, 120), font = font14, width = 400, value = "Yellow dial's value is")
+        Label((0, 150), font = font14, width = 400, value = 'computed continuously.')
+        self.dial1 = Dial((350, 10), fgcolor = GREEN, border = 2, pointers = (0.9, 0.7))
+        self.dial2 = Dial((350, 120), fgcolor = YELLOW, border = 2,  pointers = (0.9, 0.7))
+        self.pid1 = GUI.objsched.add_thread(self.mainthread(self.dial1))
+        GUI.objsched.pause(self.pid1)
+        GUI.objsched.add_thread(self.mainthread(self.dial2))
+
+        fwdbutton(0, 242, next_screen)
+        backbutton(390, 242)
+
+    def on_open(self):
+        print('Start green dial')
+        GUI.objsched.resume(self.pid1)
+
+    def on_hide(self):
+        print('Stop green dial')
+        GUI.objsched.pause(self.pid1)
+
+    def mainthread(self, dial):
+        angle = 0
+        yield
+        while True:
+            yield 0.2
+            delta = 0.2
+            angle += pi * 2 * delta / 10
+            dial.value(angle)
+            dial.value(angle /10, 1)
 
 class BaseScreen(Screen):
-    def __init__(self, knob_screen, slider_screen, assorted_screen):
+    def __init__(self, knob_screen, slider_screen, assorted_screen, thread_screen):
         super().__init__()
+        Label((0, 0), font = font14, width = 400, value = 'Multiple screen demonstration.')
         fwdbutton(0, 242, knob_screen, 'Knobs')
         fwdbutton(100, 242, slider_screen, 'Sliders')
         fwdbutton(200, 242, assorted_screen, 'Various')
+        fwdbutton(0, 100, thread_screen, 'Threads')
         quitbutton(390, 242)
 
 class KnobScreen(Screen):
@@ -240,7 +276,8 @@ def test():
     knob_screen = KnobScreen(back_screen)
     slider_screen = SliderScreen(back_screen)
     assorted_screen = AssortedScreen(back_screen)
-    base_screen = BaseScreen(knob_screen, slider_screen, assorted_screen)
+    thread_screen = ThreadScreen(back_screen)
+    base_screen = BaseScreen(knob_screen, slider_screen, assorted_screen, thread_screen)
     base_screen.run()                                          # Run it!
 
 test()

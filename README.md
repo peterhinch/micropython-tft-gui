@@ -100,8 +100,8 @@ Instructions on creating font and icon files may be found in the README for the 
 ### Terminology
 
 The GUI does not support windows. The corresponding notion is a ``Screen`` comprising a full screen
-containing displayable objects. These comprise ``control`` and ``display`` objects. The former can
-respond to touch (e.g. Pushbutton instances) while the latter cannot (LED or Dial instances).
+containing displayable GUI objects. These comprise ``control`` and ``display`` objects. The former
+can respond to touch (e.g. Pushbutton instances) while the latter cannot (LED or Dial instances).
 
 ### Coordinates
 
@@ -126,33 +126,32 @@ tuple or list of items. Callbacks are optional, as are the argument lists - a de
 function and empty list are provided. Callbacks may be bound methods - see the Screens section for
 a reason why this is useful.
 
-All objects capable of raising callbacks have member variables ``tft`` and ``objsched`` being
-references to the TFT and scheduler instances respectively.
+All objects capable of raising callbacks have a ``tft`` property enabling access to drawing
+primitives. The scheduler may be accessed via the ``GUI`` instance.
 
 ### Screens
 
 GUI controls and displays are rendered on a ``Screen`` instance. A user program may instantiate
 multiple screens, each with its own set of GUI objects. The ``Screen`` class has class methods
 enabling runtime changes of the screen being rendered to the physical display. This enables nested
-screens. The feature is demonstrated in ``screentest.py``. In real applications screens may contain
-a number of controls needing to share data. In such cases it can be simplest to subclass ``Screen``
-to create the user screen. Control callbacks will be methods bound to the user screen, with access
-to the screen's bound variables via ``self`` and to the control's bound methods via the callback's
-first argument.
+screens. The feature is demonstrated in ``screentest.py``.
 
-User subclasses of ``Screen`` may have callbacks, ``on_open`` which occurs when a screen is opened
-but prior to its display, and ``on_hide`` which runs when a screen change is about to make the
-screen disappear. These may be used to instantiate or control threads. If callbacks are implemented
-they must be bound methods of the ``Screen`` subclass. They may take positional args provided as
-an optional argument list. Where used, callbacks and argument lists must be named as follows:
- * ``on_open``, ``open_args``
- * ``on_hide``, ``hide_args``
+In practice the easiest way to build applications with multiple screens is to create a ``Screen``
+subclass for each of the application's screens. This faciitates sharing data between GUI objects on
+a screen, and also simplifies the handling of control callbacks. These will be methods bound to
+the user screen. They can access the screen's bound variables via ``self`` and the control's bound
+methods via the callback's first argument (which is a reference to the control). A simple example
+can be seen in the ``KnobScreen`` example in ``screentest.py``.
+
+The ``Screen`` class has two null methods which may be implemented in subclasses: ``on_open`` which
+runs when a screen is opened but prior to its display, and ``on_hide`` which runs when a screen
+change is about to make the screen disappear. These may be used to instantiate or control threads.
 
 ### The GUI class
 
-This provides access to the underlying ``TFT`` and scheduler objects. The former can be used for
-direct drawing to the display screen, and the latter for creating threads for concurrent execution
-(the file ``hst.py`` demonstrates this).
+From a user perspective this provides access to the scheduler object. This may be employed to
+create threads for concurrent execution (demontsrated in ``hst.py``). The ``GUI`` class is
+configured in ``tft_local.py``.
 
 # Initialisation Code
 
@@ -187,39 +186,48 @@ In normal use only the following class variable should be accessed.
 
 ## Class methods
 
-``get_tft`` Return the ``TFT`` instance. This allows direct drawing to the physical screen.
-Anything so drawn will be lost when the screen is changed.  
 ``set_grey_style`` Sets the way in which disabled ('greyed-out') objects are displayed. The colors
 of disabled objects are dimmed by a factor and optionally desaturated (turned to shades of grey).
 Optional keyword arguments: ``desaturate`` default ``True`` and ``factor`` default 2. A
 ``ValueError`` will result if ``factor`` is <= 1. The default style is to desaturate and dim by a
-factor of 2.
+factor of 2.  
+``get_tft`` Return the ``TFT`` instance. This allows direct drawing to the physical screen.
+Anything so drawn will be lost when the screen is changed. In normal use the ``TFT`` instance is
+acquired via a GUI object's ``tft`` property.
 
 # Class Screen (GUI subclass)
 
-The ``Screen`` class presents a full-screen canvas onto which displayable objects are rendered. The
-``tft_local.setup()`` method instantiates a screen and returns it. This screen will be the current
-one util another is instantiated. When a GUI object is instantiated it is associated with the
+The ``Screen`` class presents a full-screen canvas onto which displayable objects are rendered.
+Before instantiating GUI objects a ``Screen`` instance must be created. This will be the current
+one until another is instantiated. When a GUI object is instantiated it is associated with the
 current screen.
 
-Thus a single screen system merely needs to call ``setup`` and instantiate GUI objects. In a multi
-screen system it is easiest to instantiate the most deeply nested screen first thus:
+Thus a single screen system merely needs to call ``setup``, create a ``Screen`` instance and
+instantiate GUI objects. In a multi screen system it is easiest to create user screens by
+subclassing ``Screen``. Then instantiate the most deeply nested screen first thus:
 
 ```python
 setup()
-s2 = create_screen_2() # function instantiates display items on s2
-s1 = create_screen_1(s2) # Next level display items on s1 (reference to S2 allows change screen button).
-s0 = create_screen_0(s1) # Top level display items with change screen to s1
+s2 = Screen_2() # constructor instantiates display items on s2
+s1 = Screen_1(s2) # Next level display items on s1 (reference to S2 allows change screen button).
+s0 = Screen_0(s1) # Top level display items with change screen to s1
 s0.run()
 ```
 
-A create_screen function looks like this:
+A minimal screen subclass looks like this:
 
 ```python
-def create_screen_2():
-    s = Screen()
-    # Instantiate controls and displays
-    return s
+def backbutton(x, y):
+    def back(button):
+        Screen.back()
+    Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back,
+           fgcolor = CYAN,  text = 'Back', shape = RECTANGLE, width = 80)
+
+class Screen_2(Screen):
+    def __init__(self):
+        super().__init__()
+        Label((0, 0), font = font14, width = 400, value = 'Test screen')
+        backbutton(390, 242)
 ```
 
 ## Class methods

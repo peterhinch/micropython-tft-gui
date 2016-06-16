@@ -196,21 +196,13 @@ class Screen(GUI):
     def change(cls, new_screen, forward=True):
         cs = cls.current_screen
         if cs is not None:
-            if hasattr(cs, 'on_hide'):
-                if hasattr(cs, 'hide_args'):
-                    cs.on_hide(*cs.hide_args) # Callbacks are screen subclass instance bound methods
-                else:
-                    cs.on_hide()
+            cs.on_hide() # Optional method in subclass
         if forward:
             new_screen.parent = cs
         cs = new_screen
         cls.current_screen = cs
         cls.tft.clrSCR()
-        if hasattr(cs, 'on_open'):
-            if hasattr(cs, 'open_args'):
-                cs.on_open(*cs.open_args) # bound method
-            else:
-                cs.on_open()
+        cs.on_open() # Optional method in subclass
         cls.show()
 
     @classmethod
@@ -254,6 +246,12 @@ class Screen(GUI):
             objsched.add_thread(self._touchtest()) # One thread only
         Screen.current_screen = self
         self.parent = None
+
+    def on_open(self): # Implmented in subclass
+        return
+
+    def on_hide(self):
+        return
 
     def run(self):
         Screen.change(self)
