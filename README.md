@@ -77,7 +77,8 @@ Test/demo programs:
  1. vst.py A test program for vertical linear sliders.
  2. hst.py Tests horizontal slider controls, meters and LED.
  3. buttontest.py Pushbuttons and checkboxes.
- 4. knobtest.py Rotary control test.
+ 4. knobtest.py Rotary controls, dropdown lists and the two styles of "greying out" of disabled
+ controls.
  5. ibt.py Test of icon buttons.
  6. screentest.py Test of multiple screens
 
@@ -157,16 +158,16 @@ configured in ``tft_local.py``.
 
 The following initialisation code is required in any application:
 ```python
-from tft_local import Button # Whatever objects you need
-from ugui import Screen, GUI
+from tft_local import setup
+from ugui import Screen, Button # Whatever objects you need
 setup()
-my_screen = Screen()
+Screen()
 ```
 The last line produces a Screen instance which will be the location for GUI objects subsequently
 instantiated (unless you create a new ``Screen`` instance). When all objects have been instantiated
 and any threads created, the GUI is started by issuing:
 ```
-my_screen.run()
+Screen.run()
 ```
 Control then passes to the scheduler: the code following this line will not run until the scheduler
 is stopped (``GUI.objsched.stop()``). See the scheduler README for full details.
@@ -214,6 +215,11 @@ s0 = Screen_0(s1) # Top level display items with change screen to s1
 s0.run()
 ```
 
+This code has the drawback that all screen instances exist and consume RAM permanently. In
+multi-screen systems a more RAM-efficient approach is to instantiate screens only when they are
+required. An example of this technique is presented in screentest.py, with screens instantiated in
+the callback of the button which invokes the screen.
+
 A minimal screen subclass looks like this:
 
 ```python
@@ -233,8 +239,16 @@ class Screen_2(Screen):
 ## Class methods
 
 In normal use the following methods only are required:
-``change`` Change screen, refreshing the display. Argument: the new ``Screen`` instance.
-``back`` Restore previous screen.
+``change`` Change screen, refreshing the display. Argument: the new screen. This may be either a
+``Screen`` instance or a class subclassed from ``Screen``. In the latter case the class will be
+instantiated.
+``back`` Restore previous screen.  
+``run`` Takes an optional argument being the screen to run. If this is not provided, the current
+screen will run. If provided, it may be either a ``Screen`` instance or a class subclassed from
+``Screen``. In the latter case the class will be instantiated.
+
+The ability to pass a class rather than an instance to ``change`` and ``run`` simplifies the design
+of multi-screen systems where screens are instantiated as required. See screentest.py.
 
 ## Constructor
 
@@ -259,7 +273,8 @@ Constructor mandatory positional argument:
 
 Keyword only arguments:  
  * ``font`` Mandatory. Font object to use.
- * ``width`` Mandatory. The width of the object in pixels.
+ * ``width`` The width of the object in pixels. Default: ``None`` - width is determined from the
+ dimensions of the initial text.
  * ``border`` Border width in pixels - typically 2. If omitted, no border will be drawn.
  * ``fgcolor`` Color of border. Defaults to system color.
  * ``bgcolor`` Background color of object. Defaults to system background.
@@ -606,7 +621,7 @@ Optional keyword only arguments:
  * ``state`` Initial button state (index of icon displayed). Default 0.
  * ``callback`` Callback function which runs when button is pressed. Default does nothing.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
- * ``onrelease`` Default ``False``. If ``True`` the callback will occur when the button is released.
+ * ``onrelease`` Default ``True``. If ``True`` the callback will occur when the button is released.
  * ``lp_callback`` Callback to be used if button is to respond to a long press. Default ``None``.
  * ``lp_args`` A list of arguments for the above callback. Default ``[]``.
 
@@ -641,9 +656,43 @@ Methods:
  button in the set, that button becomes active and the callback is executed. Always returns the
  button which is currently active.
 
+## Class Dropdown
+
+A dropdown list. The list, when active, is drawn below the control. The height of the control is
+determined by the height of the font in use.
+
+Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
+
+Mandatory keyword only arguments:
+ * ``font``
+ * ``elements`` A list or tuple of strings to display. Must have at least one entry.
+
+Optional keyword only arguments:
+ * ``width`` Control width in pixels, default 250.
+ * ``value`` Index of currently selected list item. Default 0.
+ * ``fgcolor`` Color of foreground (the control itself). Defaults to system color.
+ * ``bgcolor`` Background color of object. Defaults to system background.
+ * ``fontcolor`` Text color. Defaults to system text color.
+ * ``select_color`` Background color for selected item in list. Default ``LIGHTBLUE``.
+ * ``callback`` Callback function which runs when a list entry is picked.
+ * ``args`` A list of arguments for the above callback. Default ``[]``.
+
+Methods:
+ * ``value`` Argument ``val`` default ``None``. If the argument is provided which is a valid index
+ into the list that entry becomes current and the callback is executed. Always returns the index
+ of the currently active entry.
+ * ``populate`` Arguments: ``elements`` a list of strings, ``value`` (default 0) index into list
+ defining initial value. Replaces the current list of strings, displays the current string and
+ executes the callback.
+ * ``textvalue`` Argument ``text`` a string default ``None``. If the argument is provided and is in
+ the control's list, that item becomes current. Returns the current string, unless the arg was
+ provided but did not correspond to any list item. In this event the control's state is not changed
+ and ``None`` is returned.
+
 # Developer Notes
 
-The ugui module is large by Pyboard standards. This presents no problem if frozen, but if you wish
+The ``ugui`` module is large by Pyboard standards. This presents no problem if frozen, but if you wish
 to modify it, freezing is cumbersome. Compiling it on the Pyboard will result in memory errors. The
 solution is to cross-compile, replacing ugui.py with ugui.mpy on the target. Alternatively you may
 opt to split the module into two.

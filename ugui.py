@@ -26,10 +26,14 @@ import math
 from delay import Delay
 from tft import TFT
 from constants import *
-
 TWOPI = 2 * math.pi
 
 # *********** UTILITY FUNCTIONS ***********
+
+class _A():
+    pass
+
+ClassType = type(_A)
 
 class ugui_exception(Exception):
     pass
@@ -193,13 +197,26 @@ class Screen(GUI):
                 obj.show()
 
     @classmethod
-    def change(cls, new_screen, forward=True):
+    def run(cls, cls_new_screen=None):
+        if cls_new_screen is None:
+            cls_new_screen = cls.current_screen
+        cls.change(cls_new_screen)
+        cls.objsched.run()
+
+    @classmethod
+    def change(cls, cls_new_screen, forward=True):
         cs = cls.current_screen
         if cs is not None:
             cs.on_hide() # Optional method in subclass
         if forward:
+            if type(cls_new_screen) is ClassType:
+                new_screen = cls_new_screen() # Instantiate new screen
+            else:
+                new_screen = cls_new_screen # we were passed an instance
             new_screen.parent = cs
-        cs = new_screen
+            cs = new_screen
+        else:
+            cs = cls_new_screen # An object, not a class
         cls.current_screen = cs
         cls.tft.clrSCR()
         cs.on_open() # Optional method in subclass
@@ -227,7 +244,7 @@ class Screen(GUI):
             if touch_panel.ready:
                 x, y = touch_panel.get_touch_async()
                 for obj in Screen.current_screen.touchlist:
-                    if obj.enabled and not obj.greyed_out():
+                    if obj.enabled and not obj.greyed_out() and not obj.suppressed:
                         obj._trytouch(x, y)
             elif not touch_panel.touched:
                 for obj in Screen.current_screen.touchlist:
@@ -318,6 +335,15 @@ class NoTouch(object):
             tft.draw_rectangle(x, y, x + self.width, y + self.height, self.fgcolor)
         return self.border # border width in pixels
 
+    def overlaps(self, xa, ya, xb, yb): # Args must be sorted: xb > xa and yb > ya
+        x0 = self.location[0]
+        y0 = self.location[1]
+        x1 = x0 + self.width
+        y1 = y0 + self.height
+        if (ya <= y1 and yb >= y0) and (xa <= x1 and xb >= x0):
+            return True
+        return False
+
 # Base class for touch-enabled classes.
 class Touchable(NoTouch):
     def __init__(self, location, font, height, width, fgcolor, bgcolor, fontcolor, border, can_drag, value, initial_value):
@@ -325,6 +351,7 @@ class Touchable(NoTouch):
         self.can_drag = can_drag
         self.busy = False
         self.was_touched = False
+        self.suppressed = False # Set when overlaid by modal object
 
     def _set_callbacks(self, cb, args, cb_end=None, cbe_args=None):
         self.callback = cb
@@ -358,7 +385,11 @@ class Touchable(NoTouch):
 # *********** DISPLAYS: NON-TOUCH CLASSES FOR DATA DISPLAY ***********
 
 class Label(NoTouch):
-    def __init__(self, location, *, font, border=None, width, fgcolor=None, bgcolor=None, fontcolor=None, value=None):
+    def __init__(self, location, *, font, border=None, width=None, fgcolor=None, bgcolor=None, fontcolor=None, value=None):
+        if width is None:
+            if value is None:
+                raise ValueError('If label value unspecified, must define the width')
+            width, _ = get_stringsize(value, font) 
         super().__init__(location, font, None, width, fgcolor, bgcolor, fontcolor, border, value, None)
         self.height = self.font.bits_vert
         self.height += 2 * self.border  # Height determined by font and border
@@ -748,7 +779,7 @@ class Checkbox(Touchable):
 class IconButton(Touchable):
     long_press_time = 1
     def __init__(self, location, *, icon_module, flash=0, toggle=False, state=0,
-                 callback=dolittle, args=[], onrelease=False, lp_callback=None, lp_args=[]):
+                 callback=dolittle, args=[], onrelease=True, lp_callback=None, lp_args=[]):
         self.draw = icon_module.draw
         self.num_icons = len(icon_module._icons)
         super().__init__(location, None, icon_module.height,
@@ -914,8 +945,10 @@ class Slider(Touchable):
                     dy = height / (len(self.legends) -1)
                 yl = y + height # Start at bottom
                 fhdelta = self.font.bits_vert / 2
+                font = self.font
                 for legend in self.legends:
-                    print_left(tft, x + self.width, int(yl - fhdelta), legend, self.fontcolor, self.font)
+                    loc = (x + self.width, int(yl - fhdelta))
+                    Label(loc, font = font, fontcolor = self.fontcolor, value = legend)
                     yl -= dy
             self.save_background(tft)
             if self._value is None:
@@ -1005,9 +1038,11 @@ class HorizSlider(Touchable):
                 else:
                     dx = width / (len(self.legends) -1)
                 xl = x
+                font = self.font
                 for legend in self.legends:
                     offset = get_stringsize(legend, self.font)[0] / 2
-                    print_left(tft, int(xl - offset), y - self.font.bits_vert, legend, self.fontcolor, self.font)
+                    loc = int(xl - offset), y - self.font.bits_vert - bw - 1
+                    Label(loc, font = font, fontcolor = self.fontcolor, value = legend)
                     xl += dx
             self.save_background(tft)
             if self._value is None:
@@ -1122,3 +1157,141 @@ class Knob(Touchable):
         x_end = int(self.xorigin + length * math.sin(angle))
         y_end = int(self.yorigin - length * math.cos(angle))
         tft.draw_line(int(self.xorigin), int(self.yorigin), x_end, y_end, color)
+
+# *********** DROPDOWN LIST CLASS ***********
+
+class Dropdown(Touchable):
+    def __init__(self, location, *, font, elements, width=250, value=0,
+                 fgcolor=None, bgcolor=None, fontcolor=None, select_color=LIGHTBLUE,
+                 callback=dolittle, args=[]):
+        border = 2
+        self.entry_height = font.bits_vert + 2 # Allow a pixel above and below text
+        height = self.entry_height + 2 * border
+        super().__init__(location, font, height, width, fgcolor, bgcolor, fontcolor, border, False, value, None)
+        super()._set_callbacks(callback, args)
+        self.select_color = select_color
+        self._show_list = False # Control state: when True dropdown list is visible
+        self.populate(elements, self._value)
+
+    def populate(self, elements, value=0):
+        self._show_list = False
+        fail = False
+        try:
+            self.elements = [s for s in elements if type(s) is str]
+        except:
+            fail = True
+        else:
+            fail = len(self.elements) == 0
+        if fail:
+            raise ValueError('elements must be a list or tuple of one or more strings')
+        if value >= len(self.elements):
+            value = 0
+        self._value = -1 # Invalidate to force callback and display
+        self.value(value)
+
+    def show(self):
+        tft = self.tft
+        bw = self.border
+        clip = self.width - (self.height + 2 * bw)
+        if self._show_list: # Show the list
+            length = len(self.elements)
+            x = self.location[0]
+            y = self.location[1] + self.height
+            width = self.width - self.height
+            height = self.entry_height * length
+            tft.fill_rectangle(x, y, x + width, y + height, self.bgcolor) # overlay existing contents
+            tft.draw_rectangle(x, y, x + width, y + height, self.fgcolor) # border
+            xs = x + bw # start and end of text field
+            xe = x + self.width - (self.height + bw)
+            for n in range(length):
+                ye = y + n * self.entry_height
+                if n == self._value:
+                    tft.fill_rectangle(xs, ye + 1, xe, ye + self.entry_height - 1, self.select_color)
+                print_left(tft, xs, ye + 1, self.elements[n], self.fontcolor, self.font, clip)
+        else: # Show the control
+            x, y = self.location[0], self.location[1]
+            self._draw(tft, x, y)
+            if self._value is not None:
+                print_left(tft, x + bw, y + bw + 1, self.elements[self._value], self.fontcolor, self.font, clip)
+
+    def textvalue(self, text=None): # if no arg return current text
+        if text is None:
+            return self.elements[self._value]
+        else: # set value by text
+            try:
+                v = self.elements.index(text)
+            except ValueError:
+                v = None
+            else:
+                if v != self._value:
+                    self.value(v)
+            return v
+
+    def _draw(self, tft, x, y):
+        self.fill = True
+        self.draw_border()
+        tft.draw_vline(x + self.width - self.height, y, self.height, self.fgcolor)
+        xcentre = x + self.width - self.height // 2 # Centre of triangle
+        ycentre = y + self.height // 2
+        halflength = (self.height - 8) // 2
+        length = halflength * 2
+        if length > 0:
+            tft.draw_hline(xcentre - halflength, ycentre - halflength, length, self.fgcolor)
+            tft.draw_line(xcentre - halflength, ycentre - halflength, xcentre, ycentre + halflength, self.fgcolor)
+            tft.draw_line(xcentre + halflength, ycentre - halflength, xcentre, ycentre + halflength, self.fgcolor)
+
+    def _trytouch(self, x, y): # If touched in bounding box, process it otherwise do nothing
+        x0 = self.location[0]
+        if self._show_list:
+            x1 = self.location[0] + self.width - self.height # narrower than control
+            y0 = self.location[1] + self.height
+            y1 = self.location[1] + self.height + self.entry_height * len(self.elements)
+        else: # Normal condition: show control
+            x1 = self.location[0] + self.width
+            y0 = self.location[1]
+            y1 = self.location[1] + self.height
+        if x0 <= x <= x1 and y0 <= y <= y1:
+            self.was_touched = True
+            if not self.busy:
+                self._touched(x, y)
+                self.busy = True
+
+    def _touched(self, x, y):
+        if self._show_list: # List is displayed: save new value
+            dy = y - (self.location[1] + self.height)
+            self._initial_value = dy // self.entry_height
+
+    def _list_dims(self):
+        x0 = self.location[0]
+        x1 = self.location[0] + self.width - self.height # narrower than control
+        y0 = self.location[1] + self.height
+        y1 = self.location[1] + self.height + self.entry_height * len(self.elements)
+        return x0, y0, x1, y1
+
+# Clear list, update value when touch removed: avoid touch events on underlying controls
+    def _untouched(self):
+        if self._show_list:
+            self._clear_list()
+            if self._initial_value is not None:
+                self.value(self._initial_value)
+                self._initial_value = None
+        elif len(self.elements) > 1: # Control is displayed: show list on release
+            self._show_list = True
+            for obj in Screen.current_screen.touchlist:
+                if obj is not self:
+                    obj.suppressed = True # Disallow touch
+            self.show()
+
+    def _clear_list(self): # doesn't redraw compound buttons
+        self._show_list = False
+        tft = GUI.get_tft()
+        x0, y0, x1, y1 = self._list_dims()
+        tft.fill_rectangle(x0, y0, x1, y1, tft.getBGColor()) # Blank to screen BG
+        for obj in Screen.current_screen.touchlist:
+            obj.suppressed = False # Allow touch
+        for obj in [z for z in Screen.current_screen.displaylist
+                    if z is not self and z.overlaps(x0, y0, x1, y1)]:
+            if obj.enabled:
+                obj.redraw = True # Redraw static content
+                obj.draw_border()
+                obj.show()

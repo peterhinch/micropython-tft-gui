@@ -68,72 +68,83 @@ def refreshbutton(x, y, curvelist):
 
 # SCREEN CREATION
 
-def create_back_screen():
-    screen = Screen()
-    Label((0, 0), font = font14, width = 400, value = 'Ensure back refreshes properly')
-    backbutton(390, 242)
-    return screen
+class BackScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        Label((0, 0), font = font10, value = 'Ensure back refreshes properly')
+        backbutton(390, 242)
 
-def create_base_screen(polar_screen, xy_screen, realtime_screen):
-    screen = Screen()
-    Label((0, 0), font = font14, width = 400, value = 'plot module demo')
-    Label((0, 200), font = font10, width = 400, value = 'RT: simulate realtime data acquisition')
-    fwdbutton(0, 242, polar_screen, 'Polar')
-    fwdbutton(100, 242, xy_screen, 'XY')
-    fwdbutton(200, 242, realtime_screen, 'RT')
-    quitbutton(390, 242)
-    return screen
+class BaseScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        Label((0, 0), font = font14, value = 'plot module demo')
+        Label((0, 200), font = font10, value = 'RT: simulate realtime data acquisition')
+        fwdbutton(0, 242, PolarScreen, 'Polar')
+        fwdbutton(100, 242, XYScreen, 'XY')
+        fwdbutton(200, 242, RealtimeScreen, 'RT')
+        quitbutton(390, 242)
 
-def create_polar_screen(next_screen):
-    def populate(curve):
+class PolarScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        backbutton(390, 242)
+        fwdbutton(390, 0, BackScreen)
+        g = PolarGraph((10, 10), border = 4)
+        clearbutton(390, 70, g)
+        curve = PolarCurve(g, self.populate)
+        refreshbutton(390, 140, (curve,))
+
+    def populate(self, curve):
         def f(theta):
             return rect(sin(3 * theta), theta) # complex
         nmax = 150
         for n in range(nmax + 1):
             theta = 2 * pi * n / nmax
             curve.point(f(theta))
-    screen = Screen()
-    backbutton(390, 242)
-    fwdbutton(390, 0, next_screen)
-    g = PolarGraph((10, 10), border = 4)
-    clearbutton(390, 70, g)
-    curve = PolarCurve(g, populate)
-    refreshbutton(390, 140, (curve,))
-    return screen
 
-def create_xy_screen(next_screen):
-    def populate_1(curve, func):
+class XYScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        backbutton(390, 242)
+        fwdbutton(390, 0, BackScreen)
+        g = CartesianGraph((10, 10), yorigin = 2) # Asymmetric y axis
+        clearbutton(390, 70, g)
+        curve1 = Curve(g, self.populate_1, (lambda x : x**3 + x**2 -x,)) # args demo
+        curve2 = Curve(g, self.populate_2, color = RED)
+        refreshbutton(390, 140, (curve1, curve2))
+
+    def populate_1(self, curve, func):
         x = -1
         while x < 1.01:
             y = func(x)
             curve.point(x, y)
             x += 0.1
 
-    def populate_2(curve):
+    def populate_2(self, curve):
         x = -1
         while x < 1.01:
             y = x**2
             curve.point(x, y)
             x += 0.1
 
-    screen = Screen()
-    backbutton(390, 242)
-    fwdbutton(390, 0, next_screen)
-    g = CartesianGraph((10, 10), yorigin = 2) # Asymmetric y axis
-    clearbutton(390, 70, g)
-    curve1 = Curve(g, populate_1, (lambda x : x**3 + x**2 -x,)) # args demo
-    curve2 = Curve(g, populate_2, color = RED)
-    refreshbutton(390, 140, (curve1, curve2))
-    return screen
-
 # Simulate slow real time data acquisition and plotting
-def create_rt_screen(next_screen):
-    def populate(curve, buttonlist):
-        GUI.objsched.add_thread(acquire(curve, buttonlist))
+class RealtimeScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        self.buttonlist = []
+        self.buttonlist.append(backbutton(390, 242))
+        self.buttonlist.append(fwdbutton(390, 0, BackScreen))
+        cartesian_graph = CartesianGraph((10, 10))
+        self.buttonlist.append(clearbutton(390, 70, cartesian_graph))
+        curve = Curve(cartesian_graph, self.populate)
+        self.buttonlist.append(refreshbutton(390, 140, (curve,)))
 
-    def acquire(curve, buttonlist):
+    def populate(self, curve):
+        GUI.objsched.add_thread(self.acquire(curve))
+
+    def acquire(self, curve):
         yield
-        for but in buttonlist:
+        for but in self.buttonlist:
             but.greyed_out(True)
         x = -1
         yield
@@ -148,27 +159,13 @@ def create_rt_screen(next_screen):
             curve.point(x, -(y ** 0.5))
             x -= 0.05
             yield 0.25
-        for but in buttonlist:
+        for but in self.buttonlist:
             but.greyed_out(False)
 
-    screen = Screen()
-    buttonlist = []
-    buttonlist.append(backbutton(390, 242))
-    buttonlist.append(fwdbutton(390, 0, next_screen))
-    g = CartesianGraph((10, 10))
-    buttonlist.append(clearbutton(390, 70, g))
-    curve = Curve(g, populate, (buttonlist,))
-    buttonlist.append(refreshbutton(390, 140, (curve,)))
-    return screen
 
 def pt():
     print('Testing plot module...')
     setup()
-    back_screen = create_back_screen() # Most deeply nested screen first
-    polar_screen = create_polar_screen(back_screen)
-    xy_screen = create_xy_screen(back_screen)
-    realtime_screen = create_rt_screen(back_screen)
-    base_screen = create_base_screen(polar_screen, xy_screen, realtime_screen)
-    base_screen.run()                                          # Run it!
+    Screen.run(BaseScreen)
 
 pt()

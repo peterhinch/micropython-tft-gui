@@ -23,142 +23,138 @@
 # THE SOFTWARE.
 
 from constants import *
-from ugui import Button, ButtonList, RadioButtons, Checkbox, Label, GUI, Screen
+from ugui import Button, ButtonList, RadioButtons, Checkbox, Label, Screen
 from font14 import font14
+from font10 import font10
 from tft_local import setup
 
-# Callbacks
-
-def callback(button, arg, label):
-    label.value(arg)
-
-def quit(button):
-    GUI.tft.clrSCR()
-    GUI.objsched.stop()
-
-def cbcb(checkbox, label):
-    if checkbox.value():
-        label.value('True')
-    else:
-        label.value('False')
-
-def cbreset(button, checkbox1, checkbox2, buttonset, bs0, radiobuttons, rb0, label):
-    checkbox1.value(False)
-    checkbox2.value(False)
-    buttonset.value(bs0)
-    radiobuttons.value(rb0)
-    label.value('Short')
-
-def cb_en_dis(button, disable, itemlist):
-    for item in itemlist:
-        item.greyed_out(disable)
-
+class ButtonScreen(Screen):
+    def __init__(self):
+        super().__init__()
 # These tables contain args that differ between members of a set of related buttons
-table = [
-    {'fgcolor' : GREEN, 'text' : 'Yes', 'args' : ['Oui'], 'fontcolor' : (0, 0, 0)},
-    {'fgcolor' : RED, 'text' : 'No', 'args' : ['Non']},
-    {'fgcolor' : BLUE, 'text' : '???', 'args' : ['Que?'], 'fill': False},
-    {'fgcolor' : GREY, 'text' : 'Rats', 'args' : ['Rats'], 'shape' : CLIPPED_RECT},
-]
-
-# similar buttons: only tabulate data that varies
-table2 = [
-    {'text' : 'P', 'args' : ['p']},
-    {'text' : 'Q', 'args' : ['q']},
-    {'text' : 'R', 'args' : ['r']},
-    {'text' : 'S', 'args' : ['s']},
-]
-
+        table = [
+            {'fgcolor' : GREEN, 'text' : 'Yes', 'args' : ('Oui', 2), 'fontcolor' : (0, 0, 0)},
+            {'fgcolor' : RED, 'text' : 'No', 'args' : ('Non', 2)},
+            {'fgcolor' : BLUE, 'text' : '???', 'args' : ('Que?', 2), 'fill': False},
+            {'fgcolor' : GREY, 'text' : 'Rats', 'args' : ('Rats', 2), 'shape' : CLIPPED_RECT,},
+        ]
+# Highlight buttons: only tabulate data that varies
+        table_highlight = [
+            {'text' : 'P', 'args' : ('p', 2)},
+            {'text' : 'Q', 'args' : ('q', 2)},
+            {'text' : 'R', 'args' : ('r', 2)},
+            {'text' : 'S', 'args' : ('s', 2)},
+        ]
 # A Buttonset with two entries
+        table_buttonset = [
+            {'fgcolor' : GREEN, 'shape' : CLIPPED_RECT, 'text' : 'Start', 'args' : ('Live', 2)},
+            {'fgcolor' : RED, 'shape' : CLIPPED_RECT, 'text' : 'Stop', 'args' : ('Die', 2)},
+        ]
 
-table3 = [
-     {'fgcolor' : GREEN, 'shape' : CLIPPED_RECT, 'text' : 'Start', 'args' : ['Live']},
-     {'fgcolor' : RED, 'shape' : CLIPPED_RECT, 'text' : 'Stop', 'args' : ['Die']},
-]
+        table_radiobuttons = [
+            {'text' : '1', 'args' : ('1', 3)},
+            {'text' : '2', 'args' : ('2', 3)},
+            {'text' : '3', 'args' : ('3', 3)},
+            {'text' : '4', 'args' : ('4', 3)},
+        ]
 
-table4 = [
-    {'text' : '1', 'args' : ['1']},
-    {'text' : '2', 'args' : ['2']},
-    {'text' : '3', 'args' : ['3']},
-    {'text' : '4', 'args' : ['4']},
-]
+        labels = { 'width' : 70,
+                'fontcolor' : WHITE,
+                'border' : 2,
+                'fgcolor' : RED,
+                'bgcolor' : (0, 40, 0),
+                'font' : font14,
+                }
 
-labels = { 'width' : 70,
-          'fontcolor' : WHITE,
-          'border' : 2,
-          'fgcolor' : RED,
-          'bgcolor' : (0, 40, 0),
-          'font' : font14,
-          }
+# Uncomment this line to see 'skeleton' style greying-out:
+#        GUI.tft.grey_color()
+
+# Labels
+        self.lstlbl = []
+        for n in range(5):
+            self.lstlbl.append(Label((390, 40 * n), **labels))
+
+# Button assortment
+        x = 0
+        for t in table:
+            Button((x, 0), font = font14, callback = self.callback, **t)
+            x += 70
+
+# Highlighting buttons
+        x = 0
+        for t in table_highlight:
+            Button((x, 60), fgcolor = GREY, fontcolor = BLACK, litcolor = WHITE,
+                font = font14, callback = self.callback, **t)
+            x += 70
+
+# Start/Stop toggle
+        self.bs = ButtonList(self.callback)
+        self.bs0 = None
+        for t in table_buttonset: # Buttons overlay each other at same location
+            button = self.bs.add_button((0, 240), font = font14, fontcolor = BLACK, height = 30, **t)
+            if self.bs0 is None: # Save for reset button callback
+                self.bs0 = button
+
+# Radio buttons
+        x = 0
+        self.rb = RadioButtons(BLUE, self.callback) # color of selected button
+        self.rb0 = None
+        for t in table_radiobuttons:
+            button = self.rb.add_button((x, 140), font = font14, fontcolor = WHITE,
+                                fgcolor = (0, 0, 90), height = 40, width = 40, **t)
+            if self.rb0 is None: # Save for reset button callback
+                self.rb0 = button
+            x += 60
+
+# Checkbox
+        self.cb1 = Checkbox((340, 0), callback = self.cbcb, args = (0,))
+        self.cb2 = Checkbox((340, 40), fillcolor = RED, callback = self.cbcb, args = (1,))
+
+# Reset button
+        self.lbl_reset = Label((200, 220), font = font10, value = 'Reset also responds to long press')
+        self.btn_reset = Button((300, 240), font = font14, height = 30, width = 80,
+                                fgcolor = BLUE, shape = RECTANGLE, text = 'Reset', fill = True,
+                                callback = self.cbreset, args = (4,), onrelease = False,
+                                lp_callback = self.callback, lp_args = ('long', 4))
+# Quit
+        self.btn_quit = Button((390, 240), font = font14, height = 30, width = 80,
+                               fgcolor = RED, shape = RECTANGLE, text = 'Quit',
+                               callback = self.quit)
+# Enable/Disable toggle 
+        self.bs_en = ButtonList(self.cb_en_dis)
+        self.tup_en_dis = (self.cb1, self.cb2, self.rb, self.bs) # Items affected by enable/disable button
+        self.bs_en.add_button((200, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
+                              fgcolor = GREEN, shape = RECTANGLE, text = 'Disable', args = (True,))
+        self.bs_en.add_button((200, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
+                              fgcolor = RED, shape = RECTANGLE, text = 'Enable', args = (False,))
+
+    def callback(self, button, arg, idx_label):
+        self.lstlbl[idx_label].value(arg)
+
+    def quit(self, button):
+        Screen.tft.clrSCR()
+        Screen.objsched.stop()
+
+    def cbcb(self, checkbox, idx_label):
+        if checkbox.value():
+            self.lstlbl[idx_label].value('True')
+        else:
+            self.lstlbl[idx_label].value('False')
+
+    def cbreset(self, button, idx_label):
+        self.cb1.value(False)
+        self.cb2.value(False)
+        self.bs.value(self.bs0)
+        self.rb.value(self.rb0)
+        self.lstlbl[idx_label].value('Short')
+
+    def cb_en_dis(self, button, disable):
+        for item in self.tup_en_dis:
+            item.greyed_out(disable)
 
 def test():
     print('Testing TFT...')
     setup()
-    my_screen = Screen()
-# Uncomment this line to see 'skeleton' style greying-out:
-#    GUI.tft.grey_color()
-
-# Labels
-    lstlbl = []
-    for n in range(5):
-        lstlbl.append(Label((350, 40 * n), **labels))
-
-# Button assortment
-    x = 0
-    for t in table:
-        t['args'].append(lstlbl[2])
-        Button((x, 0), font = font14, callback = callback, **t)
-        x += 70
-
-# Highlighting buttons
-    x = 0
-    for t in table2:
-        t['args'].append(lstlbl[2])
-        Button((x, 60), fgcolor = GREY, fontcolor = BLACK, litcolor = WHITE,
-               font = font14, callback = callback, **t)
-        x += 70
-
-# On/Off toggle
-    x = 0
-    bs = ButtonList(callback)
-    bs0 = None
-    for t in table3: # Buttons overlay each other at same location
-        t['args'].append(lstlbl[2])
-        button = bs.add_button((x, 120), font = font14, fontcolor = BLACK, **t)
-        if bs0 is None:
-            bs0 = button
-
-# Radio buttons
-    x = 0
-    rb = RadioButtons(BLUE, callback) # color of selected button
-    rb0 = None
-    for t in table4:
-        t['args'].append(lstlbl[3])
-        button = rb.add_button((x, 180), font = font14, fontcolor = WHITE,
-                               fgcolor = (0, 0, 90), height = 40, width = 40, **t)
-        if rb0 is None:
-            rb0 = button
-        x += 60
-
-# Checkbox
-    cb1 = Checkbox((300, 0), callback = cbcb, args = [lstlbl[0]])
-    cb2 = Checkbox((300, 50), fillcolor = RED, callback = cbcb, args = [lstlbl[1]])
-
-# Reset button
-    Button((300, 240), font = font14, callback = cbreset, fgcolor = BLUE,
-           text = 'Reset', args = [cb1, cb2, bs, bs0, rb, rb0, lstlbl[4]], fill = True, shape = RECTANGLE,
-           height = 30, width = 80,
-           lp_callback=callback, lp_args=['long', lstlbl[4]])
-# Quit
-    Button((390, 240), font = font14, callback = quit, fgcolor = RED, text = 'Quit', shape = RECTANGLE,
-           height = 30, width = 80)
-# On/Off toggle 
-    bs_en = ButtonList(cb_en_dis)
-    lst_en_dis = [cb1, cb2, rb, bs]
-    button = bs_en.add_button((200, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
-                           fgcolor = GREEN, shape = RECTANGLE, text = 'Disable', args = [True, lst_en_dis])
-    button = bs_en.add_button((200, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
-                           fgcolor = RED, shape = RECTANGLE, text = 'Enable', args = [False, lst_en_dis])
-    my_screen.run()                                          # Run it!
+    Screen.run(ButtonScreen)
 
 test()

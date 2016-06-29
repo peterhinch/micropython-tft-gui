@@ -67,13 +67,13 @@ methods, called without arguments.
 
 The ``Screen`` class is subclassed from the ``GUI`` class. This has a ``setup`` class method which
 is called from ``tft_local`` after initialising the hardware. It stores the tft, touchscreen and
-scheduler instances in class methods for access throughout the library. It also supports the
+scheduler instances in class variables for access throughout the library. It also supports the
 ``set_grey_style`` class method and the ``get_tft`` method. This provides access to the TFT. It
 accepts the greyed-out status of the control instance as its argument and instructs the ``TFT_G``
 class of the correct greyed-out status to use.
 
 In practice, controls and displays access the TFT by means of the ``tft`` property of the ``NoTouch``
-base class. This sets the greyed out status of the ``TFT_G`` and returns the instance.
+base class. This sets the greyed out status of the ``TFT_G`` and returns the TFT instance.
 
 Access to the TFT module is mediated by the ``TFT_G`` class. This is subclassed from the TFT
 module's ``TFT`` class. Its purpose is to handle the colors of greyed out controls: for consistency
@@ -175,6 +175,7 @@ As per ``NoTouch`` plus:
  * ``was_touched`` This is set by the ``_trytouch`` method and cleared by the ``Screen._touchtest``
  thread: it forms an interlock to ensure the ``_untouched`` method is called once only when a touch
  ends.
+ * ``suppressed`` True when can't respond to touch because overlaid by modal window.
 
 Methods:
 
