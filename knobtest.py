@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 from constants import *
-from ugui import Knob, Dial, Label, Button, ButtonList, Screen, Dropdown
+from ugui import Knob, Dial, Label, Button, ButtonList, Screen, Dropdown, Listbox
 from font14 import font14
 from font10 import font10
 from tft_local import setup
@@ -47,7 +47,11 @@ class KnobScreen(Screen):
             text = 'Reset', shape = RECTANGLE, width = 80, height = 30) # Test of set by value
         Button((280, 120), font = font14, callback = self.set_bytext, args = ('Snake',), fgcolor = CYAN,
             fontcolor = BLACK, text = 'Snake', shape = RECTANGLE, width = 80, height = 30) # test set by text
-
+# Listbox
+        self.listbox = Listbox((370, 70), font = font14, width = 105,
+                               bgcolor = GREY, fgcolor = YELLOW, select_color = BLUE,
+                               elements = ('aardvark', 'zebra', 'armadillo', 'warthog'),
+                               callback = self.cblb)
 # On/Off toggle grey style
         self.lbl_style = Label((170, 210), font = font10, value = 'Current style: grey')
         bstyle = ButtonList(self.cb_style)
@@ -57,7 +61,7 @@ class KnobScreen(Screen):
                           fgcolor = GREEN, shape = RECTANGLE, text = 'Grey', args = (True,))
 # On/Off toggle enable/disable
         bs = ButtonList(self.cb_en_dis)
-        self.lst_en_dis = (bstyle, k0, k1, self.dropdown)
+        self.lst_en_dis = (bstyle, k0, k1, self.dropdown, self.listbox)
         bs.add_button((280, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
                       fgcolor = GREEN, shape = RECTANGLE, text = 'Disable', args = (True,))
         bs.add_button((280, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
@@ -86,6 +90,9 @@ class KnobScreen(Screen):
 
     def cbdb(self, dropdown):
         self.lbl_dd.value(dropdown.textvalue())
+
+    def cblb(self, listbox):
+        print(listbox.textvalue())
 
     def set_dropdown(self, button):
         self.dropdown.value(0)

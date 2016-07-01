@@ -63,26 +63,28 @@ Core files:
  6. constants.py Constants such as colors and shapes (import using ``from constants import *``)
 
 Optional files used by test programs:
- 1. font10.py Font file.
- 2. font14.py Ditto.
- 3. radiobutton.py Icon file for icon radio buttons
- 4. checkbox.py Icon file for icon checkboxes.
- 5. switch.py Icon file for an on/off switch.
- 6. traffic.py Icons for traffic light button
- 7. gauge.py Icons for linear gauge
- 8. flash.py Icons for flashing button
- 9. threestate.py Icon for 3-state checkbox
+ 1. gdialog.py DialogBox class builds simple pushbutton-based dialog boxes.
+ 2. font10.py Font file.
+ 3. font14.py Ditto.
+ 4. radiobutton.py Icon file for icon radio buttons
+ 5. checkbox.py Icon file for icon checkboxes.
+ 6. switch.py Icon file for an on/off switch.
+ 7. traffic.py Icons for traffic light button
+ 8. gauge.py Icons for linear gauge
+ 9. flash.py Icons for flashing button
+ 10. threestate.py Icon for 3-state checkbox
 
 Test/demo programs:
  1. vst.py A test program for vertical linear sliders.
  2. hst.py Tests horizontal slider controls, meters and LED.
  3. buttontest.py Pushbuttons and checkboxes.
- 4. knobtest.py Rotary controls, dropdown lists and the two styles of "greying out" of disabled
- controls.
+ 4. knobtest.py Rotary controls, a dropdown list, a listbox. Also shows the two styles of
+ "greying out" of disabled controls.
  5. ibt.py Test of icon buttons.
- 6. screentest.py Test of multiple screens
+ 6. screentest.py Test of multiple screens.
+ 7. dialog.py A modal dialog box.
 
-If you do not intend to use icons, optional files 3-9 and demo 5 may be ignored.
+If you do not intend to use icons, optional files 4-10 and demo 5 may be ignored.
 
 It should be noted that by the standards of the Pyboard this is a large library. Attempts to use it
 in the normal way will provoke memory errors owing to heap fragmentation. It is necessary to
@@ -154,23 +156,25 @@ From a user perspective this provides access to the scheduler object. This may b
 create threads for concurrent execution (demontsrated in ``hst.py``). The ``GUI`` class is
 configured in ``tft_local.py``.
 
-# Initialisation Code
+# Program Structure
 
-The following initialisation code is required in any application:
+The following illustrates the structure of a minimal program:
 ```python
 from tft_local import setup
-from ugui import Screen, Button # Whatever objects you need
+from font14 import font14
+from constants import *
+from ugui import Screen, Button
+class BaseScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        Button((10, 10), font = font14, fontcolor = BLACK, text = 'Hi')
 setup()
-Screen()
+Screen.run(BaseScreen)
 ```
-The last line produces a Screen instance which will be the location for GUI objects subsequently
-instantiated (unless you create a new ``Screen`` instance). When all objects have been instantiated
-and any threads created, the GUI is started by issuing:
-```
-Screen.run()
-```
-Control then passes to the scheduler: the code following this line will not run until the scheduler
-is stopped (``GUI.objsched.stop()``). See the scheduler README for full details.
+The last line causes the Screen class to instantiate your ``BaseScreen`` and to start the scheduler
+using that screen object. Control then passes to the scheduler: the code following this line will
+not run until the scheduler is stopped (``Screen.objsched.stop()``). See the scheduler README for
+full details.
 
 By default tft_local.py instantiates the scheduler with a heartbeat on the Pyboard's red LED. If
 writing threaded code it provides visual confirmation that the scheduler is running, and that no
@@ -655,6 +659,37 @@ Methods:
  * ``value`` Argument ``val`` default ``None``. If the argument is provided which is an inactive
  button in the set, that button becomes active and the callback is executed. Always returns the
  button which is currently active.
+
+## Class Listbox
+
+Constructor mandatory positional argument:
+ 1. ``location`` 2-tuple defining position.
+
+Mandatory keyword only arguments:
+ * ``font``
+ * ``elements`` A list or tuple of strings to display. Must have at least one entry.
+
+Optional keyword only arguments:
+ * ``width`` Control width in pixels, default 250.
+ * ``value`` Index of currently selected list item. Default 0.
+ * ``border`` Space between border and contents. Default 2 pixels. If ``None`` no border will be
+ drawn.
+ * ``fgcolor`` Color of foreground (the control itself). Defaults to system color.
+ * ``bgcolor`` Background color of object. Defaults to system background.
+ * ``fontcolor`` Text color. Defaults to system text color.
+ * ``select_color`` Background color for selected item in list. Default ``LIGHTBLUE``.
+ * ``callback`` Callback function which runs when a list entry is picked.
+ * ``args`` A list of arguments for the above callback. Default ``[]``.
+
+Methods:
+ * ``value`` Argument ``val`` default ``None``. If the argument is provided which is a valid index
+ into the list that entry becomes current and the callback is executed. Always returns the index
+ of the currently active entry.
+ * ``textvalue`` Argument ``text`` a string default ``None``. If the argument is provided and is in
+ the control's list, that item becomes current. Returns the current string, unless the arg was
+ provided but did not correspond to any list item. In this event the control's state is not changed
+ and ``None`` is returned.
+
 
 ## Class Dropdown
 

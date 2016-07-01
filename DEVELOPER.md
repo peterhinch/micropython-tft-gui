@@ -175,7 +175,6 @@ As per ``NoTouch`` plus:
  * ``was_touched`` This is set by the ``_trytouch`` method and cleared by the ``Screen._touchtest``
  thread: it forms an interlock to ensure the ``_untouched`` method is called once only when a touch
  ends.
- * ``suppressed`` True when can't respond to touch because overlaid by modal window.
 
 Methods:
 

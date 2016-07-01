@@ -197,36 +197,33 @@ class Screen(GUI):
                 obj.show()
 
     @classmethod
-    def run(cls, cls_new_screen=None):
-        if cls_new_screen is None:
-            cls_new_screen = cls.current_screen
-        cls.change(cls_new_screen)
+    def run(cls, cls_new_screen, *, args=[], kwargs={}):
+        cls.change(cls_new_screen, args = args, kwargs = kwargs)
         cls.objsched.run()
 
     @classmethod
-    def change(cls, cls_new_screen, forward=True):
-        cs = cls.current_screen
-        if cs is not None:
-            cs.on_hide() # Optional method in subclass
+    def change(cls, cls_new_screen, *, forward=True, args=[], kwargs={}):
+        cs_old = cls.current_screen
+        if cs_old is not None:
+            cs_old.on_hide() # Optional method in subclass
         if forward:
             if type(cls_new_screen) is ClassType:
-                new_screen = cls_new_screen() # Instantiate new screen
+                new_screen = cls_new_screen(*args, **kwargs) # Instantiate new screen
             else:
-                new_screen = cls_new_screen # we were passed an instance
-            new_screen.parent = cs
-            cs = new_screen
+                raise ValueError('Must pass Screen class or subclass (not instance)')
+            new_screen.parent = cs_old
+            cs_new = new_screen
         else:
-            cs = cls_new_screen # An object, not a class
-        cls.current_screen = cs
-        cls.tft.clrSCR()
-        cs.on_open() # Optional method in subclass
-        cls.show()
+            cs_new = cls_new_screen # An object, not a class
+        cls.current_screen = cs_new
+        cs_new.on_open() # Optional subclass method
+        cs_new._do_open(cs_old) # Clear and redraw
 
     @classmethod
     def back(cls):
         parent = cls.current_screen.parent
         if parent is not None:
-            cls.change(parent, False)
+            cls.change(parent, forward = False)
 
     @classmethod
     def addobject(cls, obj):
@@ -244,7 +241,7 @@ class Screen(GUI):
             if touch_panel.ready:
                 x, y = touch_panel.get_touch_async()
                 for obj in Screen.current_screen.touchlist:
-                    if obj.enabled and not obj.greyed_out() and not obj.suppressed:
+                    if obj.enabled and not obj.greyed_out():
                         obj._trytouch(x, y)
             elif not touch_panel.touched:
                 for obj in Screen.current_screen.touchlist:
@@ -256,6 +253,7 @@ class Screen(GUI):
     def __init__(self):
         self.touchlist = []
         self.displaylist = []
+        self.modal = False
         if Screen.current_screen is None: # Initialising class and thread
             objsched = GUI.objsched
             if objsched is None:
@@ -264,15 +262,64 @@ class Screen(GUI):
         Screen.current_screen = self
         self.parent = None
 
-    def on_open(self): # Implmented in subclass
+    def _do_open(self, old_screen): # Aperture overrides
+        show_all = True
+        tft = GUI.get_tft()
+# If opening a Screen from an Aperture just blank and redraw covered area
+        if old_screen.modal:
+            show_all = False
+            x0, y0, x1, y1 = old_screen._list_dims()
+            tft.fill_rectangle(x0, y0, x1, y1, tft.getBGColor()) # Blank to screen BG
+            for obj in [z for z in self.displaylist if z.overlaps(x0, y0, x1, y1)]:
+                if obj.enabled:
+                    obj.redraw = True # Redraw static content
+                    obj.draw_border()
+                    obj.show()
+# Normally clear the screen and redraw everything
+        else:
+            tft.clrSCR()
+            Screen.show()
+
+    def on_open(self): # Optionally implemented in subclass
         return
 
-    def on_hide(self):
+    def on_hide(self): # Optionally implemented in subclass
         return
 
-    def run(self):
-        Screen.change(self)
-        self.objsched.run()
+# Very basic window class. Cuts a rectangular hole in a screen on which content may be drawn
+class Aperture(Screen):
+    _value = None
+    def __init__(self, location, height, width, *, draw_border=True, bgcolor=None, fgcolor=None):
+        Screen.__init__(self)
+        self.location = location
+        self.height = height
+        self.width = width
+        self.draw_border = draw_border
+        self.modal = True
+        tft = GUI.get_tft()
+        self.fgcolor = fgcolor if fgcolor is not None else tft.getColor()
+        self.bgcolor = bgcolor if bgcolor is not None else tft.getBGColor()
+
+    def _do_open(self, old_screen):
+        tft = GUI.get_tft()
+        x, y = self.location[0], self.location[1]
+        tft.fill_rectangle(x, y, x + self.width, y + self.height, self.bgcolor)
+        if self.draw_border:
+            tft.draw_rectangle(x, y, x + self.width, y + self.height, self.fgcolor)
+        Screen.show()
+
+    def _list_dims(self):
+        x0 = self.location[0]
+        x1 = self.location[0] + self.width
+        y0 = self.location[1]
+        y1 = self.location[1] + self.height
+        return x0, y0, x1, y1
+
+    @classmethod
+    def value(cls, val=None): # Mechanism for testing the outcome of a dialog box
+        if val is not None:
+            cls._value = val
+        return cls._value
 
 # Base class for all displayable objects
 class NoTouch(object):
@@ -321,18 +368,19 @@ class NoTouch(object):
             self.show_if_current()
 
     def show_if_current(self):
-        if self.screen == Screen.current_screen:
+        if self.screen is Screen.current_screen:
             self.show()
 
 # Called by Screen.show(). Draw background and bounding box if required
     def draw_border(self):
-        tft = self.tft
-        x = self.location[0]
-        y = self.location[1]
-        if self.fill:
-            tft.fill_rectangle(x, y, x + self.width, y + self.height, self.bgcolor)
-        if self.border > 0: # Draw a bounding box
-            tft.draw_rectangle(x, y, x + self.width, y + self.height, self.fgcolor)
+        if self.screen is Screen.current_screen:
+            tft = self.tft
+            x = self.location[0]
+            y = self.location[1]
+            if self.fill:
+                tft.fill_rectangle(x, y, x + self.width, y + self.height, self.bgcolor)
+            if self.border > 0: # Draw a bounding box
+                tft.draw_rectangle(x, y, x + self.width, y + self.height, self.fgcolor)
         return self.border # border width in pixels
 
     def overlaps(self, xa, ya, xb, yb): # Args must be sorted: xb > xa and yb > ya
@@ -351,7 +399,6 @@ class Touchable(NoTouch):
         self.can_drag = can_drag
         self.busy = False
         self.was_touched = False
-        self.suppressed = False # Set when overlaid by modal object
 
     def _set_callbacks(self, cb, args, cb_end=None, cbe_args=None):
         self.callback = cb
@@ -1158,23 +1205,18 @@ class Knob(Touchable):
         y_end = int(self.yorigin - length * math.cos(angle))
         tft.draw_line(int(self.xorigin), int(self.yorigin), x_end, y_end, color)
 
-# *********** DROPDOWN LIST CLASS ***********
+# *********** LISTBOX CLASS ***********
 
-class Dropdown(Touchable):
-    def __init__(self, location, *, font, elements, width=250, value=0,
+class Listbox(Touchable):
+    def __init__(self, location, *, font, elements, width=250, value=0, border=2,
                  fgcolor=None, bgcolor=None, fontcolor=None, select_color=LIGHTBLUE,
                  callback=dolittle, args=[]):
-        border = 2
         self.entry_height = font.bits_vert + 2 # Allow a pixel above and below text
-        height = self.entry_height + 2 * border
+        bw = border if border is not None else 0 # Replicate Touchable ctor's handling of self.border
+        height = self.entry_height * len(elements) + 2 * bw
         super().__init__(location, font, height, width, fgcolor, bgcolor, fontcolor, border, False, value, None)
         super()._set_callbacks(callback, args)
         self.select_color = select_color
-        self._show_list = False # Control state: when True dropdown list is visible
-        self.populate(elements, self._value)
-
-    def populate(self, elements, value=0):
-        self._show_list = False
         fail = False
         try:
             self.elements = [s for s in elements if type(s) is str]
@@ -1192,27 +1234,88 @@ class Dropdown(Touchable):
     def show(self):
         tft = self.tft
         bw = self.border
+        clip = self.width - 2 * bw
+        length = len(self.elements)
+        x = self.location[0]
+        y = self.location[1]
+        xs = x + bw # start and end of text field
+        xe = x + self.width - 2 * bw
+        tft.fill_rectangle(xs, y + 1, xe, y - 1 + self.height - 2 * bw, self.bgcolor)
+        for n in range(length):
+            ye = y + n * self.entry_height
+            if n == self._value:
+                tft.fill_rectangle(xs, ye + 1, xe, ye + self.entry_height - 1, self.select_color)
+            print_left(tft, xs, ye + 1, self.elements[n], self.fontcolor, self.font, clip)
+
+    def textvalue(self, text=None): # if no arg return current text
+        if text is None:
+            return self.elements[self._value]
+        else: # set value by text
+            try:
+                v = self.elements.index(text)
+            except ValueError:
+                v = None
+            else:
+                if v != self._value:
+                    self.value(v)
+            return v
+
+    def _touched(self, x, y):
+        dy = y - (self.location[1])
+        self._initial_value = dy // self.entry_height
+
+    def _untouched(self):
+        if self._initial_value is not None:
+            self.value(self._initial_value, show = True)
+            self._initial_value = None
+
+# *********** DROPDOWN LIST CLASS ***********
+
+class _ListDialog(Aperture):
+    def __init__(self, location, dropdown, width):
+        border = 1 # between Aperture border and list
+        dd = dropdown
+        font = dd.font
+        elements = dd.elements
+        entry_height = font.bits_vert + 2 # Allow a pixel above and below text
+        height = entry_height * len(elements) + 2 * border
+        lb_location = location[0] + border, location[1] + border
+        lb_width = width - 2 * border
+        super().__init__(location, height, width)
+        self.listbox = Listbox(lb_location, font = font, elements = elements, width = lb_width,
+                               border = None, fgcolor = dd.fgcolor, bgcolor = dd.bgcolor,
+                               fontcolor = dd.fontcolor, select_color = dd.select_color,
+                               value = dd.value(), callback = self.callback)
+        self.dropdown = dd
+
+    def callback(self, obj_listbox):
+        if obj_listbox._initial_value is not None: # a touch has occurred
+            val = obj_listbox.textvalue()
+            Aperture.value(val)
+            Screen.back()
+            if self.dropdown is not None: # Part of a Dropdown
+                self.dropdown.value(obj_listbox.value()) # Update it
+ 
+class Dropdown(Touchable):
+    def __init__(self, location, *, font, elements, width=250, value=0,
+                 fgcolor=None, bgcolor=None, fontcolor=None, select_color=LIGHTBLUE,
+                 callback=dolittle, args=[]):
+        border = 2
+        self.entry_height = font.bits_vert + 2 # Allow a pixel above and below text
+        height = self.entry_height + 2 * border
+        super().__init__(location, font, height, width, fgcolor, bgcolor, fontcolor, border, False, value, None)
+        super()._set_callbacks(callback, args)
+        self.select_color = select_color
+        self.elements = elements
+
+    def show(self):
+        tft = self.tft
+        bw = self.border
         clip = self.width - (self.height + 2 * bw)
-        if self._show_list: # Show the list
-            length = len(self.elements)
-            x = self.location[0]
-            y = self.location[1] + self.height
-            width = self.width - self.height
-            height = self.entry_height * length
-            tft.fill_rectangle(x, y, x + width, y + height, self.bgcolor) # overlay existing contents
-            tft.draw_rectangle(x, y, x + width, y + height, self.fgcolor) # border
-            xs = x + bw # start and end of text field
-            xe = x + self.width - (self.height + bw)
-            for n in range(length):
-                ye = y + n * self.entry_height
-                if n == self._value:
-                    tft.fill_rectangle(xs, ye + 1, xe, ye + self.entry_height - 1, self.select_color)
-                print_left(tft, xs, ye + 1, self.elements[n], self.fontcolor, self.font, clip)
-        else: # Show the control
-            x, y = self.location[0], self.location[1]
-            self._draw(tft, x, y)
-            if self._value is not None:
-                print_left(tft, x + bw, y + bw + 1, self.elements[self._value], self.fontcolor, self.font, clip)
+        x, y = self.location[0], self.location[1]
+        self._draw(tft, x, y)
+        if self._value is not None:
+            print_left(tft, x + bw, y + bw + 1, self.elements[self._value], self.fontcolor, self.font, clip)
 
     def textvalue(self, text=None): # if no arg return current text
         if text is None:
@@ -1240,58 +1343,8 @@ class Dropdown(Touchable):
             tft.draw_line(xcentre - halflength, ycentre - halflength, xcentre, ycentre + halflength, self.fgcolor)
             tft.draw_line(xcentre + halflength, ycentre - halflength, xcentre, ycentre + halflength, self.fgcolor)
 
-    def _trytouch(self, x, y): # If touched in bounding box, process it otherwise do nothing
-        x0 = self.location[0]
-        if self._show_list:
-            x1 = self.location[0] + self.width - self.height # narrower than control
-            y0 = self.location[1] + self.height
-            y1 = self.location[1] + self.height + self.entry_height * len(self.elements)
-        else: # Normal condition: show control
-            x1 = self.location[0] + self.width
-            y0 = self.location[1]
-            y1 = self.location[1] + self.height
-        if x0 <= x <= x1 and y0 <= y <= y1:
-            self.was_touched = True
-            if not self.busy:
-                self._touched(x, y)
-                self.busy = True
-
     def _touched(self, x, y):
-        if self._show_list: # List is displayed: save new value
-            dy = y - (self.location[1] + self.height)
-            self._initial_value = dy // self.entry_height
-
-    def _list_dims(self):
-        x0 = self.location[0]
-        x1 = self.location[0] + self.width - self.height # narrower than control
-        y0 = self.location[1] + self.height
-        y1 = self.location[1] + self.height + self.entry_height * len(self.elements)
-        return x0, y0, x1, y1
-
-# Clear list, update value when touch removed: avoid touch events on underlying controls
-    def _untouched(self):
-        if self._show_list:
-            self._clear_list()
-            if self._initial_value is not None:
-                self.value(self._initial_value)
-                self._initial_value = None
-        elif len(self.elements) > 1: # Control is displayed: show list on release
-            self._show_list = True
-            for obj in Screen.current_screen.touchlist:
-                if obj is not self:
-                    obj.suppressed = True # Disallow touch
-            self.show()
-
-    def _clear_list(self): # doesn't redraw compound buttons
-        self._show_list = False
-        tft = GUI.get_tft()
-        x0, y0, x1, y1 = self._list_dims()
-        tft.fill_rectangle(x0, y0, x1, y1, tft.getBGColor()) # Blank to screen BG
-        for obj in Screen.current_screen.touchlist:
-            obj.suppressed = False # Allow touch
-        for obj in [z for z in Screen.current_screen.displaylist
-                    if z is not self and z.overlaps(x0, y0, x1, y1)]:
-            if obj.enabled:
-                obj.redraw = True # Redraw static content
-                obj.draw_border()
-                obj.show()
+        if len(self.elements) > 1:
+            location = self.location[0], self.location[1] + self.height + 1
+            args = (location, self, self.width - self.height)
+            Screen.change(_ListDialog, args = args)
