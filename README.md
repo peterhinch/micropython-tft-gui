@@ -126,8 +126,8 @@ The interface is event driven. Controls may have optional callbacks which will b
 given event occurs. A callback function receives positional arguments. The first is a reference to
 the object raising the callback. Subsequent arguments are user defined, and are specified as a
 tuple or list of items. Callbacks are optional, as are the argument lists - a default null
-function and empty list are provided. Callbacks may be bound methods - see the Screens section for
-a reason why this is useful.
+function and empty list are provided. Callbacks are usually bound methods - see the Screens section
+for a reason why this is useful.
 
 All objects capable of raising callbacks have a ``tft`` property enabling access to drawing
 primitives. The scheduler may be accessed via the ``GUI`` instance.
@@ -171,6 +171,7 @@ class BaseScreen(Screen):
 setup()
 Screen.run(BaseScreen)
 ```
+
 The last line causes the Screen class to instantiate your ``BaseScreen`` and to start the scheduler
 using that screen object. Control then passes to the scheduler: the code following this line will
 not run until the scheduler is stopped (``Screen.objsched.stop()``). See the scheduler README for
@@ -207,24 +208,10 @@ Before instantiating GUI objects a ``Screen`` instance must be created. This wil
 one until another is instantiated. When a GUI object is instantiated it is associated with the
 current screen.
 
-Thus a single screen system merely needs to call ``setup``, create a ``Screen`` instance and
-instantiate GUI objects. In a multi screen system it is easiest to create user screens by
-subclassing ``Screen``. Then instantiate the most deeply nested screen first thus:
-
-```python
-setup()
-s2 = Screen_2() # constructor instantiates display items on s2
-s1 = Screen_1(s2) # Next level display items on s1 (reference to S2 allows change screen button).
-s0 = Screen_0(s1) # Top level display items with change screen to s1
-s0.run()
-```
-
-This code has the drawback that all screen instances exist and consume RAM permanently. In
-multi-screen systems a more RAM-efficient approach is to instantiate screens only when they are
-required. An example of this technique is presented in screentest.py, with screens instantiated in
-the callback of the button which invokes the screen.
-
-A minimal screen subclass looks like this:
+The best way to use the GUI, even in single screen programs, is to create a user screen by
+subclassing the ``Screen`` class. GUI objects are instantialited in the constructor after calling
+the ``Screen`` constructor has been called. This arrangement facilitates communication between
+objects on the screen. The following presents the outline of this approach:
 
 ```python
 def backbutton(x, y):
@@ -233,35 +220,42 @@ def backbutton(x, y):
     Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back,
            fgcolor = CYAN,  text = 'Back', shape = RECTANGLE, width = 80)
 
-class Screen_2(Screen):
+class Screen_0(Screen):
     def __init__(self):
         super().__init__()
         Label((0, 0), font = font14, width = 400, value = 'Test screen')
         backbutton(390, 242)
+setup()
+Screen.run(Screen_0)
 ```
+
+Note that the GUI is started by issuing ``Screen.run`` with the class as its argument rather than
+an instance. This assists in multi-screen programs: screens are only instantiated when they are to
+be displayed. This allows RAM to be reclaimed by the garbage collector when the screen is closed.
 
 ## Class methods
 
 In normal use the following methods only are required:
-``change`` Change screen, refreshing the display. Argument: the new screen. This may be either a
-``Screen`` instance or a class subclassed from ``Screen``. In the latter case the class will be
-instantiated.
+``change`` Change screen, refreshing the display. Mandatory positional argument: the new screen
+class name. This is to be a class subclassed from ``Screen``. The class will be instantiated and
+displayed. Optional keyword arguments: ``args``, ``kwargs``: arguments for the class constructor.  
 ``back`` Restore previous screen.  
-``run`` Takes an optional argument being the screen to run. If this is not provided, the current
-screen will run. If provided, it may be either a ``Screen`` instance or a class subclassed from
-``Screen``. In the latter case the class will be instantiated.
+``run``  Mandatory positional argument: the new screen. This is to be a class subclassed from
+``Screen``. The class will be instantiated and displayed. Optional keyword arguments: ``args``,
+``kwargs``: arguments for the class constructor.
 
-The ability to pass a class rather than an instance to ``change`` and ``run`` simplifies the design
-of multi-screen systems where screens are instantiated as required. See screentest.py.
+See screentest.py for an example of a multi-screen design.
 
 ## Constructor
 
 This takes no arguments.
 
-## Method
+## Methods
 
-``run`` Start the scheduler and display the ``Screen`` instance. Execution passes to the scheduler.
-Subsequent intsructions will not be executed until the scheduler is stopped.
+These do nothing, and are intended to be defined in subclasses if required.
+
+``on_open`` Called when a screen is displayed.
+``on_hide`` Called when a screen ceases to be current.
 
 # Display Classes
 
