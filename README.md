@@ -149,11 +149,8 @@ The ``Screen`` class has two null methods which may be implemented in subclasses
 runs when a screen is opened but prior to its display, and ``on_hide`` which runs when a screen
 change is about to make the screen disappear. These may be used to instantiate or control threads.
 
-### The GUI class
-
-From a user perspective this provides access to the scheduler object. This may be employed to
-create threads for concurrent execution (demontsrated in ``hst.py``). The ``GUI`` class is
-configured in ``tft_local.py``.
+The ``Screen`` class is configured in ``tft_local.py``. It also provides access to the scheduler
+via the ``Screen.objsched`` class method to facilitate writing threaded code.
 
 # Program Structure
 
@@ -747,14 +744,14 @@ The type of the arg is arbitrary. Returns the value of the ``Aperture`` class. T
 ## Class DialogBox
 
 Constructor mandatory positional args:  
-``font`` The font for buttons and label.
-Optional keyword args:
-``elements`` A list or tuple of 2-tuples. Each defines the text and color of a pushbutton.
-``location`` 2-tuple defining the dialog box location. Default (20, 20).
-``label`` Text for an optional label displayed in the centre of the dialog box. Default ``None``.
-``bgcolor`` Background color of window. Default ``DARKGREEN``.
+``font`` The font for buttons and label.  
+Optional keyword args:  
+``elements`` A list or tuple of 2-tuples. Each defines the text and color of a pushbutton.  
+``location`` 2-tuple defining the dialog box location. Default (20, 20).  
+``label`` Text for an optional label displayed in the centre of the dialog box. Default ``None``.  
+``bgcolor`` Background color of window. Default ``DARKGREEN``.  
 ``buttonwidth`` Minimum width of buttons. Default 25. In general button dimensions are calculated
-from the size of the strings in ``elements``.
+from the size of the strings in ``elements``.  
 ``closebutton`` Boolean. If set, a ``close`` button will be displayed at the top RH corner of the
 dialog box.
 
