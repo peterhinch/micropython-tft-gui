@@ -23,8 +23,7 @@
 # THE SOFTWARE.
 
 from constants import *
-from ugui import Button, Label, Screen, Aperture
-from gdialog import DialogBox
+from ugui import Button, Label, Screen, Aperture, DialogBox
 from font14 import font14
 from font10 import font10
 from tft_local import setup
@@ -76,18 +75,16 @@ class BaseScreen(Screen):
 # User written dialog
         fwdbutton(195, 242, UserDialogBox, text = 'User')
 # Dialog built using gdialog.py DialogBox
-        dialog_location = (20, 20)
         dialog_elements = (('Yes', GREEN), ('No', RED), ('Foo', YELLOW))
-        fwdbutton(0, 242, DialogBox, text = 'Gen', args = [dialog_location],
+        fwdbutton(0, 242, DialogBox, text = 'Gen', args = (font14,),
                   kwargs = {'elements' : dialog_elements, 'label' : 'Test dialog'})
         quitbutton(390, 242)
 
     def on_open(self):
-        self.lbl_result.value(DialogBox.value())
+        self.lbl_result.value(Aperture.value())
 
 def test():
-    print('Test TFT panel...')
     setup()
-    Screen.run(BaseScreen)
+    Screen.change(BaseScreen)
 
 test()

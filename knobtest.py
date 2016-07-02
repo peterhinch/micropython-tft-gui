@@ -103,6 +103,6 @@ class KnobScreen(Screen):
 def test():
     print('Test TFT panel...')
     setup()
-    Screen.run(KnobScreen)
+    Screen.change(KnobScreen)
 
 test()

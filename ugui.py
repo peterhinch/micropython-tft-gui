@@ -160,10 +160,12 @@ class TFT_G(TFT):
 
 # *********** BASE CLASSES ***********
 
-class GUI(object):
+class Screen(object):
+    current_screen = None
     tft = None
     objtouch = None
     objsched = None
+
     @classmethod
     def setup(cls, objsched, tft, objtouch):
         cls.objsched = objsched
@@ -179,33 +181,28 @@ class GUI(object):
     def set_grey_style(cls, *, desaturate=True, factor=2):
         cls.tft.dim(factor)
         cls.tft.desaturate(desaturate)
-        for obj in Screen.current_screen.displaylist:
-            if obj.enabled and obj.greyed_out():
-                obj.redraw = True # Redraw static content
-                obj.draw_border()
-                obj.show()
-
-class Screen(GUI):
-    current_screen = None
+        if Screen.current_screen is not None: # Can call before instantiated
+            for obj in Screen.current_screen.displaylist:
+                if obj.visible and obj.greyed_out():
+                    obj.redraw = True # Redraw static content
+                    obj.draw_border()
+                    obj.show()
 
     @classmethod
     def show(cls):
         for obj in cls.current_screen.displaylist:
-            if obj.enabled: # In a buttonlist only show enabled button
+            if obj.visible: # In a buttonlist only show visible button
                 obj.redraw = True # Redraw static content
                 obj.draw_border()
                 obj.show()
 
     @classmethod
-    def run(cls, cls_new_screen, *, args=[], kwargs={}):
-        cls.change(cls_new_screen, args = args, kwargs = kwargs)
-        cls.objsched.run()
-
-    @classmethod
     def change(cls, cls_new_screen, *, forward=True, args=[], kwargs={}):
+        init = cls.current_screen is None
+        if init:
+            Screen() # Instantiate a blank starting screen
         cs_old = cls.current_screen
-        if cs_old is not None:
-            cs_old.on_hide() # Optional method in subclass
+        cs_old.on_hide() # Optional method in subclass
         if forward:
             if type(cls_new_screen) is ClassType:
                 new_screen = cls_new_screen(*args, **kwargs) # Instantiate new screen
@@ -218,6 +215,8 @@ class Screen(GUI):
         cls.current_screen = cs_new
         cs_new.on_open() # Optional subclass method
         cs_new._do_open(cs_old) # Clear and redraw
+        if init:
+            cls.objsched.run()
 
     @classmethod
     def back(cls):
@@ -241,7 +240,7 @@ class Screen(GUI):
             if touch_panel.ready:
                 x, y = touch_panel.get_touch_async()
                 for obj in Screen.current_screen.touchlist:
-                    if obj.enabled and not obj.greyed_out():
+                    if obj.visible and not obj.greyed_out():
                         obj._trytouch(x, y)
             elif not touch_panel.touched:
                 for obj in Screen.current_screen.touchlist:
@@ -255,23 +254,23 @@ class Screen(GUI):
         self.displaylist = []
         self.modal = False
         if Screen.current_screen is None: # Initialising class and thread
-            objsched = GUI.objsched
+            objsched = Screen.objsched
             if objsched is None:
-                raise OSError('GUI class is not initialised.')
+                raise OSError('Screen class is not initialised.')
             objsched.add_thread(self._touchtest()) # One thread only
         Screen.current_screen = self
         self.parent = None
 
     def _do_open(self, old_screen): # Aperture overrides
         show_all = True
-        tft = GUI.get_tft()
+        tft = Screen.get_tft()
 # If opening a Screen from an Aperture just blank and redraw covered area
         if old_screen.modal:
             show_all = False
             x0, y0, x1, y1 = old_screen._list_dims()
             tft.fill_rectangle(x0, y0, x1, y1, tft.getBGColor()) # Blank to screen BG
             for obj in [z for z in self.displaylist if z.overlaps(x0, y0, x1, y1)]:
-                if obj.enabled:
+                if obj.visible:
                     obj.redraw = True # Redraw static content
                     obj.draw_border()
                     obj.show()
@@ -296,12 +295,12 @@ class Aperture(Screen):
         self.width = width
         self.draw_border = draw_border
         self.modal = True
-        tft = GUI.get_tft()
+        tft = Screen.get_tft()
         self.fgcolor = fgcolor if fgcolor is not None else tft.getColor()
         self.bgcolor = bgcolor if bgcolor is not None else tft.getBGColor()
 
     def _do_open(self, old_screen):
-        tft = GUI.get_tft()
+        tft = Screen.get_tft()
         x, y = self.location[0], self.location[1]
         tft.fill_rectangle(x, y, x + self.width, y + self.height, self.bgcolor)
         if self.draw_border:
@@ -334,9 +333,9 @@ class NoTouch(object):
         self.height = height
         self.width = width
         self.fill = bgcolor is not None
-        self.enabled = True # Used by ButtonList class for invisible buttons
+        self.visible = True # Used by ButtonList class for invisible buttons
         self._greyed_out = False # Disabled by user code
-        tft = GUI.get_tft(False) # Not greyed out
+        tft = Screen.get_tft(False) # Not greyed out
         self.fgcolor = fgcolor if fgcolor is not None else tft.getColor()
         self.bgcolor = bgcolor if bgcolor is not None else tft.getBGColor()
         self.fontcolor = fontcolor if fontcolor is not None else tft.getColor()
@@ -348,7 +347,7 @@ class NoTouch(object):
 
     @property
     def tft(self):
-        return GUI.get_tft(self._greyed_out)
+        return Screen.get_tft(self._greyed_out)
 
     def greyed_out(self):
         return self._greyed_out # Subclass may be greyed out
@@ -623,14 +622,14 @@ class Button(Touchable):
         self.lp = False # Long press not in progress
         self.orig_fgcolor = fgcolor
         if self.litcolor is not None:
-            self.delay = Delay(GUI.objsched, self.shownormal)
+            self.delay = Delay(Screen.objsched, self.shownormal)
         self.litcolor = litcolor if self.fgcolor is not None else None
 
     def show(self):
         tft = self.tft
         x = self.location[0]
         y = self.location[1]
-        if not self.enabled:   # erase the button
+        if not self.visible:   # erase the button
             tft.usegrey(False)
             tft.fill_rectangle(x, y, x + self.width, y + self.height, self.bgcolor)
             return
@@ -671,7 +670,7 @@ class Button(Touchable):
             self.show() # must be on current screen
             self.delay.trigger(Button.lit_time)
         if self.lp_callback is not None:
-            GUI.objsched.add_thread(self.longpress())
+            Screen.objsched.add_thread(self.longpress())
         if not self.onrelease:
             self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
@@ -700,7 +699,7 @@ class ButtonList(object):
         button = Button(*args, **kwargs)
         self.lstbuttons.append(button)
         active = self.current is None # 1st button added is active
-        button.enabled = active
+        button.visible = active
         button.callback = self._callback
         if active:
             self.current = button
@@ -711,9 +710,9 @@ class ButtonList(object):
             old = self.current
             new = button
             self.current = new
-            old.enabled = False
+            old.visible = False
             old.show()
-            new.enabled = True
+            new.visible = True
             new.show()
             self.user_callback(new, *new.callback_args)
         return self.current
@@ -731,9 +730,9 @@ class ButtonList(object):
         old_index = self.lstbuttons.index(button)
         new = self.lstbuttons[(old_index + 1) % len(self.lstbuttons)]
         self.current = new
-        old.enabled = False
+        old.visible = False
         old.show()
-        new.enabled = True
+        new.visible = True
         new.busy = True # Don't respond to continued press
         new.show()
         self.user_callback(new, *args) # user gets button with args they specified
@@ -845,7 +844,7 @@ class IconButton(Touchable):
         if self.flash > 0:
             if self.num_icons < 2:
                 raise ugui_exception('Need > 1 icon for flashing button')
-            self.delay = Delay(GUI.objsched, self._show, (0,))
+            self.delay = Delay(Screen.objsched, self._show, (0,))
 
     def show(self):
         self._show(self.state)
@@ -879,7 +878,7 @@ class IconButton(Touchable):
             self.state = (self.state + 1) % self.num_icons
             self._show(self.state)
         if self.lp_callback is not None:
-            GUI.objsched.add_thread(self.longpress())
+            Screen.objsched.add_thread(self.longpress())
         if not self.onrelease:
             self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
@@ -1181,7 +1180,7 @@ class Knob(Touchable):
             else:
                 color = self.bgcolor if self.color is None else self.color # Fill color
             self._drawpointer(self._old_value, color) # erase old
-            self.tft # Reset GUI greyed-out status
+            self.tft # Reset Screen greyed-out status
 
         self._drawpointer(self._value, self.fgcolor) # draw new
         self._old_value = self._value # update old
@@ -1348,3 +1347,40 @@ class Dropdown(Touchable):
             location = self.location[0], self.location[1] + self.height + 1
             args = (location, self, self.width - self.height)
             Screen.change(_ListDialog, args = args)
+
+# *********** DIALOG BOX CLASS ***********
+# Enables simplified creation of dialog boxes from parameters. See dialog.py
+
+class DialogBox(Aperture):
+    def __init__(self, font, *, elements, location=(20, 20), label=None, bgcolor=DARKGREEN, buttonwidth=25, closebutton=True):
+        height = 150
+        spacing = 20
+        buttonwidth = max(max([get_stringsize(x[0], font)[0] for x in elements]) + 4, buttonwidth)
+        buttonheight = max(get_stringsize('x', font)[1], 25)
+        nelements = len(elements)
+        width = spacing + (buttonwidth + spacing) * nelements
+        if label is not None:
+            width = max(width, get_stringsize(label, font)[0] + 2 * spacing)
+        super().__init__(location, height, width, bgcolor = bgcolor)
+        x = self.location[0] + spacing # Coordinates of Aperture objects are relative to physical display
+        gap = 0
+        if nelements > 1:
+            gap = ((width - 2 * spacing) - nelements * buttonwidth) // (nelements - 1)
+        y = self.location[1] + self.height - buttonheight - 10
+        if label is not None:
+            Label((x, self.location[1] + 50), font = font, value = label)
+        for text, color in elements:
+            Button((x, y), height = buttonheight, width = buttonwidth, font = font, fontcolor = BLACK, fgcolor = color,
+                text = text, shape = RECTANGLE,
+                callback = self.back, args = (text,))
+            x += buttonwidth + gap
+        if closebutton:
+            x, y = get_stringsize('X', font)
+            size = max(x, y, 25)
+            Button((self.location[0] + width - (size + 1), self.location[1] + 1), height = size, width = size, font = font,
+                fgcolor = RED,  text = 'X', shape = RECTANGLE,
+                callback = self.back, args = ('Close',))
+
+    def back(self, button, text):
+        Aperture.value(text)
+        Screen.back()

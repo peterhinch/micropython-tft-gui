@@ -22,27 +22,35 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 from constants import *
-from ugui import Button, Label, Screen, Aperture
-from font14 import font14
-from font10 import font10
+from ugui import Button, Label, Screen, Aperture, get_stringsize
 
 class DialogBox(Aperture):
-    def __init__(self, location, *, elements, label=None, bgcolor=DARKGREEN, buttonwidth=80, closebutton=True):
+    def __init__(self, font, *, elements, location=(20, 20), label=None, bgcolor=DARKGREEN, buttonwidth=25, closebutton=True):
         height = 150
         spacing = 20
-        width = (buttonwidth + spacing) * len(elements) + 2 * spacing
+        buttonwidth = max(max([get_stringsize(x[0], font)[0] for x in elements]) + 4, buttonwidth)
+        buttonheight = max(get_stringsize('x', font)[1], 25)
+        nelements = len(elements)
+        width = spacing + (buttonwidth + spacing) * nelements
+        if label is not None:
+            width = max(width, get_stringsize(label, font)[0] + 2 * spacing)
         super().__init__(location, height, width, bgcolor = bgcolor)
         x = self.location[0] + spacing # Coordinates of Aperture objects are relative to physical display
-        y = self.location[1] + self.height - 50
+        gap = 0
+        if nelements > 1:
+            gap = ((width - 2 * spacing) - nelements * buttonwidth) // (nelements - 1)
+        y = self.location[1] + self.height - buttonheight - 10
         if label is not None:
-            Label((x, self.location[1] + 10), font = font14, value = label)
+            Label((x, self.location[1] + 50), font = font, value = label)
         for text, color in elements:
-            Button((x, y), height = 30, width = buttonwidth, font = font14, fontcolor = BLACK, fgcolor = color,
+            Button((x, y), height = buttonheight, width = buttonwidth, font = font, fontcolor = BLACK, fgcolor = color,
                 text = text, shape = RECTANGLE,
                 callback = self.back, args = (text,))
-            x += buttonwidth + spacing
+            x += buttonwidth + gap
         if closebutton:
-            Button((self.location[0] + width - 26, self.location[1] + 1), height = 25, width = 25, font = font10,
+            x, y = get_stringsize('X', font)
+            size = max(x, y, 25)
+            Button((self.location[0] + width - (size + 1), self.location[1] + 1), height = size, width = size, font = font,
                 fgcolor = RED,  text = 'X', shape = RECTANGLE,
                 callback = self.back, args = ('Close',))
 

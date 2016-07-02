@@ -21,7 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-from ugui import GUI, NoTouch, dolittle
+from ugui import NoTouch, dolittle, Screen
 from constants import *
 from math import pi
 from cmath import rect
@@ -76,7 +76,7 @@ class Graph(object):
         self.curves.add(curve)
 
     def clear(self):
-        tft = GUI.get_tft()
+        tft = Screen.get_tft()
         self.curves = set()
         tft.fill_rectangle(self.x0, self.y0, self.x1, self.y1, self.bgcolor)
         self.show()

@@ -257,6 +257,6 @@ class AssortedScreen(Screen):
 def test():
     print('Test TFT panel...')
     setup()
-    Screen.run(BaseScreen)                                          # Run it!
+    Screen.change(BaseScreen)                                          # Run it!
 
 test()

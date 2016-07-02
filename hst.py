@@ -122,6 +122,6 @@ class HorizontalSliderScreen(Screen):
 def test():
     print('Test TFT panel...')
     setup()
-    Screen.run(HorizontalSliderScreen)
+    Screen.change(HorizontalSliderScreen)
 
 test()

@@ -122,9 +122,9 @@ Bound variables:
  * ``height``
  * ``width``
  * ``fill`` True if a ``bgcolor`` was provided to the constructor.
- * ``enabled`` For compound cotrols only (pseudo controls consisting of more than one physical
+ * ``visible`` For compound cotrols only (pseudo controls consisting of more than one physical
  control). Currently only the ``ButtonList`` sets it ``False` and ``Button`` honours it. If ``False``
- the control will be invisible.
+ the control will be invisible and insensitive to touch.
  * ``_greyed_out`` Always ``False`` in the case of displays (which don't respond to touch).
  * ``border`` Border width in pixels. 0 if there is no border.
  * `callback`` Callback function on value change. Primarily for control classes: default is a

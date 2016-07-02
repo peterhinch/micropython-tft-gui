@@ -67,7 +67,7 @@ class ButtonScreen(Screen):
                 }
 
 # Uncomment this line to see 'skeleton' style greying-out:
-#        GUI.tft.grey_color()
+#        Screen.tft.grey_color()
 
 # Labels
         self.lstlbl = []
@@ -155,6 +155,6 @@ class ButtonScreen(Screen):
 def test():
     print('Testing TFT...')
     setup()
-    Screen.run(ButtonScreen)
+    Screen.change(ButtonScreen)
 
 test()

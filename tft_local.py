@@ -28,7 +28,7 @@
 from tft import LANDSCAPE
 from usched import Sched
 from touch import TOUCH
-from ugui import Screen, GUI, TFT_G
+from ugui import Screen, TFT_G
 
 def setup():
     objsched = Sched(True, 1) # Instantiate the scheduler with GC and heartbeat on red LED
@@ -36,4 +36,5 @@ def setup():
     touch = TOUCH("XPT2046", objsched, confidence = 50, margin = 50)
     # (-3886,-0.1287,-3812,-0.132,-3797,-0.07685,-3798,-0.07681))
     tft.backlight(100) # light on: remove this line if you don't have backlight control hardware
-    GUI.setup(objsched, tft, touch)
+    Screen.setup(objsched, tft, touch)
+

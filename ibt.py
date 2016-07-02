@@ -137,6 +137,6 @@ class IconButtonScreen(Screen):
 def test():
     print('Testing TFT...')
     setup()
-    Screen.run(IconButtonScreen)
+    Screen.change(IconButtonScreen)
 
 test()

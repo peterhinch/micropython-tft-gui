@@ -23,7 +23,7 @@
 # THE SOFTWARE.
 
 from plot import PolarGraph, PolarCurve, CartesianGraph, Curve
-from ugui import Button, Label, Screen, GUI
+from ugui import Button, Label, Screen
 from constants import *
 from tft_local import setup
 from font14 import font14
@@ -37,7 +37,7 @@ def quitbutton(x, y):
     def quit(button):
         tft = button.tft
         tft.clrSCR()
-        GUI.objsched.stop()
+        Screen.objsched.stop()
     return Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80)
 
@@ -140,7 +140,7 @@ class RealtimeScreen(Screen):
         self.buttonlist.append(refreshbutton(390, 140, (curve,)))
 
     def populate(self, curve):
-        GUI.objsched.add_thread(self.acquire(curve))
+        Screen.objsched.add_thread(self.acquire(curve))
 
     def acquire(self, curve):
         yield
@@ -166,6 +166,6 @@ class RealtimeScreen(Screen):
 def pt():
     print('Testing plot module...')
     setup()
-    Screen.run(BaseScreen)
+    Screen.change(BaseScreen)
 
 pt()

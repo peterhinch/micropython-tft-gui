@@ -22,7 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 from constants import *
-from ugui import Slider, Button, ButtonList, Dial, Label, GUI, Screen
+from ugui import Slider, Button, ButtonList, Dial, Label, Screen
 from font10 import font10
 from font14 import font14
 from tft_local import setup
@@ -60,8 +60,8 @@ class VerticalSliderScreen(Screen):
             fgcolor = GREEN, cbe_args = ('Slave2',), cb_move = self.slave_moved, cbm_args = (2,), **table)
         master = Slider((0, y), font = font10,
             fgcolor = YELLOW, cbe_args = ('Master',), cb_move = self.master_moved, value=0.5, border = 2, **table)
-        GUI.objsched.add_thread(self.thread1())
-        GUI.objsched.add_thread(self.thread2())
+        Screen.objsched.add_thread(self.thread1())
+        Screen.objsched.add_thread(self.thread2())
     # On/Off toggle: enable/disable quit button and one slider
         bs = ButtonList(self.cb_en_dis)
         lst_en_dis = [self.slave1, btnquit]
@@ -87,8 +87,8 @@ class VerticalSliderScreen(Screen):
         self.lstlbl[idx].value(to_string(val))
 
     def quit(self, button):
-        GUI.tft.clrSCR()
-        GUI.objsched.stop()
+        Screen.tft.clrSCR()
+        Screen.objsched.stop()
 
     def cb_en_dis(self, button, disable, itemlist):
         for item in itemlist:
@@ -118,7 +118,7 @@ class VerticalSliderScreen(Screen):
 def test():
     print('Test TFT panel...')
     setup()
-    GUI.set_grey_style(desaturate = False) # dim
-    Screen.run(VerticalSliderScreen)       # Run it!
+    Screen.set_grey_style(desaturate = False) # dim
+    Screen.change(VerticalSliderScreen)       # Run it!
 
 test()

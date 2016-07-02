@@ -63,16 +63,15 @@ Core files:
  6. constants.py Constants such as colors and shapes (import using ``from constants import *``)
 
 Optional files used by test programs:
- 1. gdialog.py DialogBox class builds simple pushbutton-based dialog boxes.
- 2. font10.py Font file.
- 3. font14.py Ditto.
- 4. radiobutton.py Icon file for icon radio buttons
- 5. checkbox.py Icon file for icon checkboxes.
- 6. switch.py Icon file for an on/off switch.
- 7. traffic.py Icons for traffic light button
- 8. gauge.py Icons for linear gauge
- 9. flash.py Icons for flashing button
- 10. threestate.py Icon for 3-state checkbox
+ 1. font10.py Font file.
+ 2. font14.py Ditto.
+ 3. radiobutton.py Icon file for icon radio buttons
+ 4. checkbox.py Icon file for icon checkboxes.
+ 5. switch.py Icon file for an on/off switch.
+ 6. traffic.py Icons for traffic light button
+ 7. gauge.py Icons for linear gauge
+ 8. flash.py Icons for flashing button
+ 9. threestate.py Icon for 3-state checkbox
 
 Test/demo programs:
  1. vst.py A test program for vertical linear sliders.
@@ -102,9 +101,9 @@ Instructions on creating font and icon files may be found in the README for the 
 
 ### Terminology
 
-The GUI does not support windows. The corresponding notion is a ``Screen`` comprising a full screen
-containing displayable GUI objects. These comprise ``control`` and ``display`` objects. The former
-can respond to touch (e.g. Pushbutton instances) while the latter cannot (LED or Dial instances).
+GUI objects are created on a ``Screen`` instance which normally fills the entire physical screen.
+Displayable GUI objects comprise ``control`` and ``display`` instances. The former can respond to
+touch (e.g. Pushbutton instances) while the latter cannot (LED or Dial instances).
 
 ### Coordinates
 
@@ -129,8 +128,8 @@ tuple or list of items. Callbacks are optional, as are the argument lists - a de
 function and empty list are provided. Callbacks are usually bound methods - see the Screens section
 for a reason why this is useful.
 
-All objects capable of raising callbacks have a ``tft`` property enabling access to drawing
-primitives. The scheduler may be accessed via the ``GUI`` instance.
+All controls and displays have a ``tft`` property. This enables callbacks to access drawing
+primitives. The scheduler may be accessed via the ``Screen`` class (``Screen.objsched``).
 
 ### Screens
 
@@ -169,7 +168,7 @@ class BaseScreen(Screen):
         super().__init__()
         Button((10, 10), font = font14, fontcolor = BLACK, text = 'Hi')
 setup()
-Screen.run(BaseScreen)
+Screen.change(BaseScreen)
 ```
 
 The last line causes the Screen class to instantiate your ``BaseScreen`` and to start the scheduler
@@ -181,27 +180,7 @@ By default tft_local.py instantiates the scheduler with a heartbeat on the Pyboa
 writing threaded code it provides visual confirmation that the scheduler is running, and that no
 thread is hogging execution by failing to yield.
 
-# Class GUI
-
-This provides access to system-wide objects and behaviours.
-
-## Class variables
-
-In normal use only the following class variable should be accessed.  
-``objsched`` The ``Sched`` scheduler instance: enables threaded code.
-
-## Class methods
-
-``set_grey_style`` Sets the way in which disabled ('greyed-out') objects are displayed. The colors
-of disabled objects are dimmed by a factor and optionally desaturated (turned to shades of grey).
-Optional keyword arguments: ``desaturate`` default ``True`` and ``factor`` default 2. A
-``ValueError`` will result if ``factor`` is <= 1. The default style is to desaturate and dim by a
-factor of 2.  
-``get_tft`` Return the ``TFT`` instance. This allows direct drawing to the physical screen.
-Anything so drawn will be lost when the screen is changed. In normal use the ``TFT`` instance is
-acquired via a GUI object's ``tft`` property.
-
-# Class Screen (GUI subclass)
+# Class Screen
 
 The ``Screen`` class presents a full-screen canvas onto which displayable objects are rendered.
 Before instantiating GUI objects a ``Screen`` instance must be created. This will be the current
@@ -210,8 +189,8 @@ current screen.
 
 The best way to use the GUI, even in single screen programs, is to create a user screen by
 subclassing the ``Screen`` class. GUI objects are instantialited in the constructor after calling
-the ``Screen`` constructor has been called. This arrangement facilitates communication between
-objects on the screen. The following presents the outline of this approach:
+the ``Screen``. This arrangement facilitates communication between objects on the screen. The
+following presents the outline of this approach:
 
 ```python
 def backbutton(x, y):
@@ -226,23 +205,28 @@ class Screen_0(Screen):
         Label((0, 0), font = font14, width = 400, value = 'Test screen')
         backbutton(390, 242)
 setup()
-Screen.run(Screen_0)
+Screen.change(Screen_0)
 ```
 
-Note that the GUI is started by issuing ``Screen.run`` with the class as its argument rather than
+Note that the GUI is started by issuing ``Screen.change`` with the class as its argument rather than
 an instance. This assists in multi-screen programs: screens are only instantiated when they are to
 be displayed. This allows RAM to be reclaimed by the garbage collector when the screen is closed.
 
 ## Class methods
 
-In normal use the following methods only are required:
+In normal use the following methods only are required:  
 ``change`` Change screen, refreshing the display. Mandatory positional argument: the new screen
 class name. This is to be a class subclassed from ``Screen``. The class will be instantiated and
 displayed. Optional keyword arguments: ``args``, ``kwargs``: arguments for the class constructor.  
 ``back`` Restore previous screen.  
-``run``  Mandatory positional argument: the new screen. This is to be a class subclassed from
-``Screen``. The class will be instantiated and displayed. Optional keyword arguments: ``args``,
-``kwargs``: arguments for the class constructor.
+``set_grey_style`` Sets the way in which disabled ('greyed-out') objects are displayed. The colors
+of disabled objects are dimmed by a factor and optionally desaturated (turned to shades of grey).
+Optional keyword arguments: ``desaturate`` default ``True`` and ``factor`` default 2. A
+``ValueError`` will result if ``factor`` is <= 1. The default style is to desaturate and dim by a
+factor of 2.  
+``get_tft`` Return the ``TFT`` instance. This allows direct drawing to the physical screen.
+Anything so drawn will be lost when the screen is changed. In normal use the ``TFT`` instance is
+acquired via a GUI object's ``tft`` property.
 
 See screentest.py for an example of a multi-screen design.
 
@@ -256,6 +240,11 @@ These do nothing, and are intended to be defined in subclasses if required.
 
 ``on_open`` Called when a screen is displayed.
 ``on_hide`` Called when a screen ceases to be current.
+
+## Class variables
+
+In normal use only the following class variable should be accessed.
+``objsched`` The ``Sched`` scheduler instance: enables threaded code.
 
 # Display Classes
 
@@ -711,13 +700,66 @@ Methods:
  * ``value`` Argument ``val`` default ``None``. If the argument is provided which is a valid index
  into the list that entry becomes current and the callback is executed. Always returns the index
  of the currently active entry.
- * ``populate`` Arguments: ``elements`` a list of strings, ``value`` (default 0) index into list
- defining initial value. Replaces the current list of strings, displays the current string and
- executes the callback.
  * ``textvalue`` Argument ``text`` a string default ``None``. If the argument is provided and is in
  the control's list, that item becomes current. Returns the current string, unless the arg was
  provided but did not correspond to any list item. In this event the control's state is not changed
  and ``None`` is returned.
+
+# Dialog Boxes
+
+In general ``Screen`` objects occupy the entire physical display. The principal exception to this
+is modal dialog boxes: these are rendered in a window which accepts all touch events until it is
+closed. Dialog boxes are created by instantiating an ``Aperture`` which is a ``Screen`` superclass.
+In effect this is a window, but a 'micro' implementation lacking chrome beyond a simple border and
+occupying a fixed location on the screen.
+
+In use the user program creates a class subclassed from ``Aperture``. This is populated in the same
+way as per ``Screen`` subclasses. The class name can then be passed to ``Screen.change`` to invoke
+the dialog box. The GUI provides a simple way to build dialog boxes based on a small set of
+pushbuttons such as 'Yes/No/Cancel' in the form of the ``DialogBox`` class.
+
+Note that coordinates are still referenced to the physical screen: when populating a user dialog
+box, object positions should be calculated by adding their relative position to the absolute
+coordinate in ``Aperture.location``.
+
+## Class Aperture
+
+Constructor mandatory positional args:  
+``location`` 2-tuple defining the window position.
+``height`` Dimensions in pixels.
+``width``
+Optional keyword only args:  
+``draw_border`` Boolean, default ``True``. If set a single pixel window border will be drawn.
+``bgcolor``  Background color of window. Defaults to system background.
+``fgcolor`` Color of border. Defaults to system foreground.
+
+Instance variables:  
+``location`` 2-tuple defining the window position.
+``height`` Dimensions in pixels.
+``width``
+
+Class method:  
+``value`` Optional arg ``val`` default ``None``. Provides a mechanism for returning the outcome of
+a dialog box which can be queried by the calling object. If the arg is provided, the value is set.
+The type of the arg is arbitrary. Returns the value of the ``Aperture`` class. The calling
+``Screen`` can query this by implementing an ``on_open`` method which calls ``Aperture.value()``.
+
+## Class DialogBox
+
+Constructor mandatory positional args:  
+``font`` The font for buttons and label.
+Optional keyword args:
+``elements`` A list or tuple of 2-tuples. Each defines the text and color of a pushbutton.
+``location`` 2-tuple defining the dialog box location. Default (20, 20).
+``label`` Text for an optional label displayed in the centre of the dialog box. Default ``None``.
+``bgcolor`` Background color of window. Default ``DARKGREEN``.
+``buttonwidth`` Minimum width of buttons. Default 25. In general button dimensions are calculated
+from the size of the strings in ``elements``.
+``closebutton`` Boolean. If set, a ``close`` button will be displayed at the top RH corner of the
+dialog box.
+
+Pressing any button closes the dialog and sets the ``Aperture`` value to the text of the button
+pressed or 'Close' in the case of the ``close`` button.
 
 # Developer Notes
 
