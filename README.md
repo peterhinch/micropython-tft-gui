@@ -728,6 +728,7 @@ Constructor mandatory positional args:
  1. ``location`` 2-tuple defining the window position.
  2. ``height`` Dimensions in pixels.
  3. ``width``
+
 Optional keyword only args:  
  * ``draw_border`` Boolean, default ``True``. If set a single pixel window border will be drawn.
  * ``bgcolor``  Background color of window. Defaults to system background.
