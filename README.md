@@ -722,6 +722,8 @@ argument for ``control`` or ``display`` classes. See ``dialog.py`` for example u
 
 ## Class Aperture
 
+Provides a window for objects in a modal dialog box.
+
 Constructor mandatory positional args:  
  1. ``location`` 2-tuple defining the window position.
  2. ``height`` Dimensions in pixels.
@@ -748,11 +750,17 @@ Class method:
 
 ## Class DialogBox
 
-Constructor mandatory positional args:  
+Simplifies building simple dialog boxes based on a set of pushbuttons. Any button press will close
+the dialog. The caller can determine which button was pressed. The size of the buttons and the
+width of the dialog box are calculated from the strings assigned to the buttons. This ensures that
+buttons are evenly spaced and identically sized.
+
+Constructor mandatory positional args:
  1. ``font`` The font for buttons and label.
  
 Optional keyword only args:  
- * ``elements`` A list or tuple of 2-tuples. Each defines the text and color of a pushbutton.  
+ * ``elements`` A list or tuple of 2-tuples. Each defines the text and color of a pushbutton, e.g.
+ ``(('Yes', RED), ('No', GREEN))``.
  * ``location`` 2-tuple defining the dialog box location. Default (20, 20).
  * ``label`` Text for an optional label displayed in the centre of the dialog box. Default ``None``.
  * ``bgcolor`` Background color of window. Default ``DARKGREEN``.
