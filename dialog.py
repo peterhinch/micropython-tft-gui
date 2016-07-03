@@ -49,15 +49,14 @@ class UserDialogBox(Aperture):
         height = 150
         width = 220
         super().__init__((20, 20), height, width, bgcolor = DARKGREEN)
-        x = self.location[0] # Coordinates of Aperture objects are relative to physical display
-        y = self.location[1] + self.height - 50
-        Button((x + 20, y), height = 30, width = 80, font = font14, fontcolor = BLACK, fgcolor = RED,
+        y = self.height - 50
+        Button(self.locn(20, y), height = 30, width = 80, font = font14, fontcolor = BLACK, fgcolor = RED,
                text = 'Cat', shape = RECTANGLE,
                callback = self.back, args = ('Cat',))
-        Button((x + 120, y), height = 30, width = 80, font = font14, fontcolor = BLACK, fgcolor = GREEN,
+        Button(self.locn(120, y), height = 30, width = 80, font = font14, fontcolor = BLACK, fgcolor = GREEN,
                text = 'Dog', shape = RECTANGLE,
                callback = self.back, args = ('Dog',))
-        Button((self.location[0] + width - 26, self.location[1] + 1), height = 25, width = 25, font = font10,
+        Button(self.locn(width - 26, 1), height = 25, width = 25, font = font10,
                fgcolor = RED,  text = 'X', shape = RECTANGLE,
                callback = self.back, args = ('Close',))
 

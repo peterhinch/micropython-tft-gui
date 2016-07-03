@@ -299,6 +299,9 @@ class Aperture(Screen):
         self.fgcolor = fgcolor if fgcolor is not None else tft.getColor()
         self.bgcolor = bgcolor if bgcolor is not None else tft.getBGColor()
 
+    def locn(self, x, y):
+        return (self.location[0] + x, self.location[1] + y)
+
     def _do_open(self, old_screen):
         tft = Screen.get_tft()
         x, y = self.location[0], self.location[1]
@@ -1349,10 +1352,11 @@ class Dropdown(Touchable):
             Screen.change(_ListDialog, args = args)
 
 # *********** DIALOG BOX CLASS ***********
-# Enables simplified creation of dialog boxes from parameters. See dialog.py
+# Enables parameterised creation of button-based dialog boxes. See dialog.py
 
 class DialogBox(Aperture):
-    def __init__(self, font, *, elements, location=(20, 20), label=None, bgcolor=DARKGREEN, buttonwidth=25, closebutton=True):
+    def __init__(self, font, *, elements, location=(20, 20), label=None,
+                 bgcolor=DARKGREEN, buttonwidth=25, closebutton=True):
         height = 150
         spacing = 20
         buttonwidth = max(max([get_stringsize(x[0], font)[0] for x in elements]) + 4, buttonwidth)
@@ -1362,7 +1366,7 @@ class DialogBox(Aperture):
         if label is not None:
             width = max(width, get_stringsize(label, font)[0] + 2 * spacing)
         super().__init__(location, height, width, bgcolor = bgcolor)
-        x = self.location[0] + spacing # Coordinates of Aperture objects are relative to physical display
+        x = self.location[0] + spacing # Coordinates relative to physical display
         gap = 0
         if nelements > 1:
             gap = ((width - 2 * spacing) - nelements * buttonwidth) // (nelements - 1)

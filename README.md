@@ -11,17 +11,6 @@ It is targeted at hardware control and display applications.
 For hardware notes see this [reference](./HARDWARE.md). An extension for plotting simple graphs is
 described [here](./PLOT.md).
 
-# Icons
-
-Most classes use graphics primitives to draw objects on the screen. A few employ icons: this is
-arguably prettier but involves large icon files which must be frozen as bytecode. Objects drawn
-with graphics primitives are scalable. Further properties such as colors can efficiently be changed
-at runtime: to achieve this with an icon-based object would require a set of colored icons to be
-created at design time. The library is usable without the icon classes.
-
-Instructions and a utility for creating icon files may be found on Robert Hammelrath's TFT driver
-site (see below).
-
 # Pre requisites
 
 ## Pre installation
@@ -79,11 +68,11 @@ Test/demo programs:
  3. buttontest.py Pushbuttons and checkboxes.
  4. knobtest.py Rotary controls, a dropdown list, a listbox. Also shows the two styles of
  "greying out" of disabled controls.
- 5. ibt.py Test of icon buttons.
- 6. screentest.py Test of multiple screens.
- 7. dialog.py A modal dialog box.
+ 5. screentest.py Test of multiple screens.
+ 6. dialog.py A modal dialog box.
+ 7. ibt.py Test of icon buttons.
 
-If you do not intend to use icons, optional files 4-10 and demo 5 may be ignored.
+If you do not intend to use icons, optional files 3-9 and demo 7 may be ignored.
 
 It should be noted that by the standards of the Pyboard this is a large library. Attempts to use it
 in the normal way will provoke memory errors owing to heap fragmentation. It is necessary to
@@ -96,6 +85,17 @@ It is also wise to issue ctrl-D to soft reset the Pyboard before importing a mod
 library. The test programs require a ctrl-D before import.
 
 Instructions on creating font and icon files may be found in the README for the TFT driver.
+
+# Icons
+
+Most classes use graphics primitives to draw objects on the screen. A few employ icons: this is
+arguably prettier but involves large icon files which must be frozen as bytecode. Objects drawn
+with graphics primitives are scalable. Further properties such as colors can efficiently be changed
+at runtime: to achieve this with an icon-based object would require a set of colored icons to be
+created at design time. The library is usable without the icon classes.
+
+Instructions and a utility for creating icon files may be found on Robert Hammelrath's TFT driver
+site (see below).
 
 # Concepts
 
@@ -110,8 +110,8 @@ touch (e.g. Pushbutton instances) while the latter cannot (LED or Dial instances
 In common with most displays, the top left hand corner of the display is (0, 0) with increasing
 values of x to the right, and increasing values of y downward. Display objects exist within a
 rectangular bounding box; in the case of touch sensitive controls this corresponds to the sensitive
-region. The location of the object is defined as the coordinates of the top left hand corner of the
-bounding box. Locations are defined as a 2-tuple (x, y).
+region. Locations are defined as a 2-tuple (x, y). The location of an object is defined as the
+location of the top left hand corner of the bounding box.
 
 ### Colors
 
@@ -138,8 +138,8 @@ multiple screens, each with its own set of GUI objects. The ``Screen`` class has
 enabling runtime changes of the screen being rendered to the physical display. This enables nested
 screens. The feature is demonstrated in ``screentest.py``.
 
-In practice the easiest way to build applications with multiple screens is to create a ``Screen``
-subclass for each of the application's screens. This faciitates sharing data between GUI objects on
+Applications should be designed with a ``Screen`` subclass for each of the application's screens
+(even if the app uses only a single screen). This faciitates sharing data between GUI objects on
 a screen, and also simplifies the handling of control callbacks. These will be methods bound to
 the user screen. They can access the screen's bound variables via ``self`` and the control's bound
 methods via the callback's first argument (which is a reference to the control). A simple example
@@ -147,7 +147,8 @@ can be seen in the ``KnobScreen`` example in ``screentest.py``.
 
 The ``Screen`` class has two null methods which may be implemented in subclasses: ``on_open`` which
 runs when a screen is opened but prior to its display, and ``on_hide`` which runs when a screen
-change is about to make the screen disappear. These may be used to instantiate or control threads.
+change is about to make the screen disappear. These may be used to instantiate or control threads
+and to retrieve the results from a modal dialog box.
 
 The ``Screen`` class is configured in ``tft_local.py``. It also provides access to the scheduler
 via the ``Screen.objsched`` class method to facilitate writing threaded code.
@@ -173,7 +174,7 @@ using that screen object. Control then passes to the scheduler: the code followi
 not run until the scheduler is stopped (``Screen.objsched.stop()``). See the scheduler README for
 full details.
 
-By default tft_local.py instantiates the scheduler with a heartbeat on the Pyboard's red LED. If
+By default ``tft_local`` instantiates the scheduler with a heartbeat on the Pyboard's red LED. If
 writing threaded code it provides visual confirmation that the scheduler is running, and that no
 thread is hogging execution by failing to yield.
 
@@ -212,20 +213,22 @@ be displayed. This allows RAM to be reclaimed by the garbage collector when the 
 ## Class methods
 
 In normal use the following methods only are required:  
-``change`` Change screen, refreshing the display. Mandatory positional argument: the new screen
-class name. This is to be a class subclassed from ``Screen``. The class will be instantiated and
-displayed. Optional keyword arguments: ``args``, ``kwargs``: arguments for the class constructor.  
-``back`` Restore previous screen.  
-``set_grey_style`` Sets the way in which disabled ('greyed-out') objects are displayed. The colors
+ * ``change`` Change screen, refreshing the display. Mandatory positional argument: the new screen
+class name. This must be a class subclassed from ``Screen``. The class will be instantiated and
+displayed. Optional keyword arguments: ``args``, ``kwargs``: arguments for the class constructor.
+ * ``back`` Restore previous screen.
+ * ``set_grey_style`` Sets the way in which disabled ('greyed-out') objects are displayed. The colors
 of disabled objects are dimmed by a factor and optionally desaturated (turned to shades of grey).
 Optional keyword arguments: ``desaturate`` default ``True`` and ``factor`` default 2. A
 ``ValueError`` will result if ``factor`` is <= 1. The default style is to desaturate and dim by a
-factor of 2.  
-``get_tft`` Return the ``TFT`` instance. This allows direct drawing to the physical screen.
+factor of 2.
+
+Other method:  
+ * ``get_tft`` Return the ``TFT`` instance. This allows direct drawing to the physical screen.
 Anything so drawn will be lost when the screen is changed. In normal use the ``TFT`` instance is
 acquired via a GUI object's ``tft`` property.
 
-See screentest.py for an example of a multi-screen design.
+See screentest.py and dialog.py for examples of multi-screen design.
 
 ## Constructor
 
@@ -235,13 +238,13 @@ This takes no arguments.
 
 These do nothing, and are intended to be defined in subclasses if required.
 
-``on_open`` Called when a screen is displayed.
-``on_hide`` Called when a screen ceases to be current.
+ * ``on_open`` Called when a screen is displayed.
+ * ``on_hide`` Called when a screen ceases to be current.
 
 ## Class variables
 
 In normal use only the following class variable should be accessed.
-``objsched`` The ``Sched`` scheduler instance: enables threaded code.
+ * ``objsched`` The ``Sched`` scheduler instance: enables threaded code.
 
 # Display Classes
 
@@ -266,7 +269,7 @@ Keyword only arguments:
  * ``value`` Initial text. Default: ``None``.
 
 Method:
- * ``value`` Argument ``val`` boolean, default ``None``. If provided, refreshes the label with the
+ * ``value`` Argument ``val`` string, default ``None``. If provided, refreshes the label with the
  passed text otherwise clears the text in the label.
 
 ## Class Dial
@@ -284,13 +287,13 @@ Keyword only arguments (all optional):
  * ``bgcolor`` Background color of object. Defaults to system background.
  * ``border`` Border width in pixels - typically 2. If omitted, no border will be drawn.
  * ``pointers`` Tuple of floats in range 0 to 0.9. Defines the length of each pointer as a
- proportion of the dial diameter. Default (0.9,) i.e. one pointer.
+ proportion of the dial diameter. Default (0.9,) i.e. one pointer of length 0.9.
  * ``ticks`` Defines the number of graduations around the dial. Default 4.
 
 Method:
- * ``value`` Arguments ``angle``  Arguments: ``angle`` (mandatory), ``pointer`` the pointer index
- (default 0). Displays an angle. A ``ValueError`` will be raised if the pointer index exceeds the
- number of pointers defined by the constructor ``pointers`` argument.
+ * ``value`` Arguments: ``angle`` (mandatory), ``pointer`` (optional) the pointer index. Displays
+ an angle. A ``ValueError`` will be raised if the pointer index exceeds the number of pointers
+ defined by the constructor ``pointers`` argument.
 
 ## Class LED
 
@@ -333,8 +336,9 @@ Keyword only arguments:
  * ``value`` Initial value to display. Default 0.
 
 Methods:
- * ``value`` Optional argument ``val``. If set, refreshes the meter display with a new value.
- Range 0.0 to 1.0. Always returns its current value. 
+ * ``value`` Optional argument ``val``. If provided, refreshes the meter display with a new value.
+ Range 0.0 to 1.0: out of range values will be constrained to full scale or 0. Always returns its
+ current value. 
 
 ## Class IconGauge
 
@@ -352,15 +356,15 @@ Optional keyword only argument:
  * ``initial_icon`` Default 0. The index of the initial icon to be displayed.
 
 Methods:
- * ``choose`` Mandatory argument: index of an icon. Displays that icon.
+ * ``icon`` Mandatory argument: index of an icon. Displays that icon.
  * ``value`` Optional argument ``val``. Range 0.0 to 1.0. If provided, selects the nearest icon and
  displays it. Always returns the control's current value.
 
 # Control Classes
 
 These classes provide touch-sensitive objects capable of both the display and entry of data. If the
-user moves the control, its value will change and an optional callback will be executed. If a
-thread alters a control's value, its appearance will change to reflect this.
+user moves the control, its value will change and an optional callback will be executed. If another
+control's callback or a thread alters a control's value, its appearance will change to reflect this.
 
 Buttons and checkboxes are provided in two variants, one drawn using graphics primitives, and the
 other using icons.
@@ -379,31 +383,30 @@ Optional keyword only arguments:
  * ``height`` Dimension of the bounding box. Default 200 pixels (v), 30 (h).
  * ``width`` Dimension of the bounding box. Default 30 pixels (v), 200 (h).
  * ``divisions`` Number of graduations on the scale. Default 10.
- * ``legends`` A tuple of strings to display near the slider. These will be distributed equally
- along its length, starting at the bottom (v) or left (h).
+ * ``legends`` A tuple of strings to display near the slider. These ``Label`` instances will be
+ distributed evenly along its length, starting at the bottom (v) or left (h).
  * ``fgcolor`` Color of foreground (the control itself). Defaults to system color.
  * ``bgcolor`` Background color of object. Defaults to system background.
  * ``fontcolor`` Text color. Defaults to system text color.
  * ``slidecolor`` Color for the slider. Defaults to the foreground color.
  * ``border`` Width of border. Default ``None``: no border will be drawn. If a value (typically 2)
  is provided, a border line will be drawn around the control.
- * ``c 4. ``location`` 2-tuple defining position.
-b_end`` Callback function which will run when the user stops touching the control.
- * ``cbe_args`` A list of arguments for the above callback. Default ``[]``.
+ * ``cb_end`` Callback function which will run when the user stops touching the control.
+ * ``cbe_args`` A list or tuple of arguments for the above callback. Default ``[]``.
  * ``cb_move`` Callback function which will run when the user moves the slider or the value is
- changed.
- * ``cbm_args`` A list of arguments for the above callback. Default ``[]``.
+ changed programmatically.
+ * ``cbm_args`` A list or tuple of arguments for the above callback. Default ``[]``.
  * ``value`` The initial value. Default 0.0: slider will be at the bottom (v), left (h).
 
 Methods:
  * ``greyed_out`` Optional boolean argument ``val`` default ``None``. If ``None`` returns the
  current 'greyed out' status of the control. Otherwise enables or disables it, showing it in its
  new state.
- * ``value`` Optional arguments ``val`` (default ``None``), ``color`` (default ``None``).
- If ``color`` exists, the control is rendered in the selected color. This supports dynamic
- color changes  
- If ``val`` exists, adjusts the slider to correspond to the new value. The move callback will run.
- The method constrains the range to 0.0 to 1.0. Always returns the control's value.
+ * ``value`` Optional arguments ``val`` (default ``None``). If supplied the slider moves to reflect
+ the new value and the ``cb_move`` callback is triggered. The method constrains the range to 0.0 to
+ 1.0. Always returns the control's value.
+ * ``color`` Mandatory arg ``color`` The control is rendered in the selected color. This supports
+ dynamic color changes  
 
 ## Class Knob
 
@@ -422,10 +425,10 @@ Optional keyword only arguments:
  * ``border`` Width of border. Default ``None``: no border will be drawn. If a value (typically 2)
  is provided, a border line will be drawn around the control.
  * ``cb_end`` Callback function which will run when the user stops touching the control.
- * ``cbe_args`` A list of arguments for the above callback. Default ``[]``.
+ * ``cbe_args`` A list or tuple of arguments for the above callback. Default ``[]``.
  * ``cb_move`` Callback function which will run when the user moves the knob or the value is
  changed.
- * ``cbm_args`` A list of arguments for the above callback. Default ``[]``.
+ * ``cbm_args`` A list or tuple of arguments for the above callback. Default ``[]``.
  * ``value`` Initial value. Default 0.0: knob will be at its most counter-clockwise position.
 
 Methods:
@@ -452,7 +455,7 @@ Optional keyword only arguments:
  * ``border`` Width of border. Default ``None``: no border will be drawn. If a value (typically 2)
  is provided, a border line will be drawn around the control.
  * ``callback`` Callback function which will run when the value changes.
- * ``args`` A list of arguments for the above callback. Default ``[]``.
+ * ``args`` A list or tuple of arguments for the above callback. Default ``[]``.
  * ``value`` Initial value. Default ``False``.
 
 Methods:
@@ -466,8 +469,8 @@ Methods:
 ## Class Button
 
 Drawn using graphics primitives. This emulates a pushbutton, with a callback being executed each
-time the button is pressed. Buttons may be any one of three shapes: CIRCLE, RECTANGLE or
-CLIPPED_RECT.
+time the button is pressed. Buttons may be any one of three shapes: ``CIRCLE``, ``RECTANGLE`` or
+``CLIPPED_RECT``.
 
 Constructor mandatory positional argument:
  1. ``location`` 2-tuple defining position.
@@ -484,9 +487,7 @@ Optional keyword only arguments:
  * ``bgcolor`` Background color of object. Defaults to system background.
  * ``fontcolor`` Text color. Defaults to system text color.
  * ``litcolor`` If provided the button will display this color for one second after being pressed.
- * ``border`` Width of border. Default ``None``: no border will be drawn. If a value (typically 2)
- is provided, a border line will be drawn around the control.
- * ``text`` Shown in centre of button. Default ''.
+ * ``text`` Shown in centre of button. Default: an empty string.
  * ``callback`` Callback function which runs when button is pressed.
  * ``args`` A list of arguments for the above callback. Default ``[]``.
  * ``onrelease`` Default ``True``. If ``True`` the callback will occur when the button is released
@@ -540,7 +541,7 @@ table = [
 ]
 bl = ButtonList(callback)
 for t in table: # Buttons overlay each other at same location
-    bl.add_button(objsched, tft, touch, (10, 10), font = font14, fontcolor = BLACK, **t)
+    bl.add_button((10, 10), font = font14, fontcolor = BLACK, **t)
 ```
 
 ## Class RadioButtons
@@ -580,8 +581,8 @@ table = [
 x = 0
 rb = RadioButtons(callback, BLUE) # color of selected button
 for t in table:
-    rb.add_button(objsched, tft, touch, (x, 180), font = font14, fontcolor = WHITE,
-                    fgcolor = (0, 0, 90), height = 40, **t)
+    rb.add_button((x, 180), font = font14, fontcolor = WHITE,
+                    fgcolor = LIGHTBLUE, height = 40, **t)
     x += 60 # Horizontal row of buttons
 ```
 
@@ -715,54 +716,60 @@ way as per ``Screen`` subclasses. The class name can then be passed to ``Screen.
 the dialog box. The GUI provides a simple way to build dialog boxes based on a small set of
 pushbuttons such as 'Yes/No/Cancel' in the form of the ``DialogBox`` class.
 
-Note that coordinates are still referenced to the physical screen: when populating a user dialog
-box, object positions should be calculated by adding their relative position to the absolute
-coordinate in ``Aperture.location``.
+A convenience method ``locn`` is provided to assist in populating dialog boxes. Given coordinates
+relative to the dialog box, it provides an absolute ``location`` 2-tuple suitable as a constructor
+argument for ``control`` or ``display`` classes. See ``dialog.py`` for example usage.
 
 ## Class Aperture
 
 Constructor mandatory positional args:  
-``location`` 2-tuple defining the window position.
-``height`` Dimensions in pixels.
-``width``
+ 1. ``location`` 2-tuple defining the window position.
+ 2. ``height`` Dimensions in pixels.
+ 3. ``width``
 Optional keyword only args:  
-``draw_border`` Boolean, default ``True``. If set a single pixel window border will be drawn.
-``bgcolor``  Background color of window. Defaults to system background.
-``fgcolor`` Color of border. Defaults to system foreground.
+ * ``draw_border`` Boolean, default ``True``. If set a single pixel window border will be drawn.
+ * ``bgcolor``  Background color of window. Defaults to system background.
+ * ``fgcolor`` Color of border. Defaults to system foreground.
 
 Instance variables:  
-``location`` 2-tuple defining the window position.
-``height`` Dimensions in pixels.
-``width``
+ * ``location`` 2-tuple defining the window position.
+ * ``height`` Dimensions in pixels.
+ * ``width``
+
+Method:
+ * ``locn`` Args: x, y. Returns an absolute location 2-tuple given a pair of coordinates relative
+ to the dialog box.
 
 Class method:  
-``value`` Optional arg ``val`` default ``None``. Provides a mechanism for returning the outcome of
-a dialog box which can be queried by the calling object. If the arg is provided, the value is set.
-The type of the arg is arbitrary. Returns the value of the ``Aperture`` class. The calling
-``Screen`` can query this by implementing an ``on_open`` method which calls ``Aperture.value()``.
+ * ``value`` Optional arg ``val`` default ``None``. Provides a mechanism for returning the outcome
+ of a dialog box which can be queried by the calling object. If the arg is provided, the value is
+ set. The arg may be any Python object. Returns the value of the ``Aperture`` class. The calling
+ ``Screen`` can query this by implementing an ``on_open`` method which calls ``Aperture.value()``.
 
 ## Class DialogBox
 
 Constructor mandatory positional args:  
-``font`` The font for buttons and label.  
-Optional keyword args:  
-``elements`` A list or tuple of 2-tuples. Each defines the text and color of a pushbutton.  
-``location`` 2-tuple defining the dialog box location. Default (20, 20).  
-``label`` Text for an optional label displayed in the centre of the dialog box. Default ``None``.  
-``bgcolor`` Background color of window. Default ``DARKGREEN``.  
-``buttonwidth`` Minimum width of buttons. Default 25. In general button dimensions are calculated
-from the size of the strings in ``elements``.  
-``closebutton`` Boolean. If set, a ``close`` button will be displayed at the top RH corner of the
-dialog box.
+ 1. ``font`` The font for buttons and label.
+ 
+Optional keyword only args:  
+ * ``elements`` A list or tuple of 2-tuples. Each defines the text and color of a pushbutton.  
+ * ``location`` 2-tuple defining the dialog box location. Default (20, 20).
+ * ``label`` Text for an optional label displayed in the centre of the dialog box. Default ``None``.
+ * ``bgcolor`` Background color of window. Default ``DARKGREEN``.
+ * ``buttonwidth`` Minimum width of buttons. Default 25. In general button dimensions are
+ calculated from the size of the strings in ``elements``.  
+ * ``closebutton`` Boolean. If set, a ``close`` button will be displayed at the top RH corner of
+ the dialog box.
 
 Pressing any button closes the dialog and sets the ``Aperture`` value to the text of the button
 pressed or 'Close' in the case of the ``close`` button.
 
 # Developer Notes
 
-The ``ugui`` module is large by Pyboard standards. This presents no problem if frozen, but if you wish
-to modify it, freezing is cumbersome. Compiling it on the Pyboard will result in memory errors. The
-solution is to cross-compile, replacing ugui.py with ugui.mpy on the target. Alternatively you may
-opt to split the module into two.
+The ``ugui`` module is large by Pyboard standards. This presents no problem if frozen, but if you
+wish to modify it, freezing is cumbersome. Compiling it on the Pyboard will result in memory
+errors. The solution is to cross-compile, replacing ugui.py with ugui.mpy on the target. This will
+work with small test programs such as those supplied. Alternatively you may opt to split the module
+into two.
 
 For developers wishing to extend the library with new controls or displays, see this [reference](./DEVELOPER.md).
