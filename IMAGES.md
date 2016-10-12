@@ -47,6 +47,8 @@ To anyone interested in this project this was a lash-up with the network (a two
 pole passive filter) wired between a DAC output and an ADC input. A serious
 solution would require I/O electronics which I have designed but not implemented
 to date. The dynamic range could be substantially improved: 60dB was my target.
+As it stands the phase measurements are dubious when the amplitude is more than
+40dB down. An auto-ranging amplifier is required.
 
 Note to any MicroPython developers. Would that the firmware supported concurrent
 synchronous reading of two ADC's. This would enable phase to be read from an
