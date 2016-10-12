@@ -2,14 +2,16 @@
 
 Provides a simple touch driven event based GUI interface for the Pyboard when used with a TFT
 display. The latter should be based on SSD1963 controller with XPT2046 touch controller. Such
-displays are available in electronics stores and on eBay. The software is based on drivers for the
-TFT and touch controller from Robert Hammelrath together with a cooperative scheduler of my own
-design.
+displays are available in electronics stores [e.g.]( http://www.buydisplay.com/default/) and on
+eBay. The software is based on drivers for the TFT and touch controller from Robert Hammelrath
+together with a cooperative scheduler of my own design.
 
 It is targeted at hardware control and display applications.
 
 For hardware notes see this [reference](./HARDWARE.md). An extension for plotting simple graphs is
 described [here](./PLOT.md).
+
+For sample images, go [here](./IMAGES.md)
 
 # Pre requisites
 
