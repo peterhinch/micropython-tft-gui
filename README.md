@@ -52,6 +52,7 @@ Core files:
  5. tft_local.py Local hardware definition (user defined settings including optional calibration
  data). This file should be edited to match your hardware.
  6. constants.py Constants such as colors and shapes (import using ``from constants import *``)
+ 7. TFTfont.py Defines the TFTfont class required by Python font files.
 
 Optional files used by test programs:
  1. font10.py Font file.
