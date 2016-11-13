@@ -59,7 +59,7 @@ Optional files used by test programs:
  2. font14.py Ditto.
  3. radiobutton.py Icon file for icon radio buttons
  4. checkbox.py Icon file for icon checkboxes.
- 5. switch.py Icon file for an on/off switch.
+ 5. iconswitch.py Icon file for an on/off switch.
  6. traffic.py Icons for traffic light button
  7. gauge.py Icons for linear gauge
  8. flash.py Icons for flashing button

@@ -26,7 +26,7 @@ from ugui import IconButton, IconGauge, IconRadioButtons, Label, Screen
 from tft_local import setup
 from font10 import font10
 from font14 import font14
-import radiobutton, checkbox, flash, threestate, switch, gauge, traffic # icon files
+import radiobutton, checkbox, flash, threestate, iconswitch, gauge, traffic # icon files
 
 def lr(n): # y coordinate from logical row
     return 10 + 50 * n
@@ -76,7 +76,7 @@ class IconButtonScreen(Screen):
         IconButton((200, lr(1)), icon_module = radiobutton, callback = self.rb_cancel, args = (rb, rb0))
         IconButton((200, lr(2)), icon_module = radiobutton, callback = self.cb_cancel, args = (cb,))
 # Switch
-        sw = IconButton((10, lr(3)), icon_module = switch, callback = self.cbswitch, toggle = True, args = (3,))
+        sw = IconButton((10, lr(3)), icon_module = iconswitch, callback = self.cbswitch, toggle = True, args = (3,))
 # Disable Checkbox
         IconButton((200, lr(3)), icon_module = checkbox, toggle = True,
                         callback = self.cb_en_dis, args =((cb, rb, sw),))

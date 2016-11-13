@@ -1,13 +1,21 @@
 # Lightweight threading library for the micropython board.
 # Author: Peter Hinch
-# V1.06 Type check threads, heartbeat LED on Pyboard
+# V1.09 const now in micropython. Fix for context managers in threads which are stopped.
+# V1.08 Sets gc threshold in low priority thread. Checks add_thread() reentrancy.
+# V1.07 Thread status method added.
+# V1.06 Type check threads, heartbeat LED. ESP8266 support.
 # V1.05 Uses utime for improved portability.
 # Copyright Peter Hinch 2016 Released under the MIT license
 
 import gc
 from utime import ticks_us
+from sys import platform
+try:
+    from micropython import const
+except ImportError:
+    pass
 
-def _g(): # Avoid hauling in entire types module
+def _g(): # MicroPython has trouble distinguishing generators from generator functions (#2184)
     yield 1
 GeneratorType = type(_g())
 
@@ -131,6 +139,8 @@ def wait(secs):
 class Pinblock(Waitfor):
     initialised = False
     def __init__(self, pin, mode, pull, customcallback = None, timeout = None):
+        if platform != 'pyboard':
+            raise ValueError('Pinblock only valid on Pyboard')
         super().__init__()
         if not Pinblock.initialised:
             import pyb
@@ -168,7 +178,8 @@ class Sched(object):
     STATE = const(3)
     DUE = const(4)
     def __init__(self, gc_enable=True, heartbeat=None):
-        self.lstThread = []                     # Entries contain [Waitfor object, function, pid, state]
+        self.lstThread = []                     # Entries contain [Waitfor object, function, pid, state, due]
+        self.add_thread_bar = False             # Re-entrancy check
         self.bStop = False
         self.last_gc = 0
         self.pid = 0
@@ -176,11 +187,15 @@ class Sched(object):
         self.last_heartbeat = 0
         self.heartbeat = heartbeat
         if heartbeat is not None:
-            if heartbeat > 0 and heartbeat < 5:
-                import pyb
-                self.heartbeat = pyb.LED(heartbeat)
-            else:
-                raise ValueError('heartbeat must be a valid LED no.')
+            if platform == 'pyboard':
+                if heartbeat > 0 and heartbeat < 5:
+                    import pyb
+                    self.heartbeat = pyb.LED(heartbeat)
+                else:
+                    raise ValueError('heartbeat must be a valid LED no.')
+            elif platform == 'esp8266':
+                import machine
+                self.heartbeat = machine.Pin(2, machine.Pin.OUT)
 
     def __getitem__(self, pid):                 # Index by pid
         threads = [thread for thread in self.lstThread if thread[PID] == pid]
@@ -195,7 +210,12 @@ class Sched(object):
         if pid == 0:
             self.bStop = True                   # Kill _runthreads method
             return
-        self[pid][STATE] = DEAD
+        try:
+            thread = self[pid]
+            thread[FUNC].close()                # Ensure try...finally and __exit__() work
+            thread[STATE] = DEAD
+        except ValueError:                      # Missing presumed killed in action
+            pass
 
     def pause(self, pid):
         self[pid][STATE] = PAUSED
@@ -203,22 +223,38 @@ class Sched(object):
     def resume(self, pid):
         self[pid][STATE] = RUNNING
 
-# Thread list contains [Waitfor object, generator, pid, state]: Run thread to first yield to acquire 
+    def status(self, pid):                      # 0 terminated 1 running 2 paused
+        state = 0
+        try:
+            state = self[pid][STATE]
+        except ValueError:
+            pass                                # Thread died
+        return state
+
+# Thread list contains [Waitfor object, generator, pid, state, due]: Run thread to first yield to acquire 
 # a Waitfor instance and put the resultant thread onto the threadlist
     def add_thread(self, func):
+        if self.add_thread_bar:
+            raise OSError('Cannot call add_thread() in initialisation code')
+        self.add_thread_bar = True
         if type(func) is not GeneratorType:
             raise ValueError('Threads must be added using function call syntax')
         self.pid += 1
         self.lstThread.append([func.send(None), func, self.pid, RUNNING, True])
+        self.add_thread_bar = False
         return self.pid
 
 # Runs once then in roundrobin or when there's nothing else to do
     def _idle_thread(self):
         if self.gc_enable and (self.last_gc == 0 or after(self.last_gc) > GCTIME):
             gc.collect()
+            gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
             self.last_gc = ticks_us()
         if self.heartbeat is not None and (self.last_heartbeat == 0 or after(self.last_heartbeat) > HBTIME):
-            self.heartbeat.toggle()
+            if platform == 'pyboard':
+                self.heartbeat.toggle()
+            elif platform == 'esp8266':
+                self.heartbeat(not self.heartbeat())
             self.last_heartbeat = ticks_us()
 
     def triggered(self, thread):
@@ -267,11 +303,18 @@ class Sched(object):
             thr_run[DUE] = False                # Only care if RR
 
     def run(self):                              # Returns if the stop method is used or all threads terminate
-        while not self.bStop:
-            self.lstThread = [thread for thread in self.lstThread if thread[STATE] != DEAD] # Remove dead threads
-            self._idle_thread()                 # Garbage collect
-            if len(self.lstThread) == 0:
-                return
-            for thread in self.lstThread:
-                thread[DUE] = True              # Applies only to roundrobin
-            self._runthreads()                  # Returns when all RR threads have run once
+        try:
+            while not self.bStop:
+                # Remove dead threads
+                self.lstThread = [thread for thread in self.lstThread if thread[STATE] != DEAD]
+                self._idle_thread()                 # Garbage collect
+                if len(self.lstThread) == 0:
+                    return
+                for thread in self.lstThread:
+                    thread[DUE] = True              # Applies only to roundrobin
+                self._runthreads()                  # Returns when all RR threads have run once
+        # Tidy up before scheduler exit
+        finally:
+            for gen in [thread[FUNC] for thread in self.lstThread if thread[STATE] != DEAD]:
+                gen.close()                         # Ensure context managers and finally clauses clean up
+        
