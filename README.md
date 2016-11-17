@@ -8,10 +8,13 @@ together with a cooperative scheduler of my own design.
 
 It is targeted at hardware control and display applications.
 
+![Image](pictures/IMG_2441_small.JPG)
+
 For hardware notes see this [reference](./HARDWARE.md). An extension for plotting simple graphs is
 described [here](./PLOT.md).
 
-For sample images, go [here](./IMAGES.md)
+For sample images, go [here](./IMAGES.md).
+A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
 # Pre requisites
 
