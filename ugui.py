@@ -45,7 +45,7 @@ def dolittle(*_):
 def get_stringsize(s, font):
     hor = 0
     for c in s:
-        _, vert, cols = font.get_ch(ord(c))
+        _, vert, cols = font.get_ch(c)
         hor += cols
     return hor, vert
 
@@ -440,7 +440,7 @@ class Label(NoTouch):
                 raise ValueError('If label value unspecified, must define the width')
             width, _ = get_stringsize(value, font) 
         super().__init__(location, font, None, width, fgcolor, bgcolor, fontcolor, border, value, None)
-        self.height = self.font.bits_vert
+        self.height = self.font.height()
         self.height += 2 * self.border  # Height determined by font and border
 
     def show(self):
@@ -526,7 +526,7 @@ class Meter(NoTouch):
     def __init__(self, location, *, font=None, height=200, width=30,
                  fgcolor=None, bgcolor=None, pointercolor=None, fontcolor=None,
                  divisions=10, legends=None, value=0):
-        border = 5 if font is None else 1 + font.bits_vert / 2
+        border = 5 if font is None else 1 + font.height() / 2
         NoTouch.__init__(self, location, font, height, width, fgcolor, bgcolor, fontcolor, border, value, None) # super() provoked Python bug
         border = self.border # border width
         self.ptrbytes = 3 * (self.width + 1) # 3 bytes per pixel
@@ -993,7 +993,7 @@ class Slider(Touchable):
                 else:
                     dy = height / (len(self.legends) -1)
                 yl = y + height # Start at bottom
-                fhdelta = self.font.bits_vert / 2
+                fhdelta = self.font.height() / 2
                 font = self.font
                 for legend in self.legends:
                     loc = (x + self.width, int(yl - fhdelta))
@@ -1090,7 +1090,7 @@ class HorizSlider(Touchable):
                 font = self.font
                 for legend in self.legends:
                     offset = get_stringsize(legend, self.font)[0] / 2
-                    loc = int(xl - offset), y - self.font.bits_vert - bw - 1
+                    loc = int(xl - offset), y - self.font.height() - bw - 1
                     Label(loc, font = font, fontcolor = self.fontcolor, value = legend)
                     xl += dx
             self.save_background(tft)
@@ -1213,7 +1213,7 @@ class Listbox(Touchable):
     def __init__(self, location, *, font, elements, width=250, value=0, border=2,
                  fgcolor=None, bgcolor=None, fontcolor=None, select_color=LIGHTBLUE,
                  callback=dolittle, args=[]):
-        self.entry_height = font.bits_vert + 2 # Allow a pixel above and below text
+        self.entry_height = font.height() + 2 # Allow a pixel above and below text
         bw = border if border is not None else 0 # Replicate Touchable ctor's handling of self.border
         height = self.entry_height * len(elements) + 2 * bw
         super().__init__(location, font, height, width, fgcolor, bgcolor, fontcolor, border, False, value, None)
@@ -1279,7 +1279,7 @@ class _ListDialog(Aperture):
         dd = dropdown
         font = dd.font
         elements = dd.elements
-        entry_height = font.bits_vert + 2 # Allow a pixel above and below text
+        entry_height = font.height() + 2 # Allow a pixel above and below text
         height = entry_height * len(elements) + 2 * border
         lb_location = location[0] + border, location[1] + border
         lb_width = width - 2 * border
@@ -1303,7 +1303,7 @@ class Dropdown(Touchable):
                  fgcolor=None, bgcolor=None, fontcolor=None, select_color=LIGHTBLUE,
                  callback=dolittle, args=[]):
         border = 2
-        self.entry_height = font.bits_vert + 2 # Allow a pixel above and below text
+        self.entry_height = font.height() + 2 # Allow a pixel above and below text
         height = self.entry_height + 2 * border
         super().__init__(location, font, height, width, fgcolor, bgcolor, fontcolor, border, False, value, None)
         super()._set_callbacks(callback, args)

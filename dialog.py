@@ -24,8 +24,8 @@
 
 from constants import *
 from ugui import Button, Label, Screen, Aperture, DialogBox
-from font14 import font14
-from font10 import font10
+import font14
+import font10
 from tft_local import setup
 # STANDARD BUTTONS
 

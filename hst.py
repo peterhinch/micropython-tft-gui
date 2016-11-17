@@ -23,8 +23,8 @@
 # THE SOFTWARE.
 from constants import *
 from ugui import HorizSlider, Button, ButtonList, Dial, Label, LED, Meter, Screen
-from font10 import font10
-from font14 import font14
+import font10
+import font14
 from tft_local import setup
 import pyb
 

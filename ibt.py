@@ -24,8 +24,8 @@
 from constants import *
 from ugui import IconButton, IconGauge, IconRadioButtons, Label, Screen
 from tft_local import setup
-from font10 import font10
-from font14 import font14
+import font10
+import font14
 import radiobutton, checkbox, flash, threestate, iconswitch, gauge, traffic # icon files
 
 def lr(n): # y coordinate from logical row

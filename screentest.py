@@ -24,8 +24,8 @@
 
 from constants import *
 from ugui import Knob, Dial, Label, Button, RadioButtons, ButtonList, Meter, Screen, Slider, Checkbox, LED
-from font14 import font14
-from font10 import font10
+import font14
+import font10
 from tft_local import setup
 from math import pi
 

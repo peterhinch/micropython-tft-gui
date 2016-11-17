@@ -16,6 +16,28 @@ described [here](./PLOT.md).
 For sample images, go [here](./IMAGES.md).
 A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
+# Release notes
+
+Release 0.2 17th Nov 2016. The font file format has changed. This enables fonts to be created with
+the ``font_to_py.py`` utility documented [here](https://github.com/peterhinch/micropython-font-to-py.git).
+This Python3 utility converts standard font files to Python source using open source libraries. To
+create compatible font files it should be invoked with the ``-x`` argument.
+
+To upgrade to this releaase the new tft.py is required along with new font files. The supplied fonts
+are in the new format. User programs should replace
+
+```python
+from somefont import somefont
+```
+
+with
+
+```python
+import somefont
+```
+
+All test programs incorporate this change.
+
 # Pre requisites
 
 ## Pre installation
@@ -55,7 +77,6 @@ Core files:
  5. tft_local.py Local hardware definition (user defined settings including optional calibration
  data). This file should be edited to match your hardware.
  6. constants.py Constants such as colors and shapes (import using ``from constants import *``)
- 7. TFTfont.py Defines the TFTfont class required by Python font files.
 
 Optional files used by test programs:
  1. font10.py Font file.
@@ -90,7 +111,10 @@ The hardware divers listed above cannot be frozen as they use inline assembler a
 It is also wise to issue ctrl-D to soft reset the Pyboard before importing a module which uses the
 library. The test programs require a ctrl-D before import.
 
-Instructions on creating font and icon files may be found in the README for the TFT driver.
+Instructions on creating icon files may be found in the README for the TFT driver. Fonts should
+be created using the ``font_to_py.py`` utility documented
+[here](https://github.com/peterhinch/micropython-font-to-py.git). The ``-x`` argument should be
+employed.
 
 # Icons
 
@@ -164,7 +188,7 @@ via the ``Screen.objsched`` class method to facilitate writing threaded code.
 The following illustrates the structure of a minimal program:
 ```python
 from tft_local import setup
-from font14 import font14
+import font14
 from constants import *
 from ugui import Screen, Button
 class BaseScreen(Screen):

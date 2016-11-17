@@ -23,8 +23,8 @@
 # THE SOFTWARE.
 from constants import *
 from ugui import Slider, Button, ButtonList, Dial, Label, Screen
-from font10 import font10
-from font14 import font14
+import font10
+import font14
 from tft_local import setup
 from math import pi
 

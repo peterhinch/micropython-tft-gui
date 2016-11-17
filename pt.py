@@ -26,8 +26,8 @@ from plot import PolarGraph, PolarCurve, CartesianGraph, Curve
 from ugui import Button, Label, Screen
 from constants import *
 from tft_local import setup
-from font14 import font14
-from font10 import font10
+import font14
+import font10
 from math import sin, pi
 from cmath import rect
 
