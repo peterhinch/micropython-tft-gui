@@ -239,7 +239,7 @@ class TOUCH:
     @staticmethod
     @micropython.viper        
     def touch_talk(cmd: int, bits: int, port: int)  -> int:
-        gpio_bsr = ptr16(port + stm.GPIO_BSRRL)
+        gpio_bsr = ptr16(port + stm.GPIO_BSRR)
         gpio_idr = ptr16(port + stm.GPIO_IDR)
 #
 # now shift the command out, which is 8 bits 

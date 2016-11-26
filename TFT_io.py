@@ -54,7 +54,7 @@ LANDSCAPE = const(0)
 @micropython.viper        
 def displaySCR_charbitmap(bits: ptr8, size: int, control: ptr8, bg_buf: ptr8):
     gpioa = ptr8(stm.GPIOA)
-    gpiob = ptr16(stm.GPIOB + stm.GPIO_BSRRL)
+    gpiob = ptr16(stm.GPIOB + stm.GPIO_BSRR)
 #
     transparency = control[6]
     bm_ptr = 0
@@ -149,7 +149,7 @@ def displaySCR_charbitmap(bits: ptr8, size: int, control: ptr8, bg_buf: ptr8):
 @micropython.viper        
 def displaySCR_bmp(data: ptr8, size: int, bits: int, colortable: ptr8):
     gpioa = ptr8(stm.GPIOA)
-    gpiob = ptr16(stm.GPIOB + stm.GPIO_BSRRL)
+    gpiob = ptr16(stm.GPIOB + stm.GPIO_BSRR)
 #
     bm_ptr = 0
     shift = 8 - bits
@@ -196,7 +196,7 @@ def setXY_L(r0, r1, r2, r3):
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
     b(start)
 #inline subroutine
     label(send)
@@ -261,7 +261,7 @@ def setXY_P(r0, r1, r2, r3):
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
     b(start)
 #inline subroutine
     label(send)
@@ -330,7 +330,7 @@ def drawPixel_L(r0, r1, r2):
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
     b(start)
 #inline subroutine
     label(send)
@@ -409,7 +409,7 @@ def drawPixel_P(r0, r1, r2):
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
     b(start)
 #inline subroutine
     label(send)
@@ -488,7 +488,7 @@ def fillSCR_AS(r0, r1):  # r0: ptr to data, r1: number of pixels (3 bytes/pixel)
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
     ldrb(r2, [r0, 0])  # red   
     ldrb(r3, [r0, 1])  # green
     ldrb(r4, [r0, 2])  # blue
@@ -531,7 +531,7 @@ def displaySCR_AS(r0, r1):  # r0: ptr to data, r1: is number of pixels (3 bytes/
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
     b(loopend)
 
     label(loopstart)
@@ -572,7 +572,7 @@ def displaySCR565_AS(r0, r1):  # r0: ptr to data, r1: is number of pixels (3 byt
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
     b(loopend)
 
     label(loopstart)
@@ -619,7 +619,7 @@ def displaySCR565_AS(r0, r1):  # r0: ptr to data, r1: is number of pixels (3 byt
 @micropython.viper        
 def tft_cmd_data(cmd: int, data: ptr8, size: int):
     gpioa = ptr8(stm.GPIOA + stm.GPIO_ODR)
-    gpiob = ptr16(stm.GPIOB + stm.GPIO_BSRRL)
+    gpiob = ptr16(stm.GPIOB + stm.GPIO_BSRR)
     gpioa[0] = cmd          # set data on port A
     gpiob[1] = D_C | WR     # set C/D and WR low
     gpiob[0] = D_C | WR     # set C/D and WR high
@@ -641,7 +641,7 @@ def tft_cmd_data_AS(r0, r1, r2):  # r0: command, r1: ptr to data, r2 is size in 
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
 # Emit command byte
     mov(r5, WR | D_C)
     strb(r0, [r6, 0])  # set command byte
@@ -667,7 +667,7 @@ def tft_cmd_data_AS(r0, r1, r2):  # r0: command, r1: ptr to data, r2 is size in 
 @micropython.viper        
 def tft_cmd(cmd: int):
     gpioa = ptr8(stm.GPIOA + stm.GPIO_ODR)
-    gpiob = ptr16(stm.GPIOB + stm.GPIO_BSRRL)
+    gpiob = ptr16(stm.GPIOB + stm.GPIO_BSRR)
     gpioa[0] = cmd          # set data on port A
     gpiob[1] = D_C | WR     # set C/D and WR low
     gpiob[0] = D_C | WR     # set C/D and WR high
@@ -685,7 +685,7 @@ def tft_write_data_AS(r0, r1):  # r0: ptr to data, r1: is size in Bytes
     movwt(r6, stm.GPIOA) # target
     add (r6, stm.GPIO_ODR)
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
     mov(r5, WR)
 # and go, first test size for 0
     b(loopend)
@@ -714,7 +714,7 @@ def tft_read_cmd_data_AS(r0, r1, r2):
 # r7: GPIOB BSSRL register ptr
     movwt(r6, stm.GPIOA) # target
     movwt(r7, stm.GPIOB)
-    add (r7, stm.GPIO_BSRRL)
+    add (r7, stm.GPIO_BSRR)
 # Emit command byte
     movw(r5, WR | D_C)
     strb(r0, [r6, stm.GPIO_ODR])  # set command byte

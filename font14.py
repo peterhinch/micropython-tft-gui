@@ -298,7 +298,7 @@ b'\xc8\x0c\xf8\x0c\x11\x0d\x2a\x0d\x5a\x0d\x73\x0d\xba\x0d\xea\x0d'\
 b'\x1a\x0e\x4a\x0e\x7a\x0e\x93\x0e\xc3\x0e\xdc\x0e\x0c\x0f\x3c\x0f'\
 b'\x83\x0f\xb3\x0f\xe3\x0f\x13\x10\x2c\x10\x45\x10\x5e\x10\x8e\x10'\
 
-
+_mvfont = memoryview(_font)
 
 def _chr_addr(ordch):
     offset = 2 * (ordch - 32)
@@ -310,5 +310,5 @@ def get_ch(ch):
     offset = _chr_addr(ordch)
     width = int.from_bytes(_font[offset:offset + 2], 'little')
     next_offs = _chr_addr(ordch +1)
-    return memoryview(_font[offset + 2:next_offs]), 23, width
+    return _mvfont[offset + 2:next_offs], 23, width
  
