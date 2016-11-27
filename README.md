@@ -16,7 +16,14 @@ described [here](./PLOT.md).
 For sample images, go [here](./IMAGES.md).
 A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
+# Note
+
+On 14th Nov 2016 a change was introduced to the firmware, an upgrade of which will cause earlier
+versions of this code to fail. It is recommended to upgrade both the firmware and this application.
+
 # Release notes
+
+Release 0.21 26th Nov 2016. Fix above issue.
 
 Release 0.2 17th Nov 2016. The font file format has changed. This enables fonts to be created with
 the ``font_to_py.py`` utility documented [here](https://github.com/peterhinch/micropython-font-to-py.git).
