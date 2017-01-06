@@ -1,4 +1,4 @@
-#
+# asyncio version
 # The MIT License (MIT)
 # 
 # Copyright (c) 2016 Robert Hammelrath
@@ -26,6 +26,7 @@
 # It uses Y5..Y8 of PyBoard
 #
 import pyb, stm
+import uasyncio as asyncio
 # define constants
 #
 PCB_VERSION = 2
@@ -57,14 +58,14 @@ Y_HIGH = const(4090)   ## highest reasonable Y value
 class TOUCH:
 #
 # Init just sets the PIN's to In / out as required
-# objsched: scheduler if asynchronous operation intended
+# async: set True if asynchronous operation intended
 # confidence: confidence level - number of consecutive touches with a margin smaller than the given level
 #       which the function will sample until it accepts it as a valid touch
 # margin: Difference from mean centre at which touches are considered at the same position 
 # delay: Delay between samples in ms. (n/a if asynchronous)
 #
     DEFAULT_CAL = (-3917, -0.127, -3923, -0.1267, -3799, -0.07572, -3738,  -0.07814)
-    def __init__(self, controller = "XPT2046", objsched = None, *, confidence = 5, margin = 50, delay = 10, calibration = None):
+    def __init__(self, controller = "XPT2046", asyn = False, *, confidence = 5, margin = 50, delay = 10, calibration = None):
         if PCB_VERSION == 1:
             self.pin_clock = pyb.Pin("Y8", pyb.Pin.OUT_PP)
             self.pin_clock.value(0)
@@ -86,9 +87,11 @@ class TOUCH:
         cal = TOUCH.DEFAULT_CAL if calibration is None else calibration
         self.asynchronous = False
         self.touch_parameter(confidence, margin, delay, cal)
-        if objsched is not None:
+        if asyn:
             self.asynchronous = True
-            objsched.add_thread(self._main_thread())
+            import uasyncio as asyncio
+            loop = asyncio.get_event_loop()
+            loop.create_task(self._main_thread())
 
 # set parameters for get_touch()
 # res: Resolution in bits of the returned values, default = 10
@@ -167,12 +170,12 @@ class TOUCH:
         return None
 
 # Asynchronous use: this thread maintains self.x and self.y
-    def _main_thread(self):
+    async def _main_thread(self):
         buff = self.buff
         buf_length = self.buf_length
         buffptr = 0
         nsamples = 0
-        yield # Initialisation complete, wait for scheduler to start
+        await asyncio.sleep(0)
         while True:
             if nsamples == buf_length:
                 meanx = sum([c[0] for c in buff]) // buf_length
@@ -191,7 +194,7 @@ class TOUCH:
                 buff[buffptr] = sample # put in buff
                 buffptr = (buffptr + 1) % buf_length
                 nsamples = min(nsamples + 1, buf_length)
-            yield
+            await asyncio.sleep(0)
 
 # Asynchronous get_touch
     def get_touch_async(self):

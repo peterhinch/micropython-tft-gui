@@ -1,4 +1,5 @@
 # screentest.py Test/demo of multiple screens for Pybboard TFT GUI
+# asyncio version. TODO figure out how to pause and resume dial
 
 # The MIT License (MIT)
 #
@@ -22,6 +23,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import uasyncio as asyncio
 from constants import *
 from ugui import Knob, Dial, Label, Button, RadioButtons, ButtonList, Meter, Screen, Slider, Checkbox, LED
 import font14
@@ -36,9 +38,7 @@ def to_string(val):
 
 def quitbutton(x, y):
     def quit(button):
-        tft = button.tft
-        tft.clrSCR()
-        Screen.objsched.stop()
+        Screen.shutdown()
     Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80)
 
@@ -80,30 +80,32 @@ class ThreadScreen(Screen):
         Label((0, 150), font = font14, value = 'computed continuously.')
         self.dial1 = Dial((350, 10), fgcolor = GREEN, border = 2, pointers = (0.9, 0.7))
         self.dial2 = Dial((350, 120), fgcolor = YELLOW, border = 2,  pointers = (0.9, 0.7))
-        self.pid1 = Screen.objsched.add_thread(self.mainthread(self.dial1))
-        Screen.objsched.pause(self.pid1)
-        Screen.objsched.add_thread(self.mainthread(self.dial2))
+        self.pause = False  # asyncio can't pause coros so handle at application level
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.mainthread(self.dial1, True))
+        loop.create_task(self.mainthread(self.dial2))
 
         fwdbutton(0, 242, BackScreen)
         backbutton(390, 242)
 
     def on_open(self):
         print('Start green dial')
-        Screen.objsched.resume(self.pid1)
+        self.pause = False
 
     def on_hide(self):
         print('Stop green dial')
-        Screen.objsched.pause(self.pid1)
+        self.pause = True
 
-    def mainthread(self, dial):
+    async def mainthread(self, dial, can_pause=False):
         angle = 0
-        yield
+        await asyncio.sleep(0)
         while True:
-            yield 0.2
-            delta = 0.2
-            angle += pi * 2 * delta / 10
-            dial.value(angle)
-            dial.value(angle /10, 1)
+            await asyncio.sleep_ms(200)
+            if not (can_pause and self.pause):
+                delta = 0.2
+                angle += pi * 2 * delta / 10
+                dial.value(angle)
+                dial.value(angle /10, 1)
 
 class BaseScreen(Screen):
     def __init__(self):

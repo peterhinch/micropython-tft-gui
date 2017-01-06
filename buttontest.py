@@ -132,8 +132,7 @@ class ButtonScreen(Screen):
         self.lstlbl[idx_label].value(arg)
 
     def quit(self, button):
-        Screen.tft.clrSCR()
-        Screen.objsched.stop()
+        Screen.shutdown()
 
     def cbcb(self, checkbox, idx_label):
         if checkbox.value():

@@ -21,6 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+import uasyncio as asyncio
 from constants import *
 from ugui import IconButton, IconGauge, IconRadioButtons, Label, Screen
 from tft_local import setup
@@ -82,7 +83,8 @@ class IconButtonScreen(Screen):
                         callback = self.cb_en_dis, args =((cb, rb, sw),))
 # Gauge
         ig = IconGauge((80, lr(5)), icon_module = gauge)
-        Screen.objsched.add_thread(self.mainthread(ig))
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.mainthread(ig))
 
 
 # CALLBACKS
@@ -108,8 +110,7 @@ class IconButtonScreen(Screen):
 
 # Quit button CB
     def quit(self, button):
-        Screen.tft.clrSCR()
-        Screen.objsched.stop()
+        Screen.shutdown()
 
 # Enable/disable CB
     def cb_en_dis(self, button, itemlist):
@@ -118,11 +119,11 @@ class IconButtonScreen(Screen):
 
 
 # THREAD: keep the gauge moving
-    def mainthread(self, objgauge):
+    async def mainthread(self, objgauge):
         INC = 0.05
         oldvalue = 0
         inc = INC
-        yield
+        await asyncio.sleep(0)
         while True:
             oldvalue += inc
             if oldvalue >= 1.0:
@@ -132,7 +133,7 @@ class IconButtonScreen(Screen):
                 oldvalue = 0
                 inc = INC
             objgauge.value(oldvalue)
-            yield 0.1
+            await asyncio.sleep_ms(100)
 
 def test():
     print('Testing TFT...')

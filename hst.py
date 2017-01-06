@@ -21,6 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+import uasyncio as asyncio
 from constants import *
 from ugui import HorizSlider, Button, ButtonList, Dial, Label, LED, Meter, Screen
 import font10
@@ -77,8 +78,9 @@ class HorizontalSliderScreen(Screen):
         button = bs.add_button((280, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
                             fgcolor = RED, shape = RECTANGLE, text = 'Enable', args = (False,))
 # Threads to test meters
-        Screen.objsched.add_thread(self.testmeter(meter1))
-        Screen.objsched.add_thread(self.testmeter(meter2))
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.testmeter(meter1))
+        loop.create_task(self.testmeter(meter2))
 
     def slide_release(self, slider, control_name):
         print('{} returned {}'.format(control_name, slider.value()))
@@ -100,16 +102,15 @@ class HorizontalSliderScreen(Screen):
         label.value(to_string(val))
 
     def quit(self, button):
-        Screen.tft.clrSCR()
-        Screen.objsched.stop()
+        Screen.shutdown()
 
     def cb_en_dis(self, button, disable):
         for item in self.lst_en_dis:
             item.greyed_out(disable)
 # Meters move linearly between random values
-    def testmeter(self, meter):
+    async def testmeter(self, meter):
         oldvalue = 0
-        yield
+        await asyncio.sleep(0)
         while True:
             val = pyb.rng() / 2**30
             steps = 20
@@ -117,7 +118,7 @@ class HorizontalSliderScreen(Screen):
             for _ in range(steps):
                 oldvalue += delta
                 meter.value(oldvalue)
-                yield 0.1
+                await asyncio.sleep_ms(100)
 
 def test():
     print('Test TFT panel...')

@@ -1,29 +1,28 @@
 # micropython-gui
 
-Provides a simple touch driven event based GUI interface for the Pyboard when used with a TFT
-display. The latter should be based on SSD1963 controller with XPT2046 touch controller. Such
-displays are available in electronics stores [e.g.]( http://www.buydisplay.com/default/) and on
-eBay. The software is based on drivers for the TFT and touch controller from Robert Hammelrath
-together with a cooperative scheduler of my own design.
+Provides a simple touch driven event based GUI interface for the Pyboard when
+used with a TFT display. The latter should be based on SSD1963 controller with
+XPT2046 touch controller. Such displays are available in electronics stores
+[e.g.]( http://www.buydisplay.com/default/) and on eBay. The software is based
+on drivers for the TFT and touch controller from Robert Hammelrath. It now uses
+uasyncio for scheduling.
 
 It is targeted at hardware control and display applications.
 
 ![Image](pictures/IMG_2441_small.JPG)
 
-For hardware notes see this [reference](./HARDWARE.md). An extension for plotting simple graphs is
-described [here](./PLOT.md).
+For hardware notes see this [reference](./HARDWARE.md). An extension for
+plotting simple graphs is described [here](./PLOT.md).
 
 For sample images, go [here](./IMAGES.md).
 A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
-# Note
-
-On 14th Nov 2016 a change was introduced to the firmware, an upgrade of which will cause earlier
-versions of this code to fail. It is recommended to upgrade both the firmware and this application.
-
 # Release notes
 
-Release 0.21 26th Nov 2016. Fix above issue.
+Release 0.5 Now uses uasyncio. Requires firmware V1.8.7 or later. Note that
+required modules have changed and user code will require adaptation. All
+modules and test programs should be updated. Changes to user code will be minor
+unless it explicitly uses the scheduler.
 
 Release 0.2 17th Nov 2016. The font file format has changed. This enables fonts to be created with
 the ``font_to_py.py`` utility documented [here](https://github.com/peterhinch/micropython-font-to-py.git).
@@ -70,16 +69,20 @@ means of graphics primitives. Either (or both) may be used in a project.
 Documentation for the underlying libraries may be found at these sites:  
 [TFT driver](https://github.com/robert-hh/SSD1963-TFT-Library-for-PyBoard.git)  
 [XPT2046 driver](https://github.com/robert-hh/XPT2046-touch-pad-driver-for-PyBoard.git)  
-[Scheduler](https://github.com/peterhinch/Micropython-scheduler.git)
+[uasyncio libraries and notes](https://github.com/peterhinch/micropython-async)
 
 Hardware drivers:
  1. TFT_io.py Low level TFT driver.
- 2. touch.py Touch controller driver.
+ 2. touch.py Touch controller driver. Currently the version in this repository
+ must be used as this has been modified for uasyncio.
+
+Library directory:
+ 1. The uasyncio library must be installed as frozen bytecode.
 
 Core files:
  1. tft.py TFT driver.
- 2. usched.py Scheduler.
- 3. delay.py Used with the scheduler for watchdog type delays and future events.
+ 2. asyn.py Synchronisation primitives.
+ 3. aswitch.py Provides a Delay_ms class for retriggerable delays.
  4. ugui.py The micro GUI library.
  5. tft_local.py Local hardware definition (user defined settings including optional calibration
  data). This file should be edited to match your hardware.
@@ -166,7 +169,7 @@ function and empty list are provided. Callbacks are usually bound methods - see 
 for a reason why this is useful.
 
 All controls and displays have a ``tft`` property. This enables callbacks to access drawing
-primitives. The scheduler may be accessed via the ``Screen`` class (``Screen.objsched``).
+primitives.
 
 ### Screens
 
@@ -187,8 +190,7 @@ runs when a screen is opened but prior to its display, and ``on_hide`` which run
 change is about to make the screen disappear. These may be used to instantiate or control threads
 and to retrieve the results from a modal dialog box.
 
-The ``Screen`` class is configured in ``tft_local.py``. It also provides access to the scheduler
-via the ``Screen.objsched`` class method to facilitate writing threaded code.
+The ``Screen`` class is configured in ``tft_local.py``.
 
 # Program Structure
 
@@ -208,12 +210,7 @@ Screen.change(BaseScreen)
 
 The last line causes the Screen class to instantiate your ``BaseScreen`` and to start the scheduler
 using that screen object. Control then passes to the scheduler: the code following this line will
-not run until the scheduler is stopped (``Screen.objsched.stop()``). See the scheduler README for
-full details.
-
-By default ``tft_local`` instantiates the scheduler with a heartbeat on the Pyboard's red LED. If
-writing threaded code it provides visual confirmation that the scheduler is running, and that no
-thread is hogging execution by failing to yield.
+not run until the GUI is shut down and the scheduler is stopped (``Screen.shutdown()``).
 
 # Class Screen
 
@@ -254,6 +251,7 @@ In normal use the following methods only are required:
 class name. This must be a class subclassed from ``Screen``. The class will be instantiated and
 displayed. Optional keyword arguments: ``args``, ``kwargs``: arguments for the class constructor.
  * ``back`` Restore previous screen.
+ * ``shutdown`` Clear the screen and shut down the GUI.
  * ``set_grey_style`` Sets the way in which disabled ('greyed-out') objects are displayed. The colors
 of disabled objects are dimmed by a factor and optionally desaturated (turned to shades of grey).
 Optional keyword arguments: ``desaturate`` default ``True`` and ``factor`` default 2. A
@@ -277,11 +275,6 @@ These do nothing, and are intended to be defined in subclasses if required.
 
  * ``on_open`` Called when a screen is displayed.
  * ``on_hide`` Called when a screen ceases to be current.
-
-## Class variables
-
-In normal use only the following class variable should be accessed.
- * ``objsched`` The ``Sched`` scheduler instance: enables threaded code.
 
 # Display Classes
 

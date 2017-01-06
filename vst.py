@@ -21,6 +21,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+import uasyncio as asyncio
 from constants import *
 from ugui import Slider, Button, ButtonList, Dial, Label, Screen
 import font10
@@ -60,8 +61,9 @@ class VerticalSliderScreen(Screen):
             fgcolor = GREEN, cbe_args = ('Slave2',), cb_move = self.slave_moved, cbm_args = (2,), **table)
         master = Slider((0, y), font = font10,
             fgcolor = YELLOW, cbe_args = ('Master',), cb_move = self.master_moved, value=0.5, border = 2, **table)
-        Screen.objsched.add_thread(self.thread1())
-        Screen.objsched.add_thread(self.thread2())
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.thread1())
+        loop.create_task(self.thread2())
     # On/Off toggle: enable/disable quit button and one slider
         bs = ButtonList(self.cb_en_dis)
         lst_en_dis = [self.slave1, btnquit]
@@ -87,29 +89,26 @@ class VerticalSliderScreen(Screen):
         self.lstlbl[idx].value(to_string(val))
 
     def quit(self, button):
-        Screen.tft.clrSCR()
-        Screen.objsched.stop()
+        Screen.shutdown()
 
     def cb_en_dis(self, button, disable, itemlist):
         for item in itemlist:
             item.greyed_out(disable)
 
 # THREADS
-    def thread1(self):
+    async def thread1(self):
         angle = 0
-        yield
         while True:
-            yield 0.1
+            await asyncio.sleep_ms(100)
             delta = self.slave1.value()
             angle += pi * 2 * delta / 10
             self.dial1.value(angle)
             self.dial1.value(angle /10, 1)
 
-    def thread2(self):
+    async def thread2(self):
         angle = 0
-        yield
         while True:
-            yield 0.1
+            await asyncio.sleep_ms(100)
             delta = self.slave2.value()
             angle += pi * 2 * delta / 10
             self.dial2.value(angle)

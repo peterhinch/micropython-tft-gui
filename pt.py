@@ -22,6 +22,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import uasyncio as asyncio
 from plot import PolarGraph, PolarCurve, CartesianGraph, Curve
 from ugui import Button, Label, Screen
 from constants import *
@@ -35,9 +36,7 @@ from cmath import rect
 
 def quitbutton(x, y):
     def quit(button):
-        tft = button.tft
-        tft.clrSCR()
-        Screen.objsched.stop()
+        Screen.shutdown()
     return Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80)
 
@@ -140,25 +139,25 @@ class RealtimeScreen(Screen):
         self.buttonlist.append(refreshbutton(390, 140, (curve,)))
 
     def populate(self, curve):
-        Screen.objsched.add_thread(self.acquire(curve))
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.acquire(curve))
 
-    def acquire(self, curve):
-        yield
+    async def acquire(self, curve):
         for but in self.buttonlist:
             but.greyed_out(True)
         x = -1
-        yield
+        await asyncio.sleep(0)
         while x < 1.01:
             y = max(1 - x * x, 0) # possible precison issue
             curve.point(x, y ** 0.5)
             x += 0.05
-            yield 0.25
+            await asyncio.sleep_ms(250)
         x = 1
         while x > -1.01:
             y = max(1 - x * x, 0)
             curve.point(x, -(y ** 0.5))
             x -= 0.05
-            yield 0.25
+            await asyncio.sleep_ms(250)
         for but in self.buttonlist:
             but.greyed_out(False)
 

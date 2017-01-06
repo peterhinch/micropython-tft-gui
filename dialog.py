@@ -31,9 +31,7 @@ from tft_local import setup
 
 def quitbutton(x, y):
     def quit(button):
-        tft = button.tft
-        tft.clrSCR()
-        Screen.objsched.stop()
+        Screen.shutdown()
     Button((x, y), height = 30, font = font14, callback = quit, fgcolor = RED,
            text = 'Quit', shape = RECTANGLE, width = 80)
 

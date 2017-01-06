@@ -77,8 +77,7 @@ class KnobScreen(Screen):
         self.dial.value(2 * (val - 0.5) * pi, pointer)
 
     def quit(self, button):
-        Screen.tft.clrSCR()
-        Screen.objsched.stop()
+        Screen.shutdown()
 
     def cb_en_dis(self, button, disable):
         for item in self.lst_en_dis:

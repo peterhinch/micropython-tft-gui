@@ -21,12 +21,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import TFT_io
+import uasyncio as asyncio
 import math
-from delay import Delay
+import gc
+import TFT_io
+from aswitch import Delay_ms
+from asyn import Event
 from tft import TFT
 from constants import *
 TWOPI = 2 * math.pi
+gc.collect()
 
 # *********** UTILITY FUNCTIONS ***********
 
@@ -164,13 +168,13 @@ class Screen(object):
     current_screen = None
     tft = None
     objtouch = None
-    objsched = None
+    is_shutdown = Event()
 
     @classmethod
-    def setup(cls, objsched, tft, objtouch):
-        cls.objsched = objsched
+    def setup(cls, tft, objtouch):
         cls.objtouch = objtouch
         cls.tft = tft
+
 # get_tft() when called from user code, ensure greyed_out status is updated.
     @classmethod
     def get_tft(cls, greyed_out=False):
@@ -216,7 +220,12 @@ class Screen(object):
         cs_new.on_open() # Optional subclass method
         cs_new._do_open(cs_old) # Clear and redraw
         if init:
-            cls.objsched.run()
+            loop = asyncio.get_event_loop()
+            loop.run_until_complete(Screen.monitor())
+
+    @classmethod
+    async def monitor(cls):
+        await cls.is_shutdown
 
     @classmethod
     def back(cls):
@@ -233,10 +242,25 @@ class Screen(object):
         cls.current_screen.displaylist.append(obj)
 
     @classmethod
-    def _touchtest(cls): # Singleton thread tests all touchable instances
-        touch_panel = cls.objtouch
+    def shutdown(cls):
+        cls.tft.clrSCR()
+        cls.is_shutdown.set()
+
+    def __init__(self):
+        self.touchlist = []
+        self.displaylist = []
+        self.modal = False
+        if Screen.current_screen is None: # Initialising class and thread
+            loop = asyncio.get_event_loop()
+            loop.create_task(self._touchtest()) # One thread only
+            loop.create_task(self._garbage_collect())
+        Screen.current_screen = self
+        self.parent = None
+
+    async def _touchtest(self): # Singleton thread tests all touchable instances
+        touch_panel = Screen.objtouch
         while True:
-            yield
+            await asyncio.sleep_ms(0)
             if touch_panel.ready:
                 x, y = touch_panel.get_touch_async()
                 for obj in Screen.current_screen.touchlist:
@@ -248,18 +272,6 @@ class Screen(object):
                         obj.was_touched = False # Call _untouched once only
                         obj.busy = False
                         obj._untouched()
-
-    def __init__(self):
-        self.touchlist = []
-        self.displaylist = []
-        self.modal = False
-        if Screen.current_screen is None: # Initialising class and thread
-            objsched = Screen.objsched
-            if objsched is None:
-                raise OSError('Screen class is not initialised.')
-            objsched.add_thread(self._touchtest()) # One thread only
-        Screen.current_screen = self
-        self.parent = None
 
     def _do_open(self, old_screen): # Aperture overrides
         show_all = True
@@ -284,6 +296,12 @@ class Screen(object):
 
     def on_hide(self): # Optionally implemented in subclass
         return
+
+    async def _garbage_collect(self):
+        while True:
+            await asyncio.sleep_ms(100)
+            gc.collect()
+            gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 
 # Very basic window class. Cuts a rectangular hole in a screen on which content may be drawn
 class Aperture(Screen):
@@ -606,8 +624,8 @@ class IconGauge(NoTouch):
 # If font is None button will be rendered without text
 
 class Button(Touchable):
-    lit_time = 1
-    long_press_time = 1
+    lit_time = 1000
+    long_press_time = 1000
     def __init__(self, location, *, font, shape=CIRCLE, height=50, width=50, fill=True,
                  fgcolor=None, bgcolor=None, fontcolor=None, litcolor=None, text='',
                  callback=dolittle, args=[], onrelease=True, lp_callback=None, lp_args=[]):
@@ -625,7 +643,7 @@ class Button(Touchable):
         self.lp = False # Long press not in progress
         self.orig_fgcolor = fgcolor
         if self.litcolor is not None:
-            self.delay = Delay(Screen.objsched, self.shownormal)
+            self.delay = Delay_ms(self.shownormal)
         self.litcolor = litcolor if self.fgcolor is not None else None
 
     def show(self):
@@ -673,7 +691,8 @@ class Button(Touchable):
             self.show() # must be on current screen
             self.delay.trigger(Button.lit_time)
         if self.lp_callback is not None:
-            Screen.objsched.add_thread(self.longpress())
+            loop = asyncio.get_event_loop()
+            loop.create_task(self.longpress())
         if not self.onrelease:
             self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
@@ -682,10 +701,9 @@ class Button(Touchable):
         if self.onrelease:
             self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
-    def longpress(self):
+    async def longpress(self):
         self.lp = True
-        yield
-        yield self.long_press_time
+        await asyncio.sleep_ms(self.long_press_time)
         if self.lp:
             self.lp_callback(self, *self.lp_args)
 
@@ -826,7 +844,7 @@ class Checkbox(Touchable):
 # Button/checkbox whose appearance is defined by icon bitmaps
 
 class IconButton(Touchable):
-    long_press_time = 1
+    long_press_time = 1000
     def __init__(self, location, *, icon_module, flash=0, toggle=False, state=0,
                  callback=dolittle, args=[], onrelease=True, lp_callback=None, lp_args=[]):
         self.draw = icon_module.draw
@@ -839,7 +857,7 @@ class IconButton(Touchable):
         self.lp_callback = lp_callback
         self.lp_args = lp_args
         self.lp = False # Long press not in progress
-        self.flash = flash
+        self.flash = int(flash * 1000)  # Compatibility
         self.toggle = toggle
         if state >= self.num_icons or state < 0:
             raise ugui_exception('Invalid icon index {}'.format(state))
@@ -847,7 +865,7 @@ class IconButton(Touchable):
         if self.flash > 0:
             if self.num_icons < 2:
                 raise ugui_exception('Need > 1 icon for flashing button')
-            self.delay = Delay(Screen.objsched, self._show, (0,))
+            self.delay = Delay_ms(self._show, (0,))
 
     def show(self):
         self._show(self.state)
@@ -881,7 +899,8 @@ class IconButton(Touchable):
             self.state = (self.state + 1) % self.num_icons
             self._show(self.state)
         if self.lp_callback is not None:
-            Screen.objsched.add_thread(self.longpress())
+            loop = asyncio.get_event_loop()
+            loop.create_task(self.longpress())
         if not self.onrelease:
             self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
@@ -890,10 +909,9 @@ class IconButton(Touchable):
         if self.onrelease:
             self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
-    def longpress(self):
+    async def longpress(self):
         self.lp = True
-        yield
-        yield self.long_press_time
+        await asyncio.sleep_ms(self.long_press_time)
         if self.lp:
             self.lp_callback(self, *self.lp_args)
 
