@@ -27,7 +27,7 @@
 
 from tft import LANDSCAPE
 import uasyncio as asyncio
-from touch import TOUCH
+from touch_bytecode import TOUCH
 from ugui import Screen, TFT_G
 
 def setup():
