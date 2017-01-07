@@ -17,20 +17,24 @@ plotting simple graphs is described [here](./PLOT.md).
 For sample images, go [here](./IMAGES.md).
 A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
-# Release notes
+# Release notes (existing users)
 
-Release 0.5 Now uses uasyncio. Requires firmware V1.8.7 or later. Note that
-required modules have changed and user code will require adaptation. All
-modules and test programs should be updated. Changes to user code will be minor
-unless it explicitly uses the scheduler.
+Release 0.5 7th Jan 2017. Now uses uasyncio. Requires firmware V1.8.7 or later.
+Note that required modules have changed. All modules and test programs should
+be updated. Changes to user code are restricted to explicit scheduler calls,
+notably shutting down the GUI which is now achieved with ``Screen.shutdown()``.
+User defined threads will need to be converted to coroutines with ``async def``
+syntax and ``yield`` replaced with ``await``.
 
-Release 0.2 17th Nov 2016. The font file format has changed. This enables fonts to be created with
-the ``font_to_py.py`` utility documented [here](https://github.com/peterhinch/micropython-font-to-py.git).
-This Python3 utility converts standard font files to Python source using open source libraries. To
-create compatible font files it should be invoked with the ``-x`` argument.
+Release 0.2 17th Nov 2016. The font file format has changed. This enables fonts
+to be created with the ``font_to_py.py`` utility documented
+[here](https://github.com/peterhinch/micropython-font-to-py.git).
+This Python3 utility converts standard font files to Python source using open
+source libraries. To create compatible font files it should be invoked with the
+``-x`` argument.
 
-To upgrade to this releaase the new tft.py is required along with new font files. The supplied fonts
-are in the new format. User programs should replace
+To upgrade to this releaase the new tft.py is required along with new font files.
+The supplied fonts are in the new format. User programs should replace
 
 ```python
 from somefont import somefont
@@ -48,34 +52,47 @@ All test programs incorporate this change.
 
 ## Pre installation
 
-Before running the GUI the hardware should be tested and the display calibrated according to the
-instructions on Robert Hammelrath's site. These resistive touch panels work best when activated by
-a stylus or fingernail. They are also subject to jitter to a degree which varies between display
-models: the touch library uses digital filtering to reduce the effect of jitter. This uses two
-values ``confidence`` and ``margin`` which should be fine tuned to the model in use prior to
-running the GUI. The optimum values, together with calibration data, should be stored in the file
-tft_local.py listed below.
+Before running the GUI the hardware should be tested. The display may
+optionally be calibrated according to the instructions on Robert Hammelrath's
+[site](https://github.com/robert-hh/XPT2046-touch-pad-driver-for-PyBoard.git).
+Resistive touch panels work best when activated by a stylus or fingernail. They
+are also subject to jitter to a degree which varies between display models: the
+touch library uses digital filtering to reduce the effect of jitter. This uses
+two values ``confidence`` and ``margin`` which may be fine tuned to the unit in
+use prior to running the GUI. The optimum values, together with calibration
+data, should be stored in the file ``tft_local.py`` listed below.
 
-Users should familiarise themselves with building Micropython from source, and with the technique
-for installing Python modules as persistent bytecode. Instructions on how to do this may be found
+Users should familiarise themselves with building Micropython from source, and
+with the technique for installing Python modules as persistent bytecode.
+Instructions on how to do this may be found
 [here](http://forum.micropython.org/viewtopic.php?f=6&t=1776).
 
-Some familiarity with callbacks and event driven programming will be of help in developing
-applications. The GUI classes are in two categories, those rendered using icons and those drawn by
-means of graphics primitives. Either (or both) may be used in a project.
+Some familiarity with callbacks and event driven programming will be of help in
+developing applications. The GUI classes are in two categories, those rendered
+using icons and those drawn by means of graphics primitives. Either (or both)
+may be used in a project.
+
+## Library Documentation
+
+Documentation for the underlying libraries may be found at these sites.  
+Robert Hammelrath's drivers:  
+[XPT2046 driver](https://github.com/robert-hh/XPT2046-touch-pad-driver-for-PyBoard.git)  
+[TFT driver](https://github.com/robert-hh/SSD1963-TFT-Library-for-PyBoard.git)  
+Other references:  
+[Proposed standard font format](https://github.com/peterhinch/micropython-font-to-py)  
+[TFT driver fork](https://github.com/peterhinch/SSD1963-TFT-Library-for-PyBoard.git)
+Robert Hammelrath's driver adapted for above font format.
+[uasyncio libraries and notes](https://github.com/peterhinch/micropython-async)  
 
 ## Python files
-
-Documentation for the underlying libraries may be found at these sites:  
-[TFT driver](https://github.com/robert-hh/SSD1963-TFT-Library-for-PyBoard.git)  
-[XPT2046 driver](https://github.com/robert-hh/XPT2046-touch-pad-driver-for-PyBoard.git)  
-[uasyncio libraries and notes](https://github.com/peterhinch/micropython-async)
 
 Hardware driver:
  1. TFT_io.py Low level TFT driver.
 
 Library directory:
- 1. The uasyncio library must be installed as frozen bytecode.
+ 1. The uasyncio library must be installed as frozen bytecode. Copy ``lib\*``
+ containing the uasyncio installation to your frozen modules directory and
+ build.
 
 Core files:
  1. tft.py TFT driver.
@@ -83,9 +100,10 @@ Core files:
  3. asyn.py Synchronisation primitives.
  4. aswitch.py Provides a Delay_ms class for retriggerable delays.
  5. ugui.py The micro GUI library.
- 6. tft_local.py Local hardware definition (user defined settings including optional calibration
- data). This file should be edited to match your hardware.
- 7. constants.py Constants such as colors and shapes (import using ``from constants import *``)
+ 6. tft_local.py Local hardware definition (user defined settings including
+ optional calibration  data). This file should be edited to match your hardware.
+ 7. constants.py Constants such as colors and shapes (import using
+ ``from constants import *``)
 
 Optional files used by test programs:
  1. font10.py Font file.
@@ -102,28 +120,29 @@ Test/demo programs:
  1. vst.py A test program for vertical linear sliders.
  2. hst.py Tests horizontal slider controls, meters and LED.
  3. buttontest.py Pushbuttons and checkboxes.
- 4. knobtest.py Rotary controls, a dropdown list, a listbox. Also shows the two styles of
- "greying out" of disabled controls.
+ 4. knobtest.py Rotary controls, a dropdown list, a listbox. Also shows the two
+ styles of "greying out" of disabled controls.
  5. screentest.py Test of multiple screens.
  6. dialog.py A modal dialog box.
  7. ibt.py Test of icon buttons.
 
-If you do not intend to use icons, optional files 3-9 and demo 7 may be ignored.
+If you don't intend to use icons, optional files 3-9 and demo 7 may be ignored.
 
-It should be noted that by the standards of the Pyboard this is a large library. Attempts to use it
-in the normal way will provoke memory errors owing to heap fragmentation. It is necessary to
-'freeze' core files 1-5 and optional files with the firmware as persistent bytecode. tft_local.py
-may optionally be kept in the filesystem to facilitate adjusting the ``confidence`` and ``margin``
-values for best response. You should plan to freeze any other fonts and icons you intend to use.
-The hardware diver listed above cannot be frozen as it uses inline assembler and Viper code.
+By the standards of the Pyboard this is a large library. Attempts to use it in
+the normal way will provoke memory errors owing to heap fragmentation. It is
+necessary to 'freeze' core files 1-5 and optional files as persistent bytecode.
+tft_local.py may optionally be kept in the filesystem to facilitate adjusting
+the ``confidence`` and ``margin`` values for best response. You should plan to
+freeze any other fonts and icons you intend to use. The hardware diver listed
+above cannot be frozen as it uses inline assembler and Viper code.
 
-It is also wise to issue ctrl-D to soft reset the Pyboard before importing a module which uses the
-library. The test programs require a ctrl-D before import.
+It is also wise to issue ctrl-D to soft reset the Pyboard before importing a
+module which uses the library. The test programs require a ctrl-D before import.
 
-Instructions on creating icon files may be found in the README for the TFT driver. Fonts should
-be created using the ``font_to_py.py`` utility documented
-[here](https://github.com/peterhinch/micropython-font-to-py.git). The ``-x`` argument should be
-employed.
+Instructions on creating icon files may be found in the README for the TFT
+driver. Fonts should be created using the ``font_to_py.py`` utility documented
+[here](https://github.com/peterhinch/micropython-font-to-py.git). The ``-x``
+argument should be employed.
 
 # Icons
 
@@ -134,7 +153,7 @@ at runtime: to achieve this with an icon-based object would require a set of col
 created at design time. The library is usable without the icon classes.
 
 Instructions and a utility for creating icon files may be found on Robert Hammelrath's TFT driver
-site (see below).
+site (see 'Library Documentation' above).
 
 # Concepts
 
