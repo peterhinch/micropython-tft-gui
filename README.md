@@ -81,7 +81,7 @@ Robert Hammelrath's drivers:
 Other references:  
 [Proposed standard font format](https://github.com/peterhinch/micropython-font-to-py)  
 [TFT driver fork](https://github.com/peterhinch/SSD1963-TFT-Library-for-PyBoard.git)
-Robert Hammelrath's driver adapted for above font format.
+Robert Hammelrath's driver adapted for above font format.  
 [uasyncio libraries and notes](https://github.com/peterhinch/micropython-async)  
 
 ## Python files
@@ -133,8 +133,9 @@ the normal way will provoke memory errors owing to heap fragmentation. It is
 necessary to 'freeze' core files 1-5 and optional files as persistent bytecode.
 tft_local.py may optionally be kept in the filesystem to facilitate adjusting
 the ``confidence`` and ``margin`` values for best response. You should plan to
-freeze any other fonts and icons you intend to use. The hardware diver listed
-above cannot be frozen as it uses inline assembler and Viper code.
+freeze any other fonts and icons you intend to use. The hardware driver listed
+above cannot be frozen as it uses inline assembler and Viper code. Test
+programs and other small applications need not be frozen.
 
 It is also wise to issue ctrl-D to soft reset the Pyboard before importing a
 module which uses the library. The test programs require a ctrl-D before import.
