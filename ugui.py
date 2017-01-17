@@ -57,7 +57,7 @@ def print_centered(tft, x, y, s, color, font, clip=False, scroll=False):
     old_style = tft.getTextStyle()
     length, height = get_stringsize(s, font)
     tft.setTextStyle(color, None, 2, font)
-    tft.setTextPos(x - length // 2, y - height // 2, clip, scroll)
+    tft.setTextPos(max(x - length // 2, 0), max(y - height // 2, 0), clip, scroll)
     tft.printString(s)
     tft.setTextStyle(*old_style)
 
