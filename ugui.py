@@ -219,6 +219,7 @@ class Screen(object):
         cls.current_screen = cs_new
         cs_new.on_open() # Optional subclass method
         cs_new._do_open(cs_old) # Clear and redraw
+        cs_new.after_open() # Optional subclass method
         if init:
             loop = asyncio.get_event_loop()
             loop.run_until_complete(Screen.monitor())
@@ -292,6 +293,9 @@ class Screen(object):
             Screen.show()
 
     def on_open(self): # Optionally implemented in subclass
+        return
+
+    def after_open(self): # Optionally implemented in subclass
         return
 
     def on_hide(self): # Optionally implemented in subclass

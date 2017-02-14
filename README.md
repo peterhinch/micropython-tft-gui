@@ -19,6 +19,7 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
 # Release notes (existing users)
 
+Release 0.51 14th Feb 2017 add ``Screen.after_open`` method.
 Release 0.5 7th Jan 2017. Now uses uasyncio. Requires firmware V1.8.7 or later.
 Note that required modules have changed. All modules and test programs should
 be updated. Changes to user code are restricted to explicit scheduler calls,
@@ -204,10 +205,10 @@ the user screen. They can access the screen's bound variables via ``self`` and t
 methods via the callback's first argument (which is a reference to the control). A simple example
 can be seen in the ``KnobScreen`` example in ``screentest.py``.
 
-The ``Screen`` class has two null methods which may be implemented in subclasses: ``on_open`` which
-runs when a screen is opened but prior to its display, and ``on_hide`` which runs when a screen
-change is about to make the screen disappear. These may be used to instantiate or control threads
-and to retrieve the results from a modal dialog box.
+The ``Screen`` class has 3 null methods which may be implemented in subclasses: ``on_open`` which
+runs when a screen is opened but prior to its display, ``after_open`` which is called after display,
+and ``on_hide`` which runs when a screen change is about to make the screen disappear. These may be
+used to instantiate or control threads and to retrieve the results from a modal dialog box.
 
 The ``Screen`` class is configured in ``tft_local.py``.
 
