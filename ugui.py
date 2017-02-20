@@ -1252,8 +1252,7 @@ class Listbox(Touchable):
             raise ValueError('elements must be a list or tuple of one or more strings')
         if value >= len(self.elements):
             value = 0
-        self._value = -1 # Invalidate to force callback and display
-        self.value(value)
+        self._value = value # No callback until user touches
 
     def show(self):
         tft = self.tft
@@ -1290,6 +1289,7 @@ class Listbox(Touchable):
 
     def _untouched(self):
         if self._initial_value is not None:
+            self._value = -1  # Force update on every touch
             self.value(self._initial_value, show = True)
             self._initial_value = None
 
@@ -1315,7 +1315,6 @@ class _ListDialog(Aperture):
     def callback(self, obj_listbox):
         if obj_listbox._initial_value is not None: # a touch has occurred
             val = obj_listbox.textvalue()
-            Aperture.value(val)
             Screen.back()
             if self.dropdown is not None: # Part of a Dropdown
                 self.dropdown.value(obj_listbox.value()) # Update it

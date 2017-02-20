@@ -721,6 +721,8 @@ Methods:
  provided but did not correspond to any list item. In this event the control's state is not changed
  and ``None`` is returned.
 
+The callback is triggered whenever a listbox item is pressed, even if that item
+is already currently selected.
 
 ## Class Dropdown
 
@@ -752,6 +754,10 @@ Methods:
  the control's list, that item becomes current. Returns the current string, unless the arg was
  provided but did not correspond to any list item. In this event the control's state is not changed
  and ``None`` is returned.
+
+The callback is triggered if an item on the dropdown list is touched and that
+item is not currently selected (i.e. when a change occurs).
+
 
 # Dialog Boxes
 
