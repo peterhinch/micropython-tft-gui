@@ -19,8 +19,8 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
 # Contents
 
-1. [Release notes](./README.md#1-release-notes-(existing-users))
-
+1. [Release notes](./README.md#1-release-notes-for-existing-users)
+  
 2. [Pre requisites](./README.md#1-pre-requisites)
 
   2.1 [Pre installation](./README.md#21-pre-installation)
@@ -47,7 +47,7 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
   7.4 [Class Meter](./README.md#74-class-meter)
 
-  7.5 [Class IconGauge](./README.md#75-class-icon-gauge)
+  7.5 [Class IconGauge](./README.md#75-class-icongauge)
 
 8. [Control Classes](./README.md#8-control-classes)
 
@@ -59,7 +59,7 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
   8.4 [Class Button](./README.md#84-class-button)
 
-  8.5 [Class ButtonList: emulate a button with multiple states](./README.md#85-class-buttonlist:-emulate-a-button-with-multiple-states)
+  8.5 [Class ButtonList: emulate a button with multiple states](./README.md#85-class-buttonlist-emulate-a-button-with-multiple-states)
 
   8.6 [Class RadioButtons](./README.md#86-class-radiobuttons)
 
@@ -67,19 +67,19 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
   8.8 [Class IconRadioButtons](./README.md#88-class-iconradiobuttons)
 
-  8.9 [Class Dropdown](./README.md#89-class-dropdown)
+  8.9 [Class Listbox](./README.md#810-class-listbox)
 
-  8.10 [Class Listbox](./README.md#810-class-listbox)
+  8.10 [Class Dropdown](./README.md#89-class-dropdown)
 
 9. [Dialog Boxes](./README.md#9-dialog-boxes)
 
-  9.1 [9.1 Class Aperture](./README.md#91-class-aperture)
+  9.1 [Class Aperture](./README.md#91-class-aperture)
 
-  9.2 [9.2 Class DialogBox](./README.md#92-class-dialogbox)
+  9.2 [Class DialogBox](./README.md#92-class-dialogbox)
 
 10. [Developer Notes](./README.md#10-developer-notes)
 
-# 1. Release notes (existing users)
+# 1. Release notes for existing users
 
 Release 0.51 14th Feb 2017 add ``Screen.after_open`` method.
 Release 0.5 7th Jan 2017. Now uses uasyncio. Requires firmware V1.8.7 or later.
@@ -648,7 +648,7 @@ Class variables:
 
 ######[Jump to Contents](./README.md#contents)
 
-## 8.5 Class ButtonList: emulate a button with multiple states
+## 8.5 Class ButtonList emulate a button with multiple states
 
 Drawn using graphics primitives.
 
