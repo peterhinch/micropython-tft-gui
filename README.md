@@ -33,6 +33,16 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
 4. [Concepts](./README.md#4-concepts)
 
+  4.1 [Terminology](./README.md#41-terminology)
+
+  4.2 [Coordinates](./README.md#42-coordinates)
+
+  4.3 [Colors](./README.md#43-colors)
+
+  4.4 [Callbacks](./README.md#44-callbacks)
+
+  4.5 [Screens](./README.md#45-screens)
+
 5. [Program Structure](./README.md#5-program-structure)
 
 6. [Class Screen](./README.md#6-class-screen)
