@@ -77,9 +77,9 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
   8.8 [Class IconRadioButtons](./README.md#88-class-iconradiobuttons)
 
-  8.9 [Class Listbox](./README.md#810-class-listbox)
+  8.9 [Class Listbox](./README.md#89-class-listbox)
 
-  8.10 [Class Dropdown](./README.md#89-class-dropdown)
+  8.10 [Class Dropdown](./README.md#810-class-dropdown)
 
 9. [Dialog Boxes](./README.md#9-dialog-boxes)
 
