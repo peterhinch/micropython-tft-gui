@@ -17,7 +17,69 @@ plotting simple graphs is described [here](./PLOT.md).
 For sample images, go [here](./IMAGES.md).
 A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
-# Release notes (existing users)
+# Contents
+
+1. [Release notes](./README.md#1-release-notes-(existing-users))
+
+2. [Pre requisites](./README.md#1-pre-requisites)
+
+  2.1 [Pre installation](./README.md#21-pre-installation)
+
+  2.2 [Library Documentation](./README.md#22-library-documentation)
+  
+  2.3 [Python files](./README.md#23-python-files)
+
+3. [Icons](./README.md#3-icons)
+
+4. [Concepts](./README.md#4-concepts)
+
+5. [Program Structure](./README.md#5-program-structure)
+
+6. [Class Screen](./README.md#6-class-screen)
+
+7. [Display Classes](./README.md#7-display-classes)
+
+  7.1 [Class Label](./README.md#71-class-label)
+
+  7.2 [Class Dial](./README.md#72-class-dial)
+  
+  7.3 [Class LED](./README.md#73-class-led)
+
+  7.4 [Class Meter](./README.md#74-class-meter)
+
+  7.5 [Class IconGauge](./README.md#75-class-icon-gauge)
+
+8. [Control Classes](./README.md#8-control-classes)
+
+  8.1 [Class Slider](./README.md#81-class-slider)
+
+  8.2 [Class Knob](./README.md#82-class-knob)
+
+  8.3 [Class Checkbox](./README.md#83-class-checkbox)
+
+  8.4 [Class Button](./README.md#84-class-button)
+
+  8.5 [Class ButtonList: emulate a button with multiple states](./README.md#85-class-buttonlist:-emulate-a-button-with-multiple-states)
+
+  8.6 [Class RadioButtons](./README.md#86-class-radiobuttons)
+
+  8.7 [Class IconButton also checkbox](./README.md#87-class-iconbutton-also-checkbox)
+
+  8.8 [Class IconRadioButtons](./README.md#88-class-iconradiobuttons)
+
+  8.9 [Class Dropdown](./README.md#89-class-dropdown)
+
+  8.10 [Class Listbox](./README.md#810-class-listbox)
+
+9. [Dialog Boxes](./README.md#9-dialog-boxes)
+
+  9.1 [9.1 Class Aperture](./README.md#91-class-aperture)
+
+  9.2 [9.2 Class DialogBox](./README.md#92-class-dialogbox)
+
+10. [Developer Notes](./README.md#10-developer-notes)
+
+# 1. Release notes (existing users)
 
 Release 0.51 14th Feb 2017 add ``Screen.after_open`` method.
 Release 0.5 7th Jan 2017. Now uses uasyncio. Requires firmware V1.8.7 or later.
@@ -49,9 +111,11 @@ import somefont
 
 All test programs incorporate this change.
 
-# Pre requisites
+######[Jump to Contents](./README.md#contents)
 
-## Pre installation
+# 2. Pre requisites
+
+## 2.1 Pre installation
 
 Before running the GUI the hardware should be tested. The display may
 optionally be calibrated according to the instructions on Robert Hammelrath's
@@ -73,7 +137,7 @@ developing applications. The GUI classes are in two categories, those rendered
 using icons and those drawn by means of graphics primitives. Either (or both)
 may be used in a project.
 
-## Library Documentation
+## 2.2 Library Documentation
 
 Documentation for the underlying libraries may be found at these sites.  
 Robert Hammelrath's drivers:  
@@ -85,7 +149,7 @@ Other references:
 Robert Hammelrath's driver adapted for above font format.  
 [uasyncio libraries and notes](https://github.com/peterhinch/micropython-async)  
 
-## Python files
+## 2.3 Python files
 
 Hardware driver:
  1. TFT_io.py Low level TFT driver.
@@ -146,7 +210,9 @@ driver. Fonts should be created using the ``font_to_py.py`` utility documented
 [here](https://github.com/peterhinch/micropython-font-to-py.git). The ``-x``
 argument should be employed.
 
-# Icons
+######[Jump to Contents](./README.md#contents)
+
+# 3. Icons
 
 Most classes use graphics primitives to draw objects on the screen. A few employ icons: this is
 arguably prettier but involves large icon files which must be frozen as bytecode. Objects drawn
@@ -157,15 +223,17 @@ created at design time. The library is usable without the icon classes.
 Instructions and a utility for creating icon files may be found on Robert Hammelrath's TFT driver
 site (see 'Library Documentation' above).
 
-# Concepts
+######[Jump to Contents](./README.md#contents)
 
-### Terminology
+# 4. Concepts
+
+## 4.1 Terminology
 
 GUI objects are created on a ``Screen`` instance which normally fills the entire physical screen.
 Displayable GUI objects comprise ``control`` and ``display`` instances. The former can respond to
 touch (e.g. Pushbutton instances) while the latter cannot (LED or Dial instances).
 
-### Coordinates
+## 4.2 Coordinates
 
 In common with most displays, the top left hand corner of the display is (0, 0) with increasing
 values of x to the right, and increasing values of y downward. Display objects exist within a
@@ -173,13 +241,13 @@ rectangular bounding box; in the case of touch sensitive controls this correspon
 region. Locations are defined as a 2-tuple (x, y). The location of an object is defined as the
 location of the top left hand corner of the bounding box.
 
-### Colors
+## 4.3 Colors
 
 These are defined as a 3-tuple (r, g, b) with values of red, green and blue in range 0 to 255. The
 interface and this document uses the American spelling (color) throughout for consistency with the
 TFT library.
 
-### Callbacks
+## 4.4 Callbacks
 
 The interface is event driven. Controls may have optional callbacks which will be executed when a
 given event occurs. A callback function receives positional arguments. The first is a reference to
@@ -191,7 +259,7 @@ for a reason why this is useful.
 All controls and displays have a ``tft`` property. This enables callbacks to access drawing
 primitives.
 
-### Screens
+## 4.5 Screens
 
 GUI controls and displays are rendered on a ``Screen`` instance. A user program may instantiate
 multiple screens, each with its own set of GUI objects. The ``Screen`` class has class methods
@@ -212,7 +280,9 @@ used to instantiate or control threads and to retrieve the results from a modal 
 
 The ``Screen`` class is configured in ``tft_local.py``.
 
-# Program Structure
+######[Jump to Contents](./README.md#contents)
+
+# 5. Program Structure
 
 The following illustrates the structure of a minimal program:
 ```python
@@ -232,7 +302,9 @@ The last line causes the Screen class to instantiate your ``BaseScreen`` and to 
 using that screen object. Control then passes to the scheduler: the code following this line will
 not run until the GUI is shut down and the scheduler is stopped (``Screen.shutdown()``).
 
-# Class Screen
+######[Jump to Contents](./README.md#contents)
+
+# 6. Class Screen
 
 The ``Screen`` class presents a full-screen canvas onto which displayable objects are rendered.
 Before instantiating GUI objects a ``Screen`` instance must be created. This will be the current
@@ -264,7 +336,7 @@ Note that the GUI is started by issuing ``Screen.change`` with the class as its 
 an instance. This assists in multi-screen programs: screens are only instantiated when they are to
 be displayed. This allows RAM to be reclaimed by the garbage collector when the screen is closed.
 
-## Class methods
+## 6.1 Class methods
 
 In normal use the following methods only are required:  
  * ``change`` Change screen, refreshing the display. Mandatory positional argument: the new screen
@@ -285,22 +357,24 @@ acquired via a GUI object's ``tft`` property.
 
 See screentest.py and dialog.py for examples of multi-screen design.
 
-## Constructor
+## 6.2 Constructor
 
 This takes no arguments.
 
-## Methods
+## 6.3 Methods
 
 These do nothing, and are intended to be defined in subclasses if required.
 
  * ``on_open`` Called when a screen is displayed.
  * ``on_hide`` Called when a screen ceases to be current.
 
-# Display Classes
+######[Jump to Contents](./README.md#contents)
+
+# 7. Display Classes
 
 These classes provide ways to display data and are not touch sensitive.
 
-## Class Label
+## 7.1 Class Label
 
 Displays text in a fixed length field. The height of a label is determined by the metrics of the
 specified font.
@@ -322,7 +396,9 @@ Method:
  * ``value`` Argument ``val`` string, default ``None``. If provided, refreshes the label with the
  passed text otherwise clears the text in the label.
 
-## Class Dial
+######[Jump to Contents](./README.md#contents)
+
+## 7.2 Class Dial
 
 Displays angles in a circular dial. Angles are in radians with zero represented by a vertical
 pointer. Positive angles appear as clockwise rotation of the pointer. The object can display
@@ -345,7 +421,9 @@ Method:
  an angle. A ``ValueError`` will be raised if the pointer index exceeds the number of pointers
  defined by the constructor ``pointers`` argument.
 
-## Class LED
+######[Jump to Contents](./README.md#contents)
+
+## 7.3 Class LED
 
 Displays a boolean state. Can display other information by varying the color.
 
@@ -364,7 +442,9 @@ Methods:
  LED. Always returns its current state.
  * ``color`` Argument ``color``. Change the LED color without altering its state.
 
-## Class Meter
+######[Jump to Contents](./README.md#contents)
+
+## 7.4 Class Meter
 
 This displays a single value in range 0.0 to 1.0 on a vertical linear meter.
 
@@ -390,7 +470,9 @@ Methods:
  Range 0.0 to 1.0: out of range values will be constrained to full scale or 0. Always returns its
  current value. 
 
-## Class IconGauge
+######[Jump to Contents](./README.md#contents)
+
+## 7.5 Class IconGauge
 
 This can display any one of a set of icons at a location. The icon to be displayed can be selected
 by an integer index. Alternatively a float in range 0.0 to 1.0 can be displayed: the control shows
@@ -410,7 +492,9 @@ Methods:
  * ``value`` Optional argument ``val``. Range 0.0 to 1.0. If provided, selects the nearest icon and
  displays it. Always returns the control's current value.
 
-# Control Classes
+######[Jump to Contents](./README.md#contents)
+
+# 8. Control Classes
 
 These classes provide touch-sensitive objects capable of both the display and entry of data. If the
 user moves the control, its value will change and an optional callback will be executed. If another
@@ -419,7 +503,9 @@ control's callback or a thread alters a control's value, its appearance will cha
 Buttons and checkboxes are provided in two variants, one drawn using graphics primitives, and the
 other using icons.
 
-## Class Slider
+######[Jump to Contents](./README.md#contents)
+
+## 8.1 Class Slider
 
 These emulate linear potentiometers. Vertical ``Slider`` and horizontal ``HorizSlider`` variants
 are available. These are constructed and used similarly. The short forms (v) or (h) are used below
@@ -458,7 +544,9 @@ Methods:
  * ``color`` Mandatory arg ``color`` The control is rendered in the selected color. This supports
  dynamic color changes  
 
-## Class Knob
+######[Jump to Contents](./README.md#contents)
+
+## 8.2 Class Knob
 
 This emulates a rotary control capable of being rotated through a predefined arc.
 
@@ -489,7 +577,9 @@ Methods:
  The move callback will run. The method constrains the range to 0.0 to 1.0. Always returns the
  control's value.
 
-## Class Checkbox
+######[Jump to Contents](./README.md#contents)
+
+## 8.3 Class Checkbox
 
 Drawn using graphics primitives. This provides for boolean data entry and display. In the ``True``
 state the control can show an 'X' or a filled block of color.
@@ -516,7 +606,9 @@ Methods:
  control's current value, updates it; the checkbox is re-drawn and the callback executed. Always
  returns the control's value.
 
-## Class Button
+######[Jump to Contents](./README.md#contents)
+
+## 8.4 Class Button
 
 Drawn using graphics primitives. This emulates a pushbutton, with a callback being executed each
 time the button is pressed. Buttons may be any one of three shapes: ``CIRCLE``, ``RECTANGLE`` or
@@ -554,7 +646,9 @@ Class variables:
  * ``lit_time`` Period in seconds the ``litcolor`` is displayed. Default 1.
  * ``long_press_time`` Press duration for a long press. Default 1 second.
 
-## Class ButtonList: emulate a button with multiple states
+######[Jump to Contents](./README.md#contents)
+
+## 8.5 Class ButtonList: emulate a button with multiple states
 
 Drawn using graphics primitives.
 
@@ -594,7 +688,9 @@ for t in table: # Buttons overlay each other at same location
     bl.add_button((10, 10), font = font14, fontcolor = BLACK, **t)
 ```
 
-## Class RadioButtons
+######[Jump to Contents](./README.md#contents)
+
+## 8.6 Class RadioButtons
 
 Drawn using graphics primitives.
 
@@ -636,7 +732,9 @@ for t in table:
     x += 60 # Horizontal row of buttons
 ```
 
-## Class IconButton (also checkbox)
+######[Jump to Contents](./README.md#contents)
+
+## 8.7 Class IconButton also checkbox
 
 Drawn using an icon file which must be imported before instantiating. A checkbox may be implemented
 by setting the ``toggle`` argument ``True`` and using an appropriate icon file. An ``IconButton``
@@ -672,7 +770,9 @@ Methods:
 Class variables:
  * ``long_press_time`` Press duration for a long press. Default 1 second.
 
-## Class IconRadioButtons
+######[Jump to Contents](./README.md#contents)
+
+## 8.8 Class IconRadioButtons
 
 Drawn using an icon file which must be imported before instantiating. These comprise a set of
 buttons at different locations. When initially drawn, all but one button will be in state 0
@@ -691,7 +791,9 @@ Methods:
  button in the set, that button becomes active and the callback is executed. Always returns the
  button which is currently active.
 
-## Class Listbox
+######[Jump to Contents](./README.md#contents)
+
+## 8.9 Class Listbox
 
 Constructor mandatory positional argument:
  1. ``location`` 2-tuple defining position.
@@ -724,7 +826,9 @@ Methods:
 The callback is triggered whenever a listbox item is pressed, even if that item
 is already currently selected.
 
-## Class Dropdown
+######[Jump to Contents](./README.md#contents)
+
+## 8.10 Class Dropdown
 
 A dropdown list. The list, when active, is drawn below the control. The height of the control is
 determined by the height of the font in use.
@@ -758,8 +862,9 @@ Methods:
 The callback is triggered if an item on the dropdown list is touched and that
 item is not currently selected (i.e. when a change occurs).
 
+######[Jump to Contents](./README.md#contents)
 
-# Dialog Boxes
+# 9. Dialog Boxes
 
 In general ``Screen`` objects occupy the entire physical display. The principal exception to this
 is modal dialog boxes: these are rendered in a window which accepts all touch events until it is
@@ -776,7 +881,9 @@ A convenience method ``locn`` is provided to assist in populating dialog boxes. 
 relative to the dialog box, it provides an absolute ``location`` 2-tuple suitable as a constructor
 argument for ``control`` or ``display`` classes. See ``dialog.py`` for example usage.
 
-## Class Aperture
+######[Jump to Contents](./README.md#contents)
+
+## 9.1 Class Aperture
 
 Provides a window for objects in a modal dialog box.
 
@@ -805,7 +912,9 @@ Class method:
  set. The arg may be any Python object. Returns the value of the ``Aperture`` class. The calling
  ``Screen`` can query this by implementing an ``on_open`` method which calls ``Aperture.value()``.
 
-## Class DialogBox
+######[Jump to Contents](./README.md#contents)
+
+## 9.2 Class DialogBox
 
 Simplifies building simple dialog boxes based on a set of pushbuttons. Any button press will close
 the dialog. The caller can determine which button was pressed. The size of the buttons and the
@@ -829,7 +938,9 @@ Optional keyword only args:
 Pressing any button closes the dialog and sets the ``Aperture`` value to the text of the button
 pressed or 'Close' in the case of the ``close`` button.
 
-# Developer Notes
+######[Jump to Contents](./README.md#contents)
+
+# 10. Developer Notes
 
 The ``ugui`` module is large by Pyboard standards. This presents no problem if frozen, but if you
 wish to modify it, freezing is cumbersome. Compiling it on the Pyboard will result in memory
@@ -838,3 +949,5 @@ work with small test programs such as those supplied. Alternatively you may opt 
 into two.
 
 For developers wishing to extend the library with new controls or displays, see this [reference](./DEVELOPER.md).
+
+######[Jump to Contents](./README.md#contents)
