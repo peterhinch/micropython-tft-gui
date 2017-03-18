@@ -20,8 +20,8 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 # Contents
 
 1. [Release notes](./README.md#1-release-notes-for-existing-users)
-  
-2. [Pre requisites](./README.md#1-pre-requisites)
+
+2. [Pre requisites](./README.md#2-pre-requisites)
 
   2.1 [Pre installation](./README.md#21-pre-installation)
 
