@@ -40,6 +40,7 @@
 import pyb, stm
 from uctypes import addressof
 import TFT_io
+import gc
 
 # define constants
 #
@@ -81,6 +82,7 @@ class TFT:
 
         self.setColor((255, 255, 255)) # set FG color to white as can be.
         self.setBGColor((0, 0, 0))     # set BG to black
+        self.bg_buf = bytearray()
 #
         self.pin_led = None     # deferred init Flag
         self.power_control = power_control
@@ -748,7 +750,11 @@ class TFT:
 # Retrieve Background data if transparency is required
         if self.transparency: # in case of transpareny, the frame buffer content is needed
             if bg_buf is None:    # buffer allocation needed?
-                bg_buf = bytearray(pix_count * 3) # sigh...
+                if len(self.bg_buf) < pix_count * 3:
+                    del(self.bg_buf)
+                    gc.collect()
+                    self.bg_buf = bytearray(pix_count * 3) # Make it bigger
+                bg_buf = self.bg_buf
             self.setXY(self.text_x, self.text_y, self.text_x + dcols - 1, self.text_y + rows - 1) # set area
             TFT_io.tft_read_cmd_data_AS(0x2e, bg_buf, pix_count * 3) # read background data
         else:
