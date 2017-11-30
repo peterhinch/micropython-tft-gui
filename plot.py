@@ -37,30 +37,42 @@ class Curve(object):
         self.graph.addcurve(self)
         self.lastpoint = None
 
-    def point(self, x, y):
-        pt = self._scale(x, y)
-        if self.lastpoint is not None:
-            self.graph.line(self.lastpoint, pt, self.color)
-        self.lastpoint = pt
+    def point(self, x=None, y=None):
+        if x is not None and y is not None:
+            pt = self._scale(x, y)
+            if pt is not None:
+                if self.lastpoint is not None:
+                    self.graph.line(self.lastpoint, pt, self.color)
+                self.lastpoint = pt
+                return
+        self.lastpoint = None
 
     def show(self):
         self.graph.addcurve(self) # May have been removed by clear()
         self.lastpoint = None
         self.populate(self, *self.callback_args)
 
-    def _scale(self, x, y):
+    def _scale(self, x, y):  # Scale to +-1.0
         x0, y0 = self.origin
         xr, yr = self.excursion
-        return (x - x0) / xr, (y - y0) / yr
+        xs = (x - x0) / xr
+        ys = (y - y0) / yr
+        # Seems to be a 32 bit float precision issue here:
+        if abs(xs) > 1.001 or abs(ys) > 1.001:
+            return None
+        return xs, ys
 
 class PolarCurve(Curve): # Points are complex
     def __init__(self, graph, populate=dolittle, args=[], color=YELLOW):
         super().__init__(graph, populate, args, color=color)
 
-    def point(self, z):
-        if self.lastpoint is not None:
-            self.graph.line(self.lastpoint, z, self.color)
-        self.lastpoint = z
+    def point(self, z=None):
+        if z is not None and abs(z) <= 1.001:
+            if self.lastpoint is not None:
+                self.graph.line(self.lastpoint, z, self.color)
+            self.lastpoint = z
+            return
+        self.lastpoint = None
 
 class Graph(object):
     def __init__(self, location, height, width, gridcolor):

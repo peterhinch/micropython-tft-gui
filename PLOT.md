@@ -97,8 +97,10 @@ Optional arguments:
  6. ``color`` Default YELLOW.
 
 Methods:
- * ``point`` Arguments x, y. Adds a point to the curve. If a prior point exists a line will be drawn
- between it and the current point.
+ * ``point`` Arguments x, y. Defaults ``None``. Adds a point to the curve. If a
+ prior point exists a line will be drawn between it and the current point. If a
+ point is out of range or if either arg is ``None`` no line will be drawn.
+ Passing no args enables discontinuous curves to be plotted.
  * ``show`` No args. This can be used to redraw a curve which has been erased by the graph's
  ``clear`` method. In practice likely to be used when plotting changing data from sensors.
 
@@ -129,8 +131,10 @@ Optional arguments:
  4. ``color`` Default YELLOW.
 
 Methods:
- * ``point`` Argument z which must be ``complex``. Adds a point to the curve. If a prior point
- exists a line will be drawn between it and the current point.
+ * ``point`` Argument z, default ``None``. Normally a ``complex``. Adds a point
+ to the curve. If a prior point exists a line will be drawn between it and the
+ current point. If the arg is ``None`` or lies outside the unit circle no line
+ will be drawn. Passing no args enables discontinuous curves to be plotted.
  * ``show`` No args. This can be used to redraw a curve which has been erased by the graph's
  ``clear`` method. In practice likely to be used when plotting changing data from sensors.
 
