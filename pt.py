@@ -1,8 +1,9 @@
 # pt.py Test/demo of graph plotting extension for Pybboard TFT GUI
+# Now tests clipping of overrange data.
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Peter Hinch
+# Copyright (c) 2017 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +30,7 @@ from constants import *
 from tft_local import setup
 import font14
 import font10
-from math import sin, pi
+from math import sin, cos, pi
 from cmath import rect
 
 # STANDARD BUTTONS
@@ -67,22 +68,28 @@ def refreshbutton(x, y, curvelist):
 
 # SCREEN CREATION
 
+# Tests overlaying a plot with another screen
 class BackScreen(Screen):
     def __init__(self):
         super().__init__()
         Label((0, 0), font = font10, value = 'Ensure back refreshes properly')
         backbutton(390, 242)
 
+# Base screen with pushbuttons to launch demos.
 class BaseScreen(Screen):
     def __init__(self):
         super().__init__()
-        Label((0, 0), font = font14, value = 'plot module demo')
-        Label((0, 200), font = font10, value = 'RT: simulate realtime data acquisition')
+        Label((0, 0), font = font14, value = 'plot module demo.')
+        Label((0, 100), font = font10, value = 'RT: simulate realtime data acquisition.')
+        Label((0, 140), font = font10, value = 'Over, Lines: test clipping.')
         fwdbutton(0, 242, PolarScreen, 'Polar')
         fwdbutton(100, 242, XYScreen, 'XY')
         fwdbutton(200, 242, RealtimeScreen, 'RT')
+        fwdbutton(0, 200, PolarORScreen, 'Over')
+        fwdbutton(100, 200, DiscontScreen, 'Lines')
         quitbutton(390, 242)
 
+# Simple polar plot.
 class PolarScreen(Screen):
     def __init__(self):
         super().__init__()
@@ -101,6 +108,27 @@ class PolarScreen(Screen):
             theta = 2 * pi * n / nmax
             curve.point(f(theta))
 
+# Test clipping
+class PolarORScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        backbutton(390, 242)
+        fwdbutton(390, 0, BackScreen)
+        g = PolarGraph((10, 10), border = 4)
+        clearbutton(390, 70, g)
+        curve = PolarCurve(g, self.populate, (1,))
+        curve1 = PolarCurve(g, self.populate, (rect(1, pi/5),), color=RED)
+        refreshbutton(390, 140, (curve, curve1))
+
+    def populate(self, curve, rot):
+        def f(theta):
+            return rect(1.15*sin(5 * theta), theta)*rot # complex
+        nmax = 150
+        for n in range(nmax + 1):
+            theta = 2 * pi * n / nmax
+            curve.point(f(theta))
+
+# Simple Cartesian plot with asymmetric axis and two curves.
 class XYScreen(Screen):
     def __init__(self):
         super().__init__()
@@ -126,6 +154,32 @@ class XYScreen(Screen):
             curve.point(x, y)
             x += 0.1
 
+# Test of discontinuous curves and those which provoke clipping
+class DiscontScreen(Screen):
+    def __init__(self):
+        super().__init__()
+        backbutton(390, 242)
+        fwdbutton(390, 0, BackScreen)
+        g = CartesianGraph((10, 10))
+        clearbutton(390, 70, g)
+        curve1 = Curve(g, self.populate_1, (1.1,))
+        curve2 = Curve(g, self.populate_1, (1.05,), color=RED)
+        curve3 = Curve(g, self.populate_3, color=BLUE)
+        refreshbutton(390, 140, (curve1, curve2, curve3))
+
+    def populate_3(self, curve):
+        for x, y in ((-2, -0.2), (-2, 0.2), (-0.2, -2), (0.2, -2), (2, 0.2), (2, -0.2), (0.2, 2), (-0.2, 2)):
+            curve.point(x, y)
+            curve.point(0,0)
+            curve.point()
+
+    def populate_1(self, curve, mag):
+        theta = 0
+        delta = pi/32
+        while theta <= 2 * pi:
+            curve.point(mag*sin(theta), mag*cos(theta))
+            theta += delta
+
 # Simulate slow real time data acquisition and plotting
 class RealtimeScreen(Screen):
     def __init__(self):
@@ -148,7 +202,7 @@ class RealtimeScreen(Screen):
         x = -1
         await asyncio.sleep(0)
         while x < 1.01:
-            y = max(1 - x * x, 0) # possible precison issue
+            y = max(1 - x * x, 0) # possible precision issue
             curve.point(x, y ** 0.5)
             x += 0.05
             await asyncio.sleep_ms(250)

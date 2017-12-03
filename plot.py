@@ -1,8 +1,9 @@
 # plot.py Graph plotting extension for Pybboard TFT GUI
+# Now clips out of range lines
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Peter Hinch
+# Copyright (c) 2017 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +27,35 @@ from constants import *
 from math import pi
 from cmath import rect
 
+
 class Curve(object):
+    @staticmethod
+    def _clp(badpoint, point):  # 1st point is bad, 2nd is don't know
+        xn, yn = point
+        xs, ys = badpoint
+        if ys > 1:
+            xs = xn + (1 - yn)*(xs - xn)/(ys - yn)
+            ys = 1
+        if ys < -1:
+            xs = xn + (1 + yn)*(xs - xn)/(yn - ys)
+            ys = -1
+        if xs > 1:
+            ys = yn + (1 - xn)*(ys - yn)/(xs - xn)
+            xs = 1
+        if xs < -1:
+            ys = yn + (1 + xn)*(ys - yn)/(xn - xs)
+            xs = -1
+        return xs, ys
+
+    @staticmethod
+    def _outcode(point):
+        x, y = point
+        oc = 1 if y > 1 else 0
+        oc |= 2 if y < -1 else 0
+        oc |= 4 if x > 1 else 0
+        oc |= 8 if x < -1 else 0
+        return oc
+
     def __init__(self, graph, populate=dolittle, args=[], origin=(0, 0), excursion=(1, 1), color=YELLOW):
         self.graph = graph
         self.populate = populate
@@ -36,16 +65,40 @@ class Curve(object):
         self.color = color
         self.graph.addcurve(self)
         self.lastpoint = None
+        self.newpoint = None
 
     def point(self, x=None, y=None):
-        if x is not None and y is not None:
-            pt = self._scale(x, y)
-            if pt is not None:
-                if self.lastpoint is not None:
-                    self.graph.line(self.lastpoint, pt, self.color)
-                self.lastpoint = pt
-                return
-        self.lastpoint = None
+        if x is None or y is None:
+            self.newpoint = None
+            self.lastpoint = None
+            return
+
+        np = self._scale(x, y)  # In-range points scaled to +-1 bounding box
+        self.newpoint = np
+        if self.lastpoint is None:  # Nothing to plot. Save for next line.
+            # Can leave lastpoint outside bounding box.
+            self.lastpoint = self.newpoint
+            return
+
+        self._clip()  # Clip to +-1 box
+        if self.newpoint is not None:  # At least part of line was in box
+            self.graph.line(self.lastpoint, self.newpoint, self.color)
+        self.lastpoint = np  # Scaled but not clipped
+
+    # If self.newpoint and self.lastpoint are valid clip them so that both lie
+    # in +-1 range. If both are outside the box return None.
+    def _clip(self):
+        oc1 = self._outcode(self.newpoint)
+        oc2 = self._outcode(self.lastpoint)
+        if oc1 == 0 and oc2 == 0:  # OK to plot
+            return
+        if oc1 & oc2:  # Nothing to do
+            self.newpoint = None
+            return
+        if oc1:
+            self.newpoint = self._clp(self.newpoint, self.lastpoint)
+        if oc2:
+            self.lastpoint = self._clp(self.lastpoint, self.newpoint)
 
     def show(self):
         self.graph.addcurve(self) # May have been removed by clear()
@@ -57,9 +110,6 @@ class Curve(object):
         xr, yr = self.excursion
         xs = (x - x0) / xr
         ys = (y - y0) / yr
-        # Seems to be a 32 bit float precision issue here:
-        if abs(xs) > 1.001 or abs(ys) > 1.001:
-            return None
         return xs, ys
 
 class PolarCurve(Curve): # Points are complex
@@ -67,12 +117,25 @@ class PolarCurve(Curve): # Points are complex
         super().__init__(graph, populate, args, color=color)
 
     def point(self, z=None):
-        if z is not None and abs(z) <= 1.001:
-            if self.lastpoint is not None:
-                self.graph.line(self.lastpoint, z, self.color)
-            self.lastpoint = z
+        if z is None:
+            self.newpoint = None
+            self.lastpoint = None
             return
-        self.lastpoint = None
+
+        np = self._scale(z.real, z.imag)  # In-range points scaled to +-1 bounding box
+        self.newpoint = np
+        if self.lastpoint is None:  # Nothing to plot. Save for next line.
+            # Can leave lastpoint outside bounding box.
+            self.lastpoint = self.newpoint
+            return
+
+        self._clip()  # Clip to +-1 box
+        if self.newpoint is not None:  # At least part of line was in box
+            start = self.lastpoint[0] + self.lastpoint[1]*1j
+            end = self.newpoint[0] + self.newpoint[1]*1j
+            self.graph.line(start, end, self.color)
+        self.lastpoint = np  # Scaled but not clipped
+
 
 class Graph(object):
     def __init__(self, location, height, width, gridcolor):
@@ -143,7 +206,7 @@ class CartesianGraph(NoTouch, Graph):
 class PolarGraph(NoTouch, Graph):
     def __init__(self, location, *, height=250, fgcolor=WHITE, bgcolor=None, border=None,
                  gridcolor=LIGHTGREEN, adivs=3, rdivs=4):
-        super().__init__(location, None, height, height, fgcolor, bgcolor, None, border, None, None)
+        NoTouch.__init__(self, location, None, height, height, fgcolor, bgcolor, None, border, None, None)
         Graph.__init__(self, location, height, height, gridcolor)
         self.adivs = 2 * adivs # No. of divisions of Pi radians
         self.rdivs = rdivs # No. of divisions of radius

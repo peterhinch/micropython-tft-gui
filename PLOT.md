@@ -33,10 +33,13 @@ sequence of straight line segments between successive points.
 Graph objects are sized and positioned in terms of TFT screen pixel coordinates, with (0, 0) being
 the top left corner of the display, with x increasing to the right and y increasing downwards.
 
-Scaling is provided on Cartesian curves enabling user defined ranges for x and y values. Points on
-polar curves aredefined as Python ``complex`` types and should lie within the unit circle. Points
-which are out of range will be displayed beyond the confines of the graph, being clipped only by
-the physical limits of the display.
+Scaling is provided on Cartesian curves enabling user defined ranges for x and
+y values. Points lying outside of the defined range will produce lines which
+are clipped at the graph boundary.
+
+Points on polar curves are defined as Python ``complex`` types and should lie
+within the unit circle. Points which are out of range may be plotted beyond the
+unit circle but will be clipped to the rectangular graph boundary.
 
 # Graph classes
 
