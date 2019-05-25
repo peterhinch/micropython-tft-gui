@@ -19,75 +19,41 @@ A video may be seen [here](http://hinch.me.uk/tft_gui/tft_gui.mp4).
 
 # Contents
 
-1. [Release notes](./README.md#1-release-notes-for-existing-users)
-
-2. [Pre requisites](./README.md#2-pre-requisites)
-
-  2.1 [Pre installation](./README.md#21-pre-installation)
-
-  2.2 [Library Documentation](./README.md#22-library-documentation)
-  
-  2.3 [Python files](./README.md#23-python-files)
-
-3. [Icons](./README.md#3-icons)
-
-4. [Concepts](./README.md#4-concepts)
-
-  4.1 [Terminology](./README.md#41-terminology)
-
-  4.2 [Coordinates](./README.md#42-coordinates)
-
-  4.3 [Colors](./README.md#43-colors)
-
-  4.4 [Callbacks](./README.md#44-callbacks)
-
-  4.5 [Screens](./README.md#45-screens)
-
-5. [Program Structure](./README.md#5-program-structure)
-
-6. [Class Screen](./README.md#6-class-screen)
-
-7. [Display Classes](./README.md#7-display-classes)
-
-  7.1 [Class Label](./README.md#71-class-label)
-
-  7.2 [Class Dial](./README.md#72-class-dial)
-  
-  7.3 [Class LED](./README.md#73-class-led)
-
-  7.4 [Class Meter](./README.md#74-class-meter)
-
-  7.5 [Class IconGauge](./README.md#75-class-icongauge)
-
-8. [Control Classes](./README.md#8-control-classes)
-
-  8.1 [Class Slider](./README.md#81-class-slider)
-
-  8.2 [Class Knob](./README.md#82-class-knob)
-
-  8.3 [Class Checkbox](./README.md#83-class-checkbox)
-
-  8.4 [Class Button](./README.md#84-class-button)
-
-  8.5 [Class ButtonList: emulate a button with multiple states](./README.md#85-class-buttonlist-emulate-a-button-with-multiple-states)
-
-  8.6 [Class RadioButtons](./README.md#86-class-radiobuttons)
-
-  8.7 [Class IconButton also checkbox](./README.md#87-class-iconbutton-also-checkbox)
-
-  8.8 [Class IconRadioButtons](./README.md#88-class-iconradiobuttons)
-
-  8.9 [Class Listbox](./README.md#89-class-listbox)
-
-  8.10 [Class Dropdown](./README.md#810-class-dropdown)
-
-9. [Dialog Boxes](./README.md#9-dialog-boxes)
-
-  9.1 [Class Aperture](./README.md#91-class-aperture)
-
-  9.2 [Class DialogBox](./README.md#92-class-dialogbox)
-
-10. [Developer Notes](./README.md#10-developer-notes)
+1. [Release notes](./README.md#1-release-notes-for-existing-users)  
+2. [Pre requisites](./README.md#2-pre-requisites)  
+  2.1 [Pre installation](./README.md#21-pre-installation)  
+  2.2 [Library Documentation](./README.md#22-library-documentation)  
+  2.3 [Python files](./README.md#23-python-files)  
+3. [Icons](./README.md#3-icons)  
+4. [Concepts](./README.md#4-concepts)  
+  4.1 [Terminology](./README.md#41-terminology)  
+  4.2 [Coordinates](./README.md#42-coordinates)  
+  4.3 [Colors](./README.md#43-colors)  
+  4.4 [Callbacks](./README.md#44-callbacks)  
+  4.5 [Screens](./README.md#45-screens)  
+5. [Program Structure](./README.md#5-program-structure)  
+6. [Class Screen](./README.md#6-class-screen)  
+7. [Display Classes](./README.md#7-display-classes)  
+  7.1 [Class Label](./README.md#71-class-label)  
+  7.2 [Class Dial](./README.md#72-class-dial)  
+  7.3 [Class LED](./README.md#73-class-led)  
+  7.4 [Class Meter](./README.md#74-class-meter)  
+  7.5 [Class IconGauge](./README.md#75-class-icongauge)  
+8. [Control Classes](./README.md#8-control-classes)  
+  8.1 [Class Slider](./README.md#81-class-slider)  
+  8.2 [Class Knob](./README.md#82-class-knob)  
+  8.3 [Class Checkbox](./README.md#83-class-checkbox)  
+  8.4 [Class Button](./README.md#84-class-button)  
+  8.5 [Class ButtonList: emulate a button with multiple states](./README.md#85-class-buttonlist-emulate-a-button-with-multiple-states)  
+  8.6 [Class RadioButtons](./README.md#86-class-radiobuttons)  
+  8.7 [Class IconButton also checkbox](./README.md#87-class-iconbutton-also-checkbox)  
+  8.8 [Class IconRadioButtons](./README.md#88-class-iconradiobuttons)  
+  8.9 [Class Listbox](./README.md#89-class-listbox)  
+  8.10 [Class Dropdown](./README.md#810-class-dropdown)  
+9. [Dialog Boxes](./README.md#9-dialog-boxes)  
+  9.1 [Class Aperture](./README.md#91-class-aperture)  
+  9.2 [Class DialogBox](./README.md#92-class-dialogbox)  
+10. [Developer Notes](./README.md#10-developer-notes)  
 
 # 1. Release notes for existing users
 
@@ -121,7 +87,7 @@ import somefont
 
 All test programs incorporate this change.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 2. Pre requisites
 
@@ -220,7 +186,7 @@ driver. Fonts should be created using the ``font_to_py.py`` utility documented
 [here](https://github.com/peterhinch/micropython-font-to-py.git). The ``-x``
 argument should be employed.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 3. Icons
 
@@ -233,7 +199,7 @@ created at design time. The library is usable without the icon classes.
 Instructions and a utility for creating icon files may be found on Robert Hammelrath's TFT driver
 site (see 'Library Documentation' above).
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 4. Concepts
 
@@ -290,7 +256,7 @@ used to instantiate or control threads and to retrieve the results from a modal 
 
 The ``Screen`` class is configured in ``tft_local.py``.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 5. Program Structure
 
@@ -312,7 +278,7 @@ The last line causes the Screen class to instantiate your ``BaseScreen`` and to 
 using that screen object. Control then passes to the scheduler: the code following this line will
 not run until the GUI is shut down and the scheduler is stopped (``Screen.shutdown()``).
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 6. Class Screen
 
@@ -378,7 +344,7 @@ These do nothing, and are intended to be defined in subclasses if required.
  * ``on_open`` Called when a screen is displayed.
  * ``on_hide`` Called when a screen ceases to be current.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 7. Display Classes
 
@@ -406,7 +372,7 @@ Method:
  * ``value`` Argument ``val`` string, default ``None``. If provided, refreshes the label with the
  passed text otherwise clears the text in the label.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 7.2 Class Dial
 
@@ -431,7 +397,7 @@ Method:
  an angle. A ``ValueError`` will be raised if the pointer index exceeds the number of pointers
  defined by the constructor ``pointers`` argument.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 7.3 Class LED
 
@@ -452,7 +418,7 @@ Methods:
  LED. Always returns its current state.
  * ``color`` Argument ``color``. Change the LED color without altering its state.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 7.4 Class Meter
 
@@ -480,7 +446,7 @@ Methods:
  Range 0.0 to 1.0: out of range values will be constrained to full scale or 0. Always returns its
  current value. 
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 7.5 Class IconGauge
 
@@ -502,7 +468,7 @@ Methods:
  * ``value`` Optional argument ``val``. Range 0.0 to 1.0. If provided, selects the nearest icon and
  displays it. Always returns the control's current value.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 8. Control Classes
 
@@ -513,7 +479,7 @@ control's callback or a thread alters a control's value, its appearance will cha
 Buttons and checkboxes are provided in two variants, one drawn using graphics primitives, and the
 other using icons.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.1 Class Slider
 
@@ -554,7 +520,7 @@ Methods:
  * ``color`` Mandatory arg ``color`` The control is rendered in the selected color. This supports
  dynamic color changes  
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.2 Class Knob
 
@@ -587,7 +553,7 @@ Methods:
  The move callback will run. The method constrains the range to 0.0 to 1.0. Always returns the
  control's value.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.3 Class Checkbox
 
@@ -616,7 +582,7 @@ Methods:
  control's current value, updates it; the checkbox is re-drawn and the callback executed. Always
  returns the control's value.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.4 Class Button
 
@@ -656,7 +622,7 @@ Class variables:
  * ``lit_time`` Period in seconds the ``litcolor`` is displayed. Default 1.
  * ``long_press_time`` Press duration for a long press. Default 1 second.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.5 Class ButtonList emulate a button with multiple states
 
@@ -698,7 +664,7 @@ for t in table: # Buttons overlay each other at same location
     bl.add_button((10, 10), font = font14, fontcolor = BLACK, **t)
 ```
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.6 Class RadioButtons
 
@@ -742,7 +708,7 @@ for t in table:
     x += 60 # Horizontal row of buttons
 ```
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.7 Class IconButton also checkbox
 
@@ -780,7 +746,7 @@ Methods:
 Class variables:
  * ``long_press_time`` Press duration for a long press. Default 1 second.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.8 Class IconRadioButtons
 
@@ -801,7 +767,7 @@ Methods:
  button in the set, that button becomes active and the callback is executed. Always returns the
  button which is currently active.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.9 Class Listbox
 
@@ -836,7 +802,7 @@ Methods:
 The callback is triggered whenever a listbox item is pressed, even if that item
 is already currently selected.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 8.10 Class Dropdown
 
@@ -872,7 +838,7 @@ Methods:
 The callback is triggered if an item on the dropdown list is touched and that
 item is not currently selected (i.e. when a change occurs).
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 9. Dialog Boxes
 
@@ -891,7 +857,7 @@ A convenience method ``locn`` is provided to assist in populating dialog boxes. 
 relative to the dialog box, it provides an absolute ``location`` 2-tuple suitable as a constructor
 argument for ``control`` or ``display`` classes. See ``dialog.py`` for example usage.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 9.1 Class Aperture
 
@@ -922,7 +888,7 @@ Class method:
  set. The arg may be any Python object. Returns the value of the ``Aperture`` class. The calling
  ``Screen`` can query this by implementing an ``on_open`` method which calls ``Aperture.value()``.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 ## 9.2 Class DialogBox
 
@@ -948,7 +914,7 @@ Optional keyword only args:
 Pressing any button closes the dialog and sets the ``Aperture`` value to the text of the button
 pressed or 'Close' in the case of the ``close`` button.
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
 
 # 10. Developer Notes
 
@@ -960,4 +926,4 @@ into two.
 
 For developers wishing to extend the library with new controls or displays, see this [reference](./DEVELOPER.md).
 
-######[Jump to Contents](./README.md#contents)
+###### [Jump to Contents](./README.md#contents)
