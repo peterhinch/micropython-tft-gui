@@ -1,8 +1,9 @@
 # vst.py Demo/test program for vertical slider class for Pyboard TFT GUI
+# Adapted for (and requires) uasyncio V3
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Peter Hinch
+# Copyright (c) 2016-2020 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +33,10 @@ from math import pi
 def to_string(val):
     return '{:3.1f} ohms'.format(val * 10)
 
+def quit(button):
+    Screen.shutdown()
+
+
 class VerticalSliderScreen(Screen):
     def __init__(self):
         super().__init__()
@@ -47,7 +52,7 @@ class VerticalSliderScreen(Screen):
                 'legends' : ('0', '5', '10'),
                 'cb_end' : self.callback,
                 }
-        btnquit = Button((390, 240), font = font14, callback = self.quit, fgcolor = RED,
+        btnquit = Button((390, 240), font = font14, callback = quit, fgcolor = RED,
             text = 'Quit', shape = RECTANGLE, width = 80, height = 30)
         self.dial1 = Dial((350, 10), fgcolor = YELLOW, border = 2, pointers = (0.9, 0.7))
         self.dial2 = Dial((350, 120), fgcolor = YELLOW, border = 2,  pointers = (0.9, 0.7)) 
@@ -61,9 +66,8 @@ class VerticalSliderScreen(Screen):
             fgcolor = GREEN, cbe_args = ('Slave2',), cb_move = self.slave_moved, cbm_args = (2,), **table)
         master = Slider((0, y), font = font10,
             fgcolor = YELLOW, cbe_args = ('Master',), cb_move = self.master_moved, value=0.5, border = 2, **table)
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.thread1())
-        loop.create_task(self.thread2())
+        self.reg_task(self.thread1())
+        self.reg_task(self.thread2())
     # On/Off toggle: enable/disable quit button and one slider
         bs = ButtonList(self.cb_en_dis)
         lst_en_dis = [self.slave1, btnquit]
@@ -87,9 +91,6 @@ class VerticalSliderScreen(Screen):
     def slave_moved(self, slider, idx):
         val = slider.value()
         self.lstlbl[idx].value(to_string(val))
-
-    def quit(self, button):
-        Screen.shutdown()
 
     def cb_en_dis(self, button, disable, itemlist):
         for item in itemlist:

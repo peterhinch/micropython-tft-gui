@@ -1,8 +1,9 @@
 # ibt.py Test/demo of icon based pushbutton classes for Pybboard TFT GUI
+# Adapted for (and requires) uasyncio V3
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Peter Hinch
+# Copyright (c) 2016-2020 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +32,10 @@ import radiobutton, checkbox, flash, threestate, iconswitch, gauge, traffic # ic
 
 def lr(n): # y coordinate from logical row
     return 10 + 50 * n
+
+# Quit button CB
+def quit(button):
+    Screen.shutdown()
 
 class IconButtonScreen(Screen):
     def __init__(self):
@@ -61,7 +66,7 @@ class IconButtonScreen(Screen):
                 callback = self.callback, args = ('Short', 0),
                 lp_callback = self.callback, lp_args = ('Long', 0), onrelease = False)
 # Quit button
-        IconButton((420, 240), icon_module = radiobutton, callback = self.quit)
+        IconButton((420, 240), icon_module = radiobutton, callback = quit)
 # Radio buttons
         rb = IconRadioButtons(callback = self.callback)
         rb0 = rb.add_button((10, lr(1)), icon_module = radiobutton, args = ('1', 1))
@@ -83,8 +88,7 @@ class IconButtonScreen(Screen):
                         callback = self.cb_en_dis, args =((cb, rb, sw),))
 # Gauge
         ig = IconGauge((80, lr(5)), icon_module = gauge)
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.mainthread(ig))
+        self.reg_task(self.maintask(ig))
 
 
 # CALLBACKS
@@ -108,10 +112,6 @@ class IconButtonScreen(Screen):
     def cbswitch(self, button, idx_label):
         self.lstlbl[idx_label].value(str(button.value()))
 
-# Quit button CB
-    def quit(self, button):
-        Screen.shutdown()
-
 # Enable/disable CB
     def cb_en_dis(self, button, itemlist):
         for item in itemlist:
@@ -119,7 +119,7 @@ class IconButtonScreen(Screen):
 
 
 # THREAD: keep the gauge moving
-    async def mainthread(self, objgauge):
+    async def maintask(self, objgauge):
         INC = 0.05
         oldvalue = 0
         inc = INC

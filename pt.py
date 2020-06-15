@@ -1,9 +1,11 @@
 # pt.py Test/demo of graph plotting extension for Pybboard TFT GUI
+# Adapted for (and requires) uasyncio V3
+
 # Now tests clipping of overrange data.
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2017 Peter Hinch
+# Copyright (c) 2017-2020 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -184,21 +186,19 @@ class DiscontScreen(Screen):
 class RealtimeScreen(Screen):
     def __init__(self):
         super().__init__()
-        self.buttonlist = []
-        self.buttonlist.append(backbutton(390, 242))
-        self.buttonlist.append(fwdbutton(390, 0, BackScreen))
+        self.aqu_task = None
+        backbutton(390, 242)
+        fwdbutton(390, 0, BackScreen)
         cartesian_graph = CartesianGraph((10, 10))
-        self.buttonlist.append(clearbutton(390, 70, cartesian_graph))
+        self.clearbutton(390, 70, cartesian_graph)
         curve = Curve(cartesian_graph, self.populate)
-        self.buttonlist.append(refreshbutton(390, 140, (curve,)))
+        refreshbutton(390, 140, (curve,))
 
     def populate(self, curve):
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.acquire(curve))
+        self.aqu_task = asyncio.create_task(self.acquire(curve))
+        self.reg_task(self.aqu_task, True)
 
     async def acquire(self, curve):
-        for but in self.buttonlist:
-            but.greyed_out(True)
         x = -1
         await asyncio.sleep(0)
         while x < 1.01:
@@ -212,8 +212,13 @@ class RealtimeScreen(Screen):
             curve.point(x, -(y ** 0.5))
             x -= 0.05
             await asyncio.sleep_ms(250)
-        for but in self.buttonlist:
-            but.greyed_out(False)
+
+    def clearbutton(self, x, y, graph):
+        def clear(button):
+            self.aqu_task.cancel()
+            graph.clear()
+        return Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = clear,
+            fgcolor = GREEN,  text = 'Clear', shape = RECTANGLE, width = 80)
 
 
 def pt():

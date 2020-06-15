@@ -1,8 +1,9 @@
 # hst.py Demo/test for Horizontal Slider class for Pyboard TFT GUI
+# Adapted for (and requires) uasyncio V3
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Peter Hinch
+# Copyright (c) 2016-2020 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -61,7 +62,7 @@ class HorizontalSliderScreen(Screen):
         lstlbl = []
         for n in range(3):
             lstlbl.append(Label((x, 40 + 60 * n), font = font10, **labels))
-# Sliders
+        # Sliders
         x = 10
         self.slave1 = HorizSlider((x, 100), font = font10, fgcolor = GREEN, cbe_args = ('Slave1',),
                             cb_move = self.slave_moved, cbm_args = (lstlbl[1],), **table)
@@ -70,17 +71,16 @@ class HorizontalSliderScreen(Screen):
         master = HorizSlider((x, 40), font = font10, fgcolor = YELLOW, cbe_args = ('Master',),
                             cb_move = self.master_moved, slidecolor=RED, border = 2,
                             cbm_args = (lstlbl[0],), value=0.5, **table)
-# On/Off toggle: enable/disable
+        # On/Off toggle: enable/disable
         bs = ButtonList(self.cb_en_dis)
         self.lst_en_dis = [self.slave1, btnquit]
         button = bs.add_button((280, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
                             fgcolor = GREEN, shape = RECTANGLE, text = 'Disable', args = (True,))
         button = bs.add_button((280, 240), font = font14, fontcolor = BLACK, height = 30, width = 90,
                             fgcolor = RED, shape = RECTANGLE, text = 'Enable', args = (False,))
-# Threads to test meters
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.testmeter(meter1))
-        loop.create_task(self.testmeter(meter2))
+        # Tasks test meters
+        self.reg_task(self.test_meter(meter1))
+        self.reg_task(self.test_meter(meter2))
 
     def slide_release(self, slider, control_name):
         print('{} returned {}'.format(control_name, slider.value()))
@@ -108,7 +108,7 @@ class HorizontalSliderScreen(Screen):
         for item in self.lst_en_dis:
             item.greyed_out(disable)
 # Meters move linearly between random values
-    async def testmeter(self, meter):
+    async def test_meter(self, meter):
         oldvalue = 0
         await asyncio.sleep(0)
         while True:

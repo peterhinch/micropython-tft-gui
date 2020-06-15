@@ -1,7 +1,9 @@
 # ugui.py Micropython GUI library for TFT displays
+# Adapted for (and requires) uasyncio V3
+
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Peter Hinch
+# Copyright (c) 2016-2020 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,10 +27,12 @@ import uasyncio as asyncio
 import math
 import gc
 import TFT_io
-from aswitch import Delay_ms
-from asyn import Event
+from primitives.delay_ms import Delay_ms
 from tft import TFT
 from constants import *
+
+__version__ = (0, 6, 1)
+
 TWOPI = 2 * math.pi
 gc.collect()
 
@@ -39,10 +43,15 @@ class _A():
 
 ClassType = type(_A)
 
+async def _g():
+    pass
+type_coro = type(_g())
+
+
 class ugui_exception(Exception):
     pass
 
-# replaces lambda *_ : None owing to issue #2023
+# replaces lambda *_ : None owing to issue #2023 (long ago fixed)
 def dolittle(*_):
     pass
 
@@ -168,7 +177,7 @@ class Screen(object):
     current_screen = None
     tft = None
     objtouch = None
-    is_shutdown = Event()
+    is_shutdown = asyncio.Event()
 
     @classmethod
     def setup(cls, tft, objtouch):
@@ -205,10 +214,14 @@ class Screen(object):
         init = cls.current_screen is None
         if init:
             Screen() # Instantiate a blank starting screen
+        else:  # About to erase an existing screen
+            for entry in cls.current_screen.tasklist:
+                if entry[1]:  # To be cancelled on screen change
+                    entry[0].cancel()
         cs_old = cls.current_screen
         cs_old.on_hide() # Optional method in subclass
         if forward:
-            if type(cls_new_screen) is ClassType:
+            if isinstance(cls_new_screen, ClassType):
                 new_screen = cls_new_screen(*args, **kwargs) # Instantiate new screen
             else:
                 raise ValueError('Must pass Screen class or subclass (not instance)')
@@ -221,12 +234,15 @@ class Screen(object):
         cs_new._do_open(cs_old) # Clear and redraw
         cs_new.after_open() # Optional subclass method
         if init:
-            loop = asyncio.get_event_loop()
-            loop.run_until_complete(Screen.monitor())
+            asyncio.run(Screen.monitor())
 
     @classmethod
     async def monitor(cls):
-        await cls.is_shutdown
+        await cls.is_shutdown.wait()
+        for entry in cls.current_screen.tasklist:
+            entry[0].cancel()
+        await asyncio.sleep_ms(0)  # Allow subclass to cancel tasks
+        cls.tft.clrSCR()
 
     @classmethod
     def back(cls):
@@ -244,17 +260,16 @@ class Screen(object):
 
     @classmethod
     def shutdown(cls):
-        cls.tft.clrSCR()
         cls.is_shutdown.set()
 
     def __init__(self):
         self.touchlist = []
         self.displaylist = []
+        self.tasklist = []  # Allow instance to register tasks for shutdown
         self.modal = False
         if Screen.current_screen is None: # Initialising class and thread
-            loop = asyncio.get_event_loop()
-            loop.create_task(self._touchtest()) # One thread only
-            loop.create_task(self._garbage_collect())
+            asyncio.create_task(self._touchtest()) # One thread only
+            asyncio.create_task(self._garbage_collect())
         Screen.current_screen = self
         self.parent = None
 
@@ -300,6 +315,11 @@ class Screen(object):
 
     def on_hide(self): # Optionally implemented in subclass
         return
+
+    def reg_task(self, task, on_change=False):  # May be passed a coro or a Task
+        if isinstance(task, type_coro):
+            task = asyncio.create_task(task)
+        self.tasklist.append([task, on_change])
 
     async def _garbage_collect(self):
         while True:
@@ -695,8 +715,7 @@ class Button(Touchable):
             self.show() # must be on current screen
             self.delay.trigger(Button.lit_time)
         if self.lp_callback is not None:
-            loop = asyncio.get_event_loop()
-            loop.create_task(self.longpress())
+            asyncio.create_task(self.longpress())
         if not self.onrelease:
             self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 
@@ -903,8 +922,7 @@ class IconButton(Touchable):
             self.state = (self.state + 1) % self.num_icons
             self._show(self.state)
         if self.lp_callback is not None:
-            loop = asyncio.get_event_loop()
-            loop.create_task(self.longpress())
+            asyncio.create_task(self.longpress())
         if not self.onrelease:
             self.callback(self, *self.callback_args) # Callback not a bound method so pass self
 

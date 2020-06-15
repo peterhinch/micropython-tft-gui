@@ -5,7 +5,7 @@
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Peter Hinch
+# Copyright (c) 2016-2020 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,12 +26,10 @@
 # THE SOFTWARE.
 
 from tft import LANDSCAPE
-import uasyncio as asyncio
 from touch_bytecode import TOUCH
 from ugui import Screen, TFT_G
 
 def setup():
-    loop = asyncio.get_event_loop()
     tft = TFT_G("SSD1963", "LB04301", LANDSCAPE)
     touch = TOUCH("XPT2046", True, confidence = 50, margin = 50)
     # (-3886,-0.1287,-3812,-0.132,-3797,-0.07685,-3798,-0.07681))

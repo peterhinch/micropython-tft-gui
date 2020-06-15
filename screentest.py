@@ -1,9 +1,11 @@
 # screentest.py Test/demo of multiple screens for Pybboard TFT GUI
-# asyncio version. TODO figure out how to pause and resume dial
+# Adapted for (and requires) uasyncio V3
+
+# TODO figure out how to pause and resume dial
 
 # The MIT License (MIT)
 #
-# Copyright (c) 2016 Peter Hinch
+# Copyright (c) 2016-2020 Peter Hinch
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -71,9 +73,10 @@ class BackScreen(Screen):
     def on_hide(self):
         print(self.hide_arg)
 
-class ThreadScreen(Screen):
+class TaskScreen(Screen):
     def __init__(self):
         super().__init__()
+        self.tasks = []  # Control cancellation explicitly
         Label((0, 0), font = font14, value = 'Green dial runs only')
         Label((0, 30), font = font14, value = 'when screen is visible')
         Label((0, 120), font = font14, value = "Yellow dial's value is")
@@ -81,12 +84,11 @@ class ThreadScreen(Screen):
         self.dial1 = Dial((350, 10), fgcolor = GREEN, border = 2, pointers = (0.9, 0.7))
         self.dial2 = Dial((350, 120), fgcolor = YELLOW, border = 2,  pointers = (0.9, 0.7))
         self.pause = False  # asyncio can't pause coros so handle at application level
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.mainthread(self.dial1, True))
-        loop.create_task(self.mainthread(self.dial2))
+        self.tasks.append(asyncio.create_task(self.mainthread(self.dial1, True)))
+        self.tasks.append(asyncio.create_task(self.mainthread(self.dial2)))
 
         fwdbutton(0, 242, BackScreen)
-        backbutton(390, 242)
+        self.backbutton(390, 242)
 
     def on_open(self):
         print('Start green dial')
@@ -107,6 +109,15 @@ class ThreadScreen(Screen):
                 dial.value(angle)
                 dial.value(angle /10, 1)
 
+    def backbutton(self, x, y):
+        def back(button):
+            for task in self.tasks:
+                task.cancel()
+            self.tasks = []
+            Screen.back()
+        Button((x, y), height = 30, font = font14, fontcolor = BLACK, callback = back,
+            fgcolor = CYAN,  text = 'Back', shape = RECTANGLE, width = 80)
+
 class BaseScreen(Screen):
     def __init__(self):
         super().__init__()
@@ -114,7 +125,7 @@ class BaseScreen(Screen):
         fwdbutton(0, 242, KnobScreen, 'Knobs')
         fwdbutton(100, 242, SliderScreen, 'Sliders')
         fwdbutton(200, 242, AssortedScreen, 'Various')
-        fwdbutton(0, 100, ThreadScreen, 'Threads')
+        fwdbutton(0, 100, TaskScreen, 'Tasks')
         quitbutton(390, 242)
 
 class KnobScreen(Screen):

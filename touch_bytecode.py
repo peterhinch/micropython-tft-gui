@@ -1,7 +1,9 @@
-#
+# touch_bytecode.py
+# Adapted for (and requires) uasyncio V3
+
 # The MIT License (MIT)
 # 
-# Copyright (c) 2016 Robert Hammelrath
+# Copyright (c) 2016 Robert Hammelrath (c) 2016-2020 Peter Hinch
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +28,8 @@
 # It uses Y5..Y8 of PyBoard
 #
 import pyb, stm
+import uasyncio as asyncio
+
 # define constants
 #
 PCB_VERSION = 2
@@ -88,9 +92,7 @@ class TOUCH:
         self.touch_parameter(confidence, margin, delay, cal)
         if asyn:
             self.asynchronous = True
-            import uasyncio as asyncio
-            loop = asyncio.get_event_loop()
-            loop.create_task(self._main_thread())
+            asyncio.create_task(self._main_thread())
 
 # set parameters for get_touch()
 # res: Resolution in bits of the returned values, default = 10
@@ -170,7 +172,6 @@ class TOUCH:
 
 # Asynchronous use: this thread maintains self.x and self.y
     async def _main_thread(self):
-        import uasyncio as asyncio  # Why is this necessary in touch_bytecode but not in touch??
         buff = self.buff
         buf_length = self.buf_length
         buffptr = 0

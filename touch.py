@@ -1,7 +1,9 @@
-# asyncio version
+# touch.py
+# Adapted for (and requires) uasyncio V3
+
 # The MIT License (MIT)
 # 
-# Copyright (c) 2016 Robert Hammelrath
+# Copyright (c) 2016 Robert Hammelrath (c) 2016-2020 Peter Hinch
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -89,9 +91,7 @@ class TOUCH:
         self.touch_parameter(confidence, margin, delay, cal)
         if asyn:
             self.asynchronous = True
-            import uasyncio as asyncio
-            loop = asyncio.get_event_loop()
-            loop.create_task(self._main_thread())
+            asyncio.create_task(self._main_thread())
 
 # set parameters for get_touch()
 # res: Resolution in bits of the returned values, default = 10
@@ -240,7 +240,7 @@ class TOUCH:
 # Total net time for a 12 bit sample: ~ 25 µs, 8 bit sample ~20 µs
 #
     @staticmethod
-    @micropython.viper        
+    @micropython.viper
     def touch_talk(cmd: int, bits: int, port: int)  -> int:
         gpio_bsr = ptr16(port + stm.GPIO_BSRR)
         gpio_idr = ptr16(port + stm.GPIO_IDR)
