@@ -1,39 +1,23 @@
 # pt.py Test/demo of graph plotting extension for Pybboard TFT GUI
 # Adapted for (and requires) uasyncio V3
 
-# Now tests clipping of overrange data.
-
-# The MIT License (MIT)
-#
-# Copyright (c) 2017-2020 Peter Hinch
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# Released under the MIT License (MIT). See LICENSE.
+# Copyright (c) 2016-2020 Peter Hinch
 
 import uasyncio as asyncio
-from plot import PolarGraph, PolarCurve, CartesianGraph, Curve
-from ugui import Button, Label, Screen
-from constants import *
-from tft_local import setup
-import font14
-import font10
 from math import sin, cos, pi
 from cmath import rect
+
+from tft.driver.plot import PolarGraph, PolarCurve, CartesianGraph, Curve
+from tft.driver.ugui import Screen
+from tft.driver.constants import *
+from tft.driver.tft_local import setup
+
+from tft.widgets.label import Label
+from tft.widgets.buttons import Button
+
+from tft.fonts import font14
+from tft.fonts import font10
 
 # STANDARD BUTTONS
 

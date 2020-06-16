@@ -1,3 +1,9 @@
+# __init__.py for primitives
+# Adapted for (and requires) uasyncio V3
+
+# Released under the MIT License (MIT). See LICENSE.
+# Copyright (c) 2016-2020 Peter Hinch
+
 try:
     import uasyncio as asyncio
 except ImportError:

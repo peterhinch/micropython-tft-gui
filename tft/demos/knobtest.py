@@ -1,32 +1,24 @@
 # knobtest.py Test/demo of Knob and Dial classes for Pybboard TFT GUI
 
-# The MIT License (MIT)
-#
-# Copyright (c) 2016 Peter Hinch
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-from constants import *
-from ugui import Knob, Dial, Label, Button, ButtonList, Screen, Dropdown, Listbox
-import font14
-import font10
-from tft_local import setup
+# Adapted for (and requires) uasyncio V3
+
+# Released under the MIT License (MIT). See LICENSE.
+# Copyright (c) 2016-2020 Peter Hinch
+
 from math import pi
+from tft.driver.ugui import Screen
+from tft.driver.constants import *
+from tft.driver.tft_local import setup
+
+from tft.widgets.dial import Dial
+from tft.widgets.knob import Knob
+from tft.widgets.dropdown import Dropdown
+from tft.widgets.listbox import Listbox
+from tft.widgets.buttons import Button, ButtonList
+from tft.widgets.label import Label
+
+from tft.fonts import font14
+from tft.fonts import font10
 
 class KnobScreen(Screen):
     def __init__(self):
